@@ -1,6 +1,6 @@
 // Shared application data and constants extracted from the original App.jsx.
 
-export const API = "http://localhost:5000/api";
+export const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const CATALOGUE = [
  { id:'p01-aesthetic-hoodie', title:'Aesthetic Oversized Hoodie', price:2499, orig:3500, disc:29, cat:'fashion', rating:4.8, sold:1243, emoji:'', img:'https://picsum.photos/id/1011/400/400', color:'#ff6b9d' },
