@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const API   = "http://localhost:5000/api";
-const WS    = "http://localhost:5000";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const WS  = import.meta.env.VITE_WS_URL  || "http://localhost:5000";
 
 // ─── API HELPER ───────────────────────────────────────────────────────────────
 const api = async (path, opts = {}) => {
