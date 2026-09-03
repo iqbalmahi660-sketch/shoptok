@@ -525,7 +525,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome back, {user?.name} </p></div>
 
  {sellerTab==="overview"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:22}}>
- {[{icon:"",label:"Revenue",val:`Rs ${totalRev.toLocaleString()}`,color:"#fe2c55",goto:"revenue"},{icon:"",label:"Orders",val:sellerOrders.length.toString(),color:"#25f4ee",goto:"orders"},{icon:"",label:"Active Products",val:activePrds.toString(),color:"#a78bfa",goto:"products"},{icon:"⏳",label:"Pending",val:(pendingPrds+pendingOrd).toString(),color:"#fbbf24",goto:"pending"}].map(s=>(
+ {[{icon:"",label:"Revenue",val:`Rs ${totalRev.toLocaleString()}`,color:"#fe2c55",goto:"revenue"},{icon:"",label:"Orders",val:sellerOrders.length.toString(),color:"#ff4d6d",goto:"orders"},{icon:"",label:"Active Products",val:activePrds.toString(),color:"#e0245e",goto:"products"},{icon:"⏳",label:"Pending",val:(pendingPrds+pendingOrd).toString(),color:"#c81e45",goto:"pending"}].map(s=>(
  <div key={s.label} onClick={()=>setST(s.goto)} style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.07)",borderRadius:14,padding:18,cursor:"pointer",transition:"all 0.2s"}}
  onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color+"50";e.currentTarget.style.transform="translateY(-2px)";}}
  onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.07)";e.currentTarget.style.transform="translateY(0)";}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><p style={{fontSize:10,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>{s.label}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>{s.val}</p></div><div style={{width:42,height:42,borderRadius:11,background:`${s.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{s.icon}</div></div><p style={{marginTop:10,fontSize:10,color:s.color}}>View details →</p></div>
@@ -559,10 +559,10 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div>
  }
  </div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"16px 20px",borderBottom:"1px solid rgba(0,0,0,0.06)"}}><p style={{fontWeight:700,fontSize:15,color:"#fe2c55"}}>Order Statistics</p></div><div style={{padding:"16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
- {[[totalOrders,"Total Orders","#25f4ee"],[inProcess,"In Process","#fbbf24"],[completed,"Completed","#34d399"],[cancelled,"Cancelled","#fe2c55"]].map(([v,l,c])=>(
+ {[[totalOrders,"Total Orders","#ff4d6d"],[inProcess,"In Process","#c81e45"],[completed,"Completed","#e0245e"],[cancelled,"Cancelled","#fe2c55"]].map(([v,l,c])=>(
  <div key={l} style={{textAlign:"center",padding:"12px 8px",background:"rgba(0,0,0,0.03)",borderRadius:10,border:`1px solid ${c}20`}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:24,color:c,marginBottom:3}}>{v}</p><p style={{fontSize:11,color:"#555"}}>{l}</p></div>
  ))}
- </div><div style={{padding:"14px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #25f4ee",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}><p style={{fontSize:9,color:"#25f4ee",fontWeight:700}}></p><p style={{fontSize:11,color:"#25f4ee",fontWeight:800}}>Verified</p><p style={{fontSize:9,color:"#25f4ee",fontWeight:700}}></p></div></div></div></div>
+ </div><div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #fe2c55",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}><p style={{fontSize:9,color:"#fe2c55",fontWeight:700}}></p><p style={{fontSize:11,color:"#fe2c55",fontWeight:800}}>Verified</p><p style={{fontSize:9,color:"#fe2c55",fontWeight:700}}></p></div></div></div></div>
  );
  })()}
  </div>}
