@@ -49,7 +49,7 @@ export default function SingaporeStyleHome({
   }));
 
   return (
-    <main className="sg-home">
+    <main className="sg-home" style={{ maxWidth: 2400, width: "100%", margin: "0 auto" }}>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
       <div className="sg-categories" aria-label="Categories">
