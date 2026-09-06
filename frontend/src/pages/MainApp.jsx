@@ -1,3 +1,4 @@
+import AboutUs from "./AboutUs.jsx";
 import { useState, useEffect, useRef } from "react";
 import  SingaporeStyleHome  from "./SingaporeStyleHome.jsx";
 import { API, CATALOGUE, CATS, S, VIDS } from "../data/catalogue.js";
