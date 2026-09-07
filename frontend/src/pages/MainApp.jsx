@@ -29,7 +29,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  return ()=>window.removeEventListener("scroll",onScroll);
  },[]);
  const [page,setPage] = useState(localStorage.getItem("shopPage")||"shop");
- // Store Setting states (moved from IIFE to fix React hooks rules)
  const [storeForm,setStoreForm] = useState({storeName:"",contactPerson:"",storeMobile:"",storeProfile:"Welcome to our store.",welcomeMsg:"WELCOME! WELCOME!",newPassword:"",confirmPassword:""});
  const [storeLogo,setStoreLogo] = useState(null);
  const [banners,setBanners] = useState([null,null,null]);
@@ -61,7 +60,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [showProfEdit,setPE] = useState(false);
  const [editProd,setEditProd] = useState(null);
  const [profileImg,setPImg] = useState(()=>{
- // Priority: user prop > localStorage > null
  if(user?.profileImg) return user.profileImg;
  try{ const u=JSON.parse(localStorage.getItem("shopUser")||"{}"); return u.profileImg||null; }catch{ return null; }
  });
@@ -84,7 +82,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const toggleLP=(id)=>setLP(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
  const toggleLV=(id)=>setLV(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
 
- // DB products for shop page
  const [dbProducts,setDbProducts]=useState([]);
  const [dbLoading,setDbLoading]=useState(false);
  useEffect(()=>{
@@ -132,7 +129,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const shipping=cartTotal>=1000?0:150;
  const o={id:`#ORD-${Date.now().toString().slice(-6)}`,items:[...cart],total:cartTotal+shipping,status:"Processing",date:new Date().toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),statusColor:"#fbbf24"};
  setBO(prev=>[o,...prev]);setSO(prev=>[o,...prev]);setCart([]);
- // Fetch updated orders from backend
  try{
  const token=localStorage.getItem("shopToken");
  if(token){
@@ -153,7 +149,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }catch(e){console.log("Order sync failed",e);}
  };
 
- // Load buyer orders from backend on mount
  useEffect(()=>{
  const loadBuyerOrders=async()=>{
  try{
@@ -176,19 +171,16 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }catch(e){console.log("Orders load failed",e);}
  };
  loadBuyerOrders();
- // Auto refresh every 30 seconds
  const interval=setInterval(loadBuyerOrders,30000);
  return ()=>clearInterval(interval);
  },[user]);
 
- // Load seller products and orders from backend
  useEffect(()=>{
  if(!user||user.role!=="seller") return;
  const token=localStorage.getItem("shopToken");
  if(!token) return;
 
  const loadSellerData = () => {
- // Load seller's own products
  fetch(`${API}/products/my`,{headers:{Authorization:`Bearer ${token}`}})
  .then(r=>r.json()).then(d=>{
  if(d.products){
@@ -202,13 +194,11 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  rating:Number(p.rating)||0,
  sold:Number(p.sold)||0,
  stock:Number(p.stock)||0,
- // normalize status: backend uses "live", frontend uses "active"
  status: p.status==="live" ? "active" : p.status,
  })));
  }
  }).catch(e=>console.log("Seller products load failed",e));
 
- // Load seller's orders
  fetch(`${API}/orders/seller`,{headers:{Authorization:`Bearer ${token}`}})
  .then(r=>r.json()).then(d=>{
  if(d.orders){
@@ -226,12 +216,10 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  };
 
  loadSellerData();
- // Auto refresh every 30 seconds
  const interval = setInterval(loadSellerData, 30000);
  return () => clearInterval(interval);
  },[user]);
 
- // Load seller products from backend
  useEffect(()=>{
  if(!user||user.role!=="seller")return;
  const loadSellerProds=async()=>{
@@ -255,7 +243,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  loadSellerProds();
  },[user]);
 
- // Load seller videos from backend
  const loadSellerVideos=async()=>{
  if(!user||user.role!=="seller")return;
  try{
@@ -361,7 +348,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  `}</style>
 
- {/* Checkout full-page flow */}
  {checkout&&(
  <CheckoutFlow
  cart={cart}
@@ -379,7 +365,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {showProfEdit&&<ProfileEditModal onClose={()=>setPE(false)} onSave={async(f,newImgFile)=>{
  try{
  const token=localStorage.getItem("shopToken");
- // If new profile image selected, upload to Cloudinary first
  let imgUrl=profileImg;
  if(newImgFile){
  const fd=new FormData();fd.append("image",newImgFile);
@@ -388,11 +373,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(upData.url){
  imgUrl=upData.url;
  setPImg(imgUrl);
- // Save immediately to localStorage so it persists
  try{const u=JSON.parse(localStorage.getItem("shopUser")||"{}");u.profileImg=imgUrl;localStorage.setItem("shopUser",JSON.stringify(u));}catch{}
  }
  }
- // Update profile
  const res=await fetch(`${API}/auth/profile`,{method:"PUT",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
  body:JSON.stringify({name:f.name,phone:f.phone,city:f.city,profileImg:imgUrl,password:f.password||undefined})});
  const data=await res.json();
@@ -407,7 +390,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  setPE(false);
  }} user={user} profileImg={profileImg} setProfileImg={setPImg}/>}
 
- {/* Product Detail Panel */}
  {selProd&&(
  <div className="content-with-sidebar" style={{position:"fixed",top:0,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:120,overflowY:"auto"}}><FullProductPage
  prod={selProd}
@@ -421,7 +403,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  /></div>
  )}
 
- {/* Store Detail Panel */}
  {selStore&&(
  <StorePanel
  store={selStore}
@@ -433,7 +414,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  />
  )}
 
- {/* CART SIDEBAR */}
  {cartOpen&&!checkout&&(
  <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:200}}/><div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:201,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
  {cart.length===0
@@ -450,8 +430,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div></>
  )}
 
- {/* FIXED LEFT SIDEBAR */}
- <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="ShopTok" style={{height:28,width:"auto",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
+ <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TikTokShop" style={{height:28,width:"auto",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
  {!user&&(
@@ -463,14 +442,13 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div><span style={{fontSize:13,fontWeight:600,color:"#111"}}>{user.name}</span></div>
  )}
  <div style={{flex:1}}/><div style={{display:"flex",flexDirection:"column",gap:14,fontSize:13,paddingBottom:10}}>
- {[["Shop","shop"],["Sell","seller"],["About",null],["Customer support",null],["Legal",null]].map(([l,p])=>(
+ {[["Shop","shop"],["Sell","seller"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([l,p])=>(
  <span key={l} onClick={()=>p&&setPage(p)} style={{cursor:"pointer",color:"#555",transition:"color 0.15s"}}
  onMouseEnter={e=>e.currentTarget.style.color="#111"}
  onMouseLeave={e=>e.currentTarget.style.color="#555"}>{l}</span>
  ))}
- <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 ShopTok</span></div></div><div className="content-with-sidebar">
+ <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
- {/* TOP NAV */}
  <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}><div style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
  {(user||cartCount>0)&&(
  <button onClick={()=>setCO(o=>!o)} style={{position:"relative",background:"none",border:"none",color:"#111",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontFamily:"inherit",flexShrink:0}}>Cart{cartCount>0&&<span style={{position:"absolute",top:-8,right:-14,background:"#fe2c55",color:"#fff",fontSize:9,fontWeight:700,width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cartCount}</span>}
@@ -489,10 +467,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  </div></nav>
 
- {/* PAGES */}
  <div style={{width:"100%",maxWidth:"100%",margin:0,padding:page==="seller"||page==="profile"?0:"0 24px",boxSizing:"border-box",display:"block"}} className="page-inner">
 
- {/* SHOP */}
  {page==="shop"&&(
    <SingaporeStyleHome
      products={dbProducts.length ? dbProducts : CATALOGUE}
@@ -506,7 +482,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
      loading={dbLoading}
    />
  )}
- {/* SELLER DASHBOARD */}
  {page==="seller"&&!user&&(
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your Seller Dashboard</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to manage your store, products, and orders.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
  )}
@@ -543,7 +518,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  </div>
 
- {/* ── Best Sellers on Dashboard ── */}
  {(()=>{
  const sorted=[...sellerProds].sort((a,b)=>(b.sold||0)-(a.sold||0)).slice(0,10);
  const totalOrders=sellerOrders.length;
@@ -649,7 +623,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div>}
  </div>}
 
- {/* FINANCIAL STATEMENT */}
  {sellerTab==="financial"&&(()=>{
  const downloadAnalytics=(period)=>{
  const now=new Date();
@@ -660,7 +633,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  else if(period==="yearly"){const y=new Date(now.getFullYear(),0,1);filteredOrders=sellerOrders.filter(o=>new Date(o.date||o.created_at)>=y);}
  const totalAmt=filteredOrders.reduce((s,o)=>s+(o.total||0),0);
  const rows=[
- ["ShopTok - Sales Analytics Report"],
+ ["TikTokShop - Sales Analytics Report"],
  [`Period: ${period.charAt(0).toUpperCase()+period.slice(1)}`,`Generated: ${now.toLocaleString("en-PK")}`],
  [""],
  ["Order ID","Product","Quantity","Price","Total","Status","Date"],
@@ -683,7 +656,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const blob=new Blob([csv],{type:"text/csv"});
  const url=URL.createObjectURL(blob);
  const a=document.createElement("a");
- a.href=url;a.download=`shoptok-analytics-${period}-${now.toISOString().slice(0,10)}.csv`;
+ a.href=url;a.download=`tiktokshop-analytics-${period}-${now.toISOString().slice(0,10)}.csv`;
  a.click();URL.revokeObjectURL(url);
  };
  return(
@@ -693,7 +666,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div>
 
- {/* Download Analytics */}
  <div style={{background:"#ffffff",border:"1px solid rgba(52,211,153,0.2)",borderRadius:14,padding:20,marginBottom:20}}><p style={{fontWeight:700,marginBottom:6,color:"#34d399"}}>Download Analytics (Excel/CSV)</p><p style={{fontSize:12,color:"#555",marginBottom:16}}>Download your sales data for any time period</p><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
  {[["Daily","daily",""],["Weekly","weekly",""],["Monthly","monthly",""],["Yearly","yearly",""]].map(([label,period,icon])=>(
  <button key={period} onClick={()=>downloadAnalytics(period)}
@@ -711,31 +683,26 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  );
  })()}
 
- {/* MY WALLET */}
- {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>Rs 0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>ShopTok Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
+ {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>Rs 0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>TikTokShop Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
 
- {/* FUND RECORD */}
  {sellerTab==="funds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Fund Records</p><div style={{display:"flex",gap:8,marginBottom:16}}>
  {["All","Deposit","Withdrawal","Refund"].map(f=>(
  <button key={f} style={{padding:"6px 14px",borderRadius:100,border:"1px solid rgba(0,0,0,0.1)",background:"transparent",color:"rgba(0,0,0,0.5)",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{f}</button>
  ))}
  </div><div style={{textAlign:"center",padding:"40px 0"}}><p style={{fontSize:40,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No fund records found</p></div></div></div>}
 
- {/* REFUND REQUEST */}
  {sellerTab==="refunds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>↩ Refund Requests</p><div style={{display:"flex",gap:8,marginBottom:16}}>
  {["All","Pending","Approved","Rejected"].map(f=>(
  <button key={f} style={{padding:"6px 14px",borderRadius:100,border:"1px solid rgba(0,0,0,0.1)",background:"transparent",color:"rgba(0,0,0,0.5)",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{f}</button>
  ))}
  </div><div style={{textAlign:"center",padding:"40px 0"}}><p style={{fontSize:40,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No refund requests</p></div></div></div>}
 
- {/* PRODUCT REVIEW */}
  {sellerTab==="reviews"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>⭐ Product Reviews</p><div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:20,textAlign:"center"}}>
  {[5,4,3,2,1].map(s=>(
  <div key={s} style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.15)",borderRadius:10,padding:"12px 8px"}}><p style={{fontSize:18,marginBottom:4}}>{"⭐".repeat(s)}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55"}}>0</p></div>
  ))}
  </div><div style={{textAlign:"center",padding:"20px 0"}}><p style={{color:"#555",fontSize:13}}>No reviews yet — reviews appear after buyers purchase</p></div></div></div>}
 
- {/* PRODUCT WAREHOUSE */}
  {sellerTab==="warehouse"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Product Warehouse</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:20}}>
  {[["Total Stock",sellerProds.reduce((s,p)=>s+(p.stock||0),0).toString(),"#25f4ee"],["Active Products",activePrds.toString(),"#34d399"],["Low Stock","0","#fbbf24"]].map(([l,v,c])=>(
  <div key={l} style={{background:"rgba(0,0,0,0.03)",border:"1px solid rgba(0,0,0,0.07)",borderRadius:12,padding:16,textAlign:"center"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:24,color:c,marginBottom:4}}>{v}</p><p style={{fontSize:11,color:"#555"}}>{l}</p></div>
@@ -751,7 +718,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  </div></div>}
 
- {/* BEST SELLERS */}
  {sellerTab==="bestsellers"&&(()=>{
  const sorted=[...sellerProds].sort((a,b)=>(b.sold||0)-(a.sold||0)).slice(0,10);
  const totalOrders=sellerOrders.length;
@@ -761,7 +727,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  return(
  <div style={{display:"grid",gridTemplateColumns:"1fr 280px",gap:16,alignItems:"start"}}>
 
- {/* LEFT: Top 10 Table */}
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"16px 20px",borderBottom:"1px solid rgba(0,0,0,0.06)"}}><p style={{fontWeight:700,fontSize:15,color:"#fe2c55"}}>TOP 10 Best-Selling Items</p></div><div style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"10px 20px",background:"rgba(0,0,0,0.03)",borderBottom:"1px solid rgba(0,0,0,0.06)"}}>
  {["#","Product Name","Price","Sales Volume"].map(h=>(
  <p key={h} style={{fontSize:11,color:"#555",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.04em"}}>{h}</p>
@@ -777,7 +742,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  </div>
 
- {/* RIGHT: Order Statistics */}
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"16px 20px",borderBottom:"1px solid rgba(0,0,0,0.06)"}}><p style={{fontWeight:700,fontSize:15,color:"#fe2c55"}}>Order Statistics</p></div><div style={{padding:"20px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
  {[
  [totalOrders,"Total Orders","#334155"],
@@ -791,7 +755,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  );
  })()}
 
- {/* STORE SETTING */}
  {sellerTab==="storesetting"&&(()=>{
  const handleLogoChange=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>setStoreLogo(ev.target.result);r.readAsDataURL(fi);};
  const handleBanner=(idx,e)=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>{const b=[...banners];b[idx]=ev.target.result;setBanners(b);};r.readAsDataURL(fi);};
@@ -808,42 +771,33 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  return(
  <div style={{display:"flex",flexDirection:"column",gap:0,background:"#ffffff",minHeight:"100%"}}>
 
- {/* Header */}
  <div style={{display:"flex",alignItems:"center",gap:12,padding:"16px 0 20px"}}><button onClick={()=>setST("overview")} style={{background:"rgba(0,0,0,0.06)",border:"none",color:"#111",width:32,height:32,borderRadius:"50%",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button><div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:18}}>Store Setting</h2><p style={{fontSize:12,color:"rgba(0,0,0,0.4)"}}>Filters · Store Setting</p></div></div>
 
- {/* Store Information */}
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:22,marginBottom:14}}><h3 style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,marginBottom:18,color:"#111"}}>Store Information</h3>
 
- {/* Store Name */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:14}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Store Name</label><input value={storeForm.storeName} onChange={e=>setStoreForm({...storeForm,storeName:e.target.value})}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"}}/></div>
 
- {/* Store Logo */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"flex-start",gap:12,marginBottom:14}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right",paddingTop:8}}>Store Logo</label><label style={{cursor:"pointer",display:"inline-block"}}><div style={{width:80,height:80,borderRadius:10,background:"rgba(0,0,0,0.06)",border:"2px dashed rgba(0,0,0,0.15)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
  {storeLogo?<img src={storeLogo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
  :<div style={{textAlign:"center"}}><p style={{fontSize:22}}></p><p style={{fontSize:10,color:"#555",marginTop:4}}>Upload</p></div>}
  </div><input type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoChange}/></label></div>
 
- {/* Contact Person */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:14}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Contact Person</label><input value={storeForm.contactPerson} onChange={e=>setStoreForm({...storeForm,contactPerson:e.target.value})}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"}}/></div>
 
- {/* Store Mobile */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:14}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Store Mobile</label><input value={storeForm.storeMobile} onChange={e=>setStoreForm({...storeForm,storeMobile:e.target.value})} placeholder="03001234567"
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"}}/></div>
 
- {/* Store Profile */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"flex-start",gap:12,marginBottom:14}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right",paddingTop:8}}>Store Profile</label><div><textarea value={storeForm.storeProfile} onChange={e=>setStoreForm({...storeForm,storeProfile:e.target.value})} rows={3}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",width:"100%",resize:"vertical"}}/><p style={{fontSize:10,color:"rgba(0,0,0,0.3)",marginTop:3}}>up to 500 words</p></div></div>
 
- {/* Welcome Message */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"flex-start",gap:12,marginBottom:20}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right",paddingTop:8}}>Welcome to the store</label><div><textarea value={storeForm.welcomeMsg} onChange={e=>setStoreForm({...storeForm,welcomeMsg:e.target.value})} rows={3}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",width:"100%",resize:"vertical"}}/><p style={{fontSize:10,color:"rgba(0,0,0,0.3)",marginTop:3}}>up to 500 words</p></div></div><div style={{display:"flex",justifyContent:"flex-end"}}><button onClick={handleSave} disabled={storeSaving}
  style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",border:"none",color:"#fff",padding:"10px 28px",borderRadius:8,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>
  {storeSaving?"Saving...":"Save"}
  </button></div></div>
 
- {/* Banner Settings */}
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:22,marginBottom:14}}><h3 style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,marginBottom:18,color:"#111"}}>Banner Settings</h3>
  {["Store Banner 1 (1190x300)","Store Banner 2 (1190x300)","Store Banner 3 (1190x300)"].map((label,idx)=>(
  <div key={idx} style={{marginBottom:16}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginBottom:8}}>{label}</p><label style={{cursor:"pointer",display:"block"}}><div style={{width:"100%",height:120,borderRadius:10,background:"rgba(0,0,0,0.04)",border:"2px dashed rgba(0,0,0,0.1)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
@@ -854,24 +808,19 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div>
 
- {/* Personal Information */}
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:22,marginBottom:14}}><h3 style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,marginBottom:18,color:"#111"}}>Personal Information</h3>
 
- {/* Avatar */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Avatar</label><div style={{display:"flex",alignItems:"center",gap:12}}><div style={{width:48,height:48,borderRadius:"50%",overflow:"hidden",border:"2px solid #fe2c55",flexShrink:0}}>
  {profileImg?<img src={profileImg} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
  :<div style={{width:"100%",height:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>{user?.avatar||""}</div>}
  </div><button onClick={()=>setPE(true)} style={{background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.3)",color:"#fe2c55",padding:"6px 14px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Change</button></div></div>
 
- {/* Name */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Name</label><div style={{display:"flex",alignItems:"center",gap:10}}><input value={storeForm.contactPerson} onChange={e=>setStoreForm({...storeForm,contactPerson:e.target.value})}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><span style={{background:"rgba(52,211,153,0.1)",color:"#34d399",fontSize:11,padding:"4px 10px",borderRadius:100,whiteSpace:"nowrap"}}>Verified</span><button style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>New</button></div></div>
 
- {/* Phone/Password */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Phone/Password</label><div style={{display:"flex",alignItems:"center",gap:10}}><input value={storeForm.storeMobile} onChange={e=>setStoreForm({...storeForm,storeMobile:e.target.value})}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><button onClick={()=>setPE(true)} style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>Change</button></div></div>
 
- {/* Login Password */}
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:20}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Login Password</label><div style={{display:"flex",alignItems:"center",gap:10}}><input type="password" placeholder="••••••••"
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><button onClick={()=>setPE(true)} style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>Change</button></div></div><div style={{display:"flex",justifyContent:"flex-end"}}><button onClick={handleSave} disabled={storeSaving}
  style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",border:"none",color:"#fff",padding:"10px 28px",borderRadius:8,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>
@@ -880,8 +829,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  );
  })()}
 
- {/* VENTURE ALLIANCE */}
- {sellerTab==="venture"&&<div><div style={{background:"linear-gradient(135deg,#0a0a1a,#1a0a2e)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:20,padding:28,marginBottom:16,textAlign:"center"}}><p style={{fontSize:40,marginBottom:12}}></p><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:8,color:"#a78bfa"}}>Venture Alliance Program</h2><p style={{fontSize:13,color:"rgba(255,255,255,0.65)",lineHeight:1.7,marginBottom:20}}>Partner with ShopTok and grow your business. Earn commissions, get priority support, and access exclusive seller benefits.</p><button style={{padding:"12px 28px",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Join Alliance →</button></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+ {sellerTab==="venture"&&<div><div style={{background:"linear-gradient(135deg,#0a0a1a,#1a0a2e)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:20,padding:28,marginBottom:16,textAlign:"center"}}><p style={{fontSize:40,marginBottom:12}}></p><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:8,color:"#a78bfa"}}>Venture Alliance Program</h2><p style={{fontSize:13,color:"rgba(255,255,255,0.65)",lineHeight:1.7,marginBottom:20}}>Partner with TikTokShop and grow your business. Earn commissions, get priority support, and access exclusive seller benefits.</p><button style={{padding:"12px 28px",background:"linear-gradient(135deg,#a78bfa,#6d28d9)",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Join Alliance →</button></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
  {[[" Priority Support","Get dedicated seller support 24/7"],[" Higher Commissions","Earn up to 15% commission on sales"],[" Marketing Boost","Feature your products in ads"],[" Elite Badge","Display verified alliance badge on store"]].map(([t,d])=>(
  <div key={t} style={{background:"#ffffff",border:"1px solid rgba(167,139,250,0.2)",borderRadius:14,padding:16}}><p style={{fontWeight:700,marginBottom:6}}>{t}</p><p style={{fontSize:12,color:"#555",lineHeight:1.6}}>{d}</p></div>
  ))}
@@ -897,7 +845,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  {showUploadVideo&&<UploadVideoModal onClose={()=>setShowUploadVideo(false)} onUploaded={loadSellerVideos} showToast={showToast}/>}
 
- {/* BUYER PROFILE */}
  {page==="profile"&&!user&&(
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your account</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to view your orders, wishlist, and settings.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
  )}
@@ -915,7 +862,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"rgba(0,0,0,0.4)",marginBottom:16}}>No orders yet</p><button onClick={()=>setPage("shop")} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :<div style={{display:"flex",flexDirection:"column",gap:12}}>{buyerOrders.map((order,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,background:`${p.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
- {/* Tracking bar */}
  <div style={{padding:"10px 16px 14px"}}><div style={{display:"flex",alignItems:"center",gap:0}}>
  {["Placed","Confirmed","Shipped","Delivered"].map((s,si)=>{
  const done=["Placed","Confirmed"].includes(order.status)||si===0||(order.status==="Shipped"&&si<=2)||(order.status==="Delivered"&&si<=3);
@@ -947,11 +893,14 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {[["Order updates",true],["Promotions",true],["Flash sales",false]].map(([t,on])=>(
  <div key={t} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><span style={{fontSize:13,color:"rgba(0,0,0,0.7)"}}>{t}</span><div style={{width:40,height:22,borderRadius:11,background:on?"#fe2c55":"#222",position:"relative",cursor:"pointer"}}><div style={{position:"absolute",top:3,left:on?19:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.2s"}}/></div></div>
  ))}
- </div><div style={{background:"rgba(37,244,238,0.05)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:14,padding:18}}><p style={{fontSize:13,fontWeight:700,color:"#25f4ee",marginBottom:6}}>Sell on ShopTok</p><p style={{fontSize:12,color:"rgba(0,0,0,0.4)",marginBottom:12}}>Apne isi account se seller ban sakte ho — naya account banana zaroori nahi!</p><Btn variant="outline" small onClick={()=>goAuth(S.ONBOARD)}>Become a Seller</Btn></div><div style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.15)",borderRadius:14,padding:18}}><p style={{fontSize:13,fontWeight:700,color:"#fe2c55",marginBottom:12}}>Account</p><div style={{display:"flex",gap:10}}><Btn variant="ghost" small onClick={()=>setPE(true)}>Edit Profile</Btn><Btn variant="danger" small onClick={logout}>Log Out</Btn></div></div></div>}
+ </div><div style={{background:"rgba(37,244,238,0.05)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:14,padding:18}}><p style={{fontSize:13,fontWeight:700,color:"#25f4ee",marginBottom:6}}>Sell on TikTokShop</p><p style={{fontSize:12,color:"rgba(0,0,0,0.4)",marginBottom:12}}>Apne isi account se seller ban sakte ho — naya account banana zaroori nahi!</p><Btn variant="outline" small onClick={()=>goAuth(S.ONBOARD)}>Become a Seller</Btn></div><div style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.15)",borderRadius:14,padding:18}}><p style={{fontSize:13,fontWeight:700,color:"#fe2c55",marginBottom:12}}>Account</p><div style={{display:"flex",gap:10}}><Btn variant="ghost" small onClick={()=>setPE(true)}>Edit Profile</Btn><Btn variant="danger" small onClick={logout}>Log Out</Btn></div></div></div>}
  </div></div>
  )}
  </div>
- {["track-order","return-refund","delivery-info","seller-guide","privacy-policy","terms-of-service"].includes(page)&&(
+ {page==="about"&&(
+ <AboutUs setPage={setPage}/>
+ )}
+ {["legal","customer-support","track-order","return-refund","delivery-info","seller-guide","privacy-policy","terms-of-service"].includes(page)&&(
  <PolicyPage page={page} setPage={setPage}/>
  )}
  {page==="sitemap"&&(
