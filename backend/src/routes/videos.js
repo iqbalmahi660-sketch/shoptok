@@ -38,7 +38,8 @@ const parseArrayField = (val) => {
 
 // ── POST /api/videos ───────────────────────────────────────────────────────
 // Seller uploads a new video. Requires the seller to already have a seller
-// profile (i.e. completed seller onboarding).
+// profile (i.e. completed seller onboarding). Videos publish immediately —
+// no admin approval required (status is set straight to 'live').
 router.post('/', authUser, upload.single('video'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No video file provided' });
@@ -56,7 +57,7 @@ router.post('/', authUser, upload.single('video'), async (req, res) => {
 
     const { rows } = await query(
       `INSERT INTO videos (seller_id, video_url, thumbnail_url, title, caption, product_ids, hashtags, tags, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending') RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'live') RETURNING *`,
       [
         seller.id, result.secure_url, result.thumbnail_url || null,
         title || null, description || caption || null,
