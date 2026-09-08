@@ -1,4 +1,5 @@
 import AboutUs from "./AboutUs.jsx";
+import VideoFeed from "./VideoFeed.jsx";
 import { useState, useEffect, useRef } from "react";
 import  SingaporeStyleHome  from "./SingaporeStyleHome.jsx";
 import { API, CATALOGUE, CATS, S, VIDS } from "../data/catalogue.js";
@@ -485,7 +486,10 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {page==="seller"&&!user&&(
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your Seller Dashboard</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to manage your store, products, and orders.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
  )}
- {page==="seller"&&user&&(
+ {page==="seller"&&user&&user.role!=="seller"&&(
+ <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(37,244,238,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🏪</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Set up your Seller Account first</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:360}}>You're currently signed in as a buyer. Create a seller account to unlock the Seller Dashboard and start listing products.</p><button onClick={()=>goAuth(S.ONBOARD)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 28px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Create Seller Account</button></div>
+ )}
+ {page==="seller"&&user&&user.role==="seller"&&(
  <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{
  overview:" Dashboard",
@@ -897,6 +901,17 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div></div>
  )}
  </div>
+ {page==="feed"&&(
+ <VideoFeed
+ products={dbProducts.length ? dbProducts : CATALOGUE}
+ onOpen={setSP}
+ onAdd={addToCart}
+ likedV={likedV}
+ toggleLV={toggleLV}
+ setPage={setPage}
+ showToast={showToast}
+ />
+ )}
  {page==="about"&&(
  <AboutUs setPage={setPage}/>
  )}
