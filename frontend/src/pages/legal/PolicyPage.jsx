@@ -9,6 +9,7 @@ const NAV_GROUPS = [
   {
     label: "Customer Support",
     items: [
+      { key: "customer-support", label: "Customer Support" },
       { key: "track-order", label: "Track Your Order" },
       { key: "return-refund", label: "Return & Refund" },
       { key: "delivery-info", label: "Delivery Information" },
@@ -23,6 +24,23 @@ const NAV_GROUPS = [
       { key: "terms-of-service", label: "Terms of Service" },
     ],
   },
+];
+
+// ─── CUSTOMER SUPPORT HUB (TikTok-help-center style) ───────────────────────────
+const SUPPORT_FAQS = [
+  { q: "How do I track my order?", pg: "track-order" },
+  { q: "How do I return an item?", pg: "return-refund" },
+  { q: "What are the delivery charges?", pg: "delivery-info" },
+  { q: "How do I become a seller?", pg: "seller-guide" },
+  { q: "What if my delivery fails?", pg: "delivery-info" },
+  { q: "How do refunds get processed?", pg: "return-refund" },
+];
+
+const SUPPORT_CATEGORIES = [
+  { key: "track-order", icon: "📦", title: "Track Your Order", desc: "Order statuses, delivery timelines, and how to follow your package." },
+  { key: "return-refund", icon: "↩", title: "Return & Refund", desc: "Eligibility, timelines, and how to start a return or refund." },
+  { key: "delivery-info", icon: "🚚", title: "Delivery Information", desc: "Coverage areas, charges, and Cash on Delivery details." },
+  { key: "seller-guide", icon: "🏪", title: "Seller Guide", desc: "Everything sellers need — from onboarding to payouts." },
 ];
 
 // ─── LEGAL HUB CARDS ────────────────────────────────────────────────────────
@@ -130,8 +148,14 @@ export const PolicyPage = ({ page, setPage }) => {
 
   const isAbout = page === "about";
   const isLegalHub = page === "legal";
+  const isSupportHub = page === "customer-support";
+  const [supportSearch, setSupportSearch] = useState("");
   const p = pages[page];
-  if (!isAbout && !isLegalHub && !p) return null;
+  if (!isAbout && !isLegalHub && !isSupportHub && !p) return null;
+
+  const filteredFaqs = supportSearch.trim()
+    ? SUPPORT_FAQS.filter((f) => f.q.toLowerCase().includes(supportSearch.trim().toLowerCase()))
+    : SUPPORT_FAQS;
 
   const NavLink = ({ item }) => (
     <button
@@ -223,6 +247,53 @@ export const PolicyPage = ({ page, setPage }) => {
                   >
                     <h3 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#fe2c55" }}>{d.title} →</h3>
                     <p style={{ fontSize: 13, color: "rgba(0,0,0,0.55)", lineHeight: 1.6 }}>{d.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : isSupportHub ? (
+            <>
+              {/* Hero + Search */}
+              <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 20, padding: "40px 32px", marginBottom: 24 }}>
+                <h1 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 30, marginBottom: 18, color: "#111" }}>How can we help?</h1>
+                <input
+                  value={supportSearch}
+                  onChange={(e) => setSupportSearch(e.target.value)}
+                  placeholder="Search help articles"
+                  style={{ width: "100%", maxWidth: 480, padding: "13px 18px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.1)", background: "#f7f7f8", fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {/* FAQ shortcuts */}
+              <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 16, padding: "22px 26px", marginBottom: 20 }}>
+                <h2 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, fontSize: 16, marginBottom: 14, color: "#111" }}>Frequently asked questions</h2>
+                {filteredFaqs.length ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }} className="about-values">
+                    {filteredFaqs.map((f) => (
+                      <button
+                        key={f.q}
+                        onClick={() => { setPage(f.pg); window.scrollTo(0, 0); }}
+                        style={{ textAlign: "left", background: "none", border: "none", padding: "9px 0", cursor: "pointer", fontFamily: "inherit", fontSize: 13.5, color: "#fe2c55", borderBottom: "1px solid rgba(0,0,0,0.05)" }}
+                      >{f.q}</button>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 13, color: "rgba(0,0,0,0.4)" }}>No matching articles. Try a different search, or browse a topic below.</p>
+                )}
+              </div>
+
+              {/* Category cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} className="about-values">
+                {SUPPORT_CATEGORIES.map((c) => (
+                  <button
+                    key={c.key}
+                    onClick={() => { setPage(c.key); window.scrollTo(0, 0); }}
+                    style={{ textAlign: "left", background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 14, padding: "20px 22px", cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fe2c55"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.07)"; }}
+                  >
+                    <h3 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, fontSize: 15, marginBottom: 6, color: "#111" }}>{c.icon} {c.title}</h3>
+                    <p style={{ fontSize: 13, color: "rgba(0,0,0,0.55)", lineHeight: 1.6 }}>{c.desc}</p>
                   </button>
                 ))}
               </div>

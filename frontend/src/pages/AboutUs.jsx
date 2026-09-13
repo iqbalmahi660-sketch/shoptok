@@ -37,9 +37,9 @@ export default function AboutUs({ setPage }) {
       <section style={{ background: C.ink, color: "#fff", borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}` }}>
         <div className="wrap" style={{ maxWidth: 1120, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", padding: "40px 32px" }}>
           {[
-            { num: "2024", label: "Launched in Pakistan", color: C.cyan },
-            { num: "10K+", label: "Local sellers onboarded", color: "#fff" },
-            { num: "500K+", label: "Shoppable videos & LIVEs", color: C.pink },
+            { num: "2024", label: "Launched in Your Country", color: C.cyan },
+            { num: "0", label: "Local sellers onboarded", color: "#fff" },
+            { num: "0", label: "Shoppable videos & LIVEs", color: C.pink },
             { num: "24/7", label: "Buyer protection coverage", color: "#fff" },
           ].map((s, i) => (
             <div key={s.label} style={{ padding: "0 20px", borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.14)" }}>
