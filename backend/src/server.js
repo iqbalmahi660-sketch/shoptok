@@ -36,17 +36,28 @@ app.use(
   )
 );
 
-app.use(cors({
-  origin: [
-    'https://admin.tokzoo.com',
-    'https://tokzoo.com',
-    'https://www.tokzoo.com',
-    'http://localhost:5173',
-  ],
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://admin.tokzoo.com',
+      'https://tokzoo.com',
+      'https://www.tokzoo.com',
+      'http://localhost:5173',
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
