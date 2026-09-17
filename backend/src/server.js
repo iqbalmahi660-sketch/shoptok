@@ -14,22 +14,53 @@ const server = http.createServer(app);
 // ── Socket.io setup ───────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: function(origin, callback) { callback(null, true); },
-    methods: ['GET','POST'],
+    origin: [
+      'https://admin.tokzoo.com',
+      'https://tokzoo.com',
+      'https://www.tokzoo.com',
+      'http://localhost:5173',
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
+
 socketMgr.init(io);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(morgan(process.env.NODE_ENV==='production' ? 'combined' : 'dev'));
+
+app.use(
+  morgan(
+    process.env.NODE_ENV === 'production' ? 'combined' : 'dev'
+  )
+);
+
 app.use(cors({
-  origin: function(origin, callback) { callback(null, true); },
+  origin: [
+    'https://admin.tokzoo.com',
+    'https://tokzoo.com',
+    'https://www.tokzoo.com',
+    'http://localhost:5173',
+  ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(rateLimit({ windowMs: 15*60*1000, max: 200, message: { success:false, message:'Too many requests' } }));
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    message: {
+      success: false,
+      message: 'Too many requests',
+    },
+  })
+);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',     require('./routes/auth'));
@@ -40,21 +71,37 @@ app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/videos',   require('./routes/videos'));
 
 // ── Health check ──────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ status:'ok', env: process.env.NODE_ENV, time: new Date() }));
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    env: process.env.NODE_ENV,
+    time: new Date(),
+  });
+});
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
-app.use((req, res) => res.status(404).json({ success:false, message:'Not found' }));
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Not found',
+  });
+});
 
 // ── Error handler ─────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('❌', err.message);
-  res.status(err.status||500).json({ success:false, message: err.message||'Server error' });
+
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Server error',
+  });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () => {
-  console.log(`\n🚀 ShopTok Backend v2.0`);
+  console.log('\n🚀 ShopTok Backend v2.0');
   console.log(`   Port:   ${PORT}`);
   console.log(`   Env:    ${process.env.NODE_ENV}`);
   console.log(`   Health: http://localhost:${PORT}/health\n`);
