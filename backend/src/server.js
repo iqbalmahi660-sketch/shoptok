@@ -1,14 +1,19 @@
 require('dotenv').config();
-const express     = require('express');
-const http        = require('http');
-const { Server }  = require('socket.io');
-const cors        = require('cors');
-const helmet      = require('helmet');
-const morgan      = require('morgan');
-const rateLimit   = require('express-rate-limit');
-const socketMgr   = require('./socket');
 
-const app    = express();
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const socketMgr = require('./socket');
+
+const app = express();
+
+// Railway / reverse proxy support
+app.set('trust proxy', 1);
+
 const server = http.createServer(app);
 
 // ── Socket.io setup ───────────────────────────────────────────────────────────
@@ -28,58 +33,96 @@ const io = new Server(server, {
 socketMgr.init(io);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(helmet({ contentSecurityPolicy: false }));
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 
 app.use(
   morgan(
-    process.env.NODE_ENV === 'production' ? 'combined' : 'dev'
+    process.env.NODE_ENV === 'production'
+      ? 'combined'
+      : 'dev'
   )
 );
 
+// ── CORS ──────────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'https://admin.tokzoo.com',
+  'https://tokzoo.com',
+  'https://www.tokzoo.com',
+  'http://localhost:5173',
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'https://admin.tokzoo.com',
-      'https://tokzoo.com',
-      'https://www.tokzoo.com',
-      'http://localhost:5173',
-    ];
-
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests without Origin header
+    // (Postman, server-to-server requests, etc.)
+    if (!origin) {
+      return callback(null, true);
     }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log('❌ CORS blocked origin:', origin);
+    return callback(new Error('Not allowed by CORS'));
   },
+
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+
+  methods: [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+  ],
+
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+  ],
+
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+
+// Explicitly handle browser preflight requests
 app.options('*', cors(corsOptions));
 
+// ── Body parsers ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// ── Rate limiting ─────────────────────────────────────────────────────────────
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 200,
+
     message: {
       success: false,
       message: 'Too many requests',
     },
+
+    standardHeaders: true,
+    legacyHeaders: false,
   })
 );
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',     require('./routes/auth'));
-app.use('/api/admin',    require('./routes/admin'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
-app.use('/api/orders',   require('./routes/orders'));
-app.use('/api/upload',   require('./routes/upload'));
-app.use('/api/videos',   require('./routes/videos'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/upload', require('./routes/upload'));
+app.use('/api/videos', require('./routes/videos'));
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
