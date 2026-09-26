@@ -109,9 +109,9 @@ export default function AboutUs({ setPage }) {
           <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 18, padding: 28 }}>
             {[
               ["LIVE now", "Skincare routine w/ @glowskin_pk"],
-              ["Viewers", "3,204 watching"],
-              ["Cart adds", "+186 in last 10 min"],
-              ["Sellers featured", "4 local brands"],
+              ["Viewers", "0 watching"],
+              ["Cart adds", "0"],
+              ["Sellers featured", "0 local brands"],
             ].map((row, i) => (
               <div key={row[0]} style={{ display: "flex", justifyContent: "space-between", padding: "14px 0", borderBottom: i === 3 ? "none" : "1px solid rgba(255,255,255,0.08)", fontSize: 14 }}>
                 <span style={{ color: "rgba(255,255,255,0.55)" }}>{row[0]}</span>
