@@ -23,6 +23,7 @@ const io = new Server(server, {
       'https://admin.tokzoo.com',
       'https://tokzoo.com',
       'https://www.tokzoo.com',
+      'https://motivated-solace-production-5ac8.up.railway.app',
       'http://localhost:5173',
     ],
     methods: ['GET', 'POST'],
@@ -53,6 +54,7 @@ const allowedOrigins = [
   'https://admin.tokzoo.com',
   'https://tokzoo.com',
   'https://www.tokzoo.com',
+  'https://motivated-solace-production-5ac8.up.railway.app',
   'http://localhost:5173',
 ];
 
