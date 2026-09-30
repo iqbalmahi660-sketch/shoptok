@@ -290,8 +290,11 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  .hscroll::-webkit-scrollbar{height:0px;}
  .hscroll::-webkit-scrollbar-thumb{background:transparent;}
  .hscroll{scrollbar-width:none;}
+  .page-inner{width:100%;max-width:none;min-width:0;}
+  .shop-fullwidth{width:100%;max-width:none;min-width:0;margin:0;}
+  .shop-fullwidth > *{width:100%!important;max-width:none!important;margin-left:0!important;margin-right:0!important;}
  .fixed-left-sidebar{display:flex;}
- .content-with-sidebar{margin-left:220px;}
+ .content-with-sidebar{margin-left:220px;width:calc(100% - 220px);max-width:none;min-width:0;}
  @media(max-width:860px){
  .fixed-left-sidebar{display:none!important;}
  .content-with-sidebar{margin-left:0!important;}
@@ -420,12 +423,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {cart.length===0
  ?<div style={{textAlign:"center",paddingTop:60}}><div style={{fontSize:46,marginBottom:12}}></div><p style={{color:"rgba(0,0,0,0.4)"}}>Cart is empty</p><button onClick={()=>{setCO(false);setPage("shop");}} style={{marginTop:16,background:"#fe2c55",color:"#fff",border:"none",padding:"10px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :cart.map(item=>(
- <div key={item.id} style={{background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.08)",borderRadius:12,padding:12,display:"flex",gap:11}}><div style={{width:50,height:50,borderRadius:10,background:`${item.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{item.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{item.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55",fontSize:13}}>Rs {(item.price*item.qty).toLocaleString()}</span><div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>updateQty(item.id,-1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontSize:12,fontWeight:600,minWidth:14,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button><button onClick={()=>removeFromCart(item.id)} style={{color:"#fe2c55",background:"none",border:"none",cursor:"pointer",fontSize:15}}></button></div></div></div></div>
+ <div key={item.id} style={{background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.08)",borderRadius:12,padding:12,display:"flex",gap:11}}><div style={{width:50,height:50,borderRadius:10,background:`${item.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{item.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{item.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55",fontSize:13}}>${(item.price*item.qty).toLocaleString()}</span><div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>updateQty(item.id,-1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontSize:12,fontWeight:600,minWidth:14,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button><button onClick={()=>removeFromCart(item.id)} style={{color:"#fe2c55",background:"none",border:"none",cursor:"pointer",fontSize:15}}></button></div></div></div></div>
  ))
  }
  </div>
  {cart.length>0&&(
- <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>Rs {cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add Rs "+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — Rs {(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
+ <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>${cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add $"+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — ${(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
  </button></div>
  )}
  </div></>
@@ -471,17 +474,19 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{width:"100%",maxWidth:"100%",margin:0,padding:page==="seller"||page==="profile"?0:"0 24px",boxSizing:"border-box",display:"block"}} className="page-inner">
 
  {page==="shop"&&(
-   <SingaporeStyleHome
-     products={dbProducts.length ? dbProducts : CATALOGUE}
-     vids={VIDS}
-     onOpen={setSP}
-     onAdd={addToCart}
-     search={search}
-     setSearch={setSearch}
-     cat={cat}
-     setCat={setCat}
-     loading={dbLoading}
-   />
+   <div className="shop-fullwidth">
+     <SingaporeStyleHome
+       products={dbProducts.length ? dbProducts : CATALOGUE}
+       vids={VIDS}
+       onOpen={setSP}
+       onAdd={addToCart}
+       search={search}
+       setSearch={setSearch}
+       cat={cat}
+       setCat={setCat}
+       loading={dbLoading}
+     />
+   </div>
  )}
  {page==="seller"&&!user&&(
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your Seller Dashboard</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to manage your store, products, and orders.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
@@ -508,7 +513,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome back, {user?.name} </p></div>
 
  {sellerTab==="overview"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:22}}>
- {[{icon:"",label:"Revenue",val:`Rs ${totalRev.toLocaleString()}`,color:"#fe2c55",goto:"revenue"},{icon:"",label:"Orders",val:sellerOrders.length.toString(),color:"#25f4ee",goto:"orders"},{icon:"",label:"Active Products",val:activePrds.toString(),color:"#a78bfa",goto:"products"},{icon:"⏳",label:"Pending",val:(pendingPrds+pendingOrd).toString(),color:"#fbbf24",goto:"pending"}].map(s=>(
+ {[{icon:"",label:"Revenue",val:`$${totalRev.toLocaleString()}`,color:"#fe2c55",goto:"revenue"},{icon:"",label:"Orders",val:sellerOrders.length.toString(),color:"#25f4ee",goto:"orders"},{icon:"",label:"Active Products",val:activePrds.toString(),color:"#a78bfa",goto:"products"},{icon:"⏳",label:"Pending",val:(pendingPrds+pendingOrd).toString(),color:"#fbbf24",goto:"pending"}].map(s=>(
  <div key={s.label} onClick={()=>setST(s.goto)} style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.07)",borderRadius:14,padding:18,cursor:"pointer",transition:"all 0.2s"}}
  onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color+"50";e.currentTarget.style.transform="translateY(-2px)";}}
  onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.07)";e.currentTarget.style.transform="translateY(0)";}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><p style={{fontSize:10,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>{s.label}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>{s.val}</p></div><div style={{width:42,height:42,borderRadius:11,background:`${s.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{s.icon}</div></div><p style={{marginTop:10,fontSize:10,color:s.color}}>View details →</p></div>
@@ -517,7 +522,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {sellerProds.length===0
  ?<div style={{textAlign:"center",padding:"24px 0"}}><p style={{fontSize:28,marginBottom:8}}></p><p style={{fontSize:12,color:"#444",marginBottom:12}}>No products yet</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 16px",borderRadius:100,fontSize:12,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600}}>+ Add First Product</button></div>
  :sellerProds.slice(0,4).map((p,i)=>(
- <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{fontSize:11,color:"#333",width:16}}>#{i+1}</span><div style={{width:34,height:34,borderRadius:8,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:500,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p><p style={{fontSize:10,color:"rgba(0,0,0,0.3)"}}>Stock: {p.stock}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:12,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</p><span style={{fontSize:9,color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24"}}>{(p.status==="active"||p.status==="live")?"● Live":"● Pending"}</span></div></div>
+ <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{fontSize:11,color:"#333",width:16}}>#{i+1}</span><div style={{width:34,height:34,borderRadius:8,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:500,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p><p style={{fontSize:10,color:"rgba(0,0,0,0.3)"}}>Stock: {p.stock}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:12,color:"#fe2c55"}}>${p.price.toLocaleString()}</p><span style={{fontSize:9,color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24"}}>{(p.status==="active"||p.status==="live")?"● Live":"● Pending"}</span></div></div>
  ))
  }
  </div>
@@ -536,7 +541,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>Add products to see best sellers</p></div>
  :<div>
  {sorted.map((p,i)=>(
- <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"12px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:24,height:24,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:11,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>Rs {(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
+ <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"12px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:24,height:24,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:11,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>${(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
  ))}
  </div>
  }
@@ -544,20 +549,30 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {[[totalOrders,"Total Orders","#334155"],[inProcess,"In Process","#334155"],[completed,"Completed","#14a37f"],[cancelled,"Cancelled","#334155"]].map(([v,l,c])=>(
  <div key={l} style={{textAlign:"center",padding:"12px 8px",background:"rgba(0,0,0,0.03)",borderRadius:10,border:`1px solid ${c}20`}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:24,color:c,marginBottom:3}}>{v}</p><p style={{fontSize:11,color:"#555"}}>{l}</p></div>
  ))}
- </div><div style={{padding:"14px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}><p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p><p style={{fontSize:11,color:"#14a37f",fontWeight:800}}>Verified</p><p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p></div></div></div></div>
+ </div>
+ {sellerProds.length>=3&&(
+ <div style={{padding:"14px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}>
+  <div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}>
+   <p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p>
+   <p style={{fontSize:11,color:"#14a37f",fontWeight:800}}>Verified</p>
+   <p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p>
+  </div>
+ </div>
+ )}
+ </div></div>
  );
  })()}
  </div>}
 
  {sellerTab==="revenue"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:18}}>
  {[["Today",totalRev,"#fe2c55"],["This Week",totalRev,"#25f4ee"],["This Month",totalRev,"#34d399"]].map(([l,v,c])=>(
- <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16,textAlign:"center"}}><p style={{fontSize:11,color:"#555",marginBottom:6}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16,color:c}}>Rs {v.toLocaleString()}</p></div>
+ <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16,textAlign:"center"}}><p style={{fontSize:11,color:"#555",marginBottom:6}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16,color:c}}>${v.toLocaleString()}</p></div>
  ))}
  </div>
  {sellerOrders.length===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"#555"}}>No revenue yet</p></div>
  :<div style={{display:"flex",flexDirection:"column",gap:8}}>{sellerOrders.map((o,i)=>(
- <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#555"}}>{o.date}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,color:"#34d399"}}>+Rs {o.total.toLocaleString()}</p></div></div>
+ <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#555"}}>{o.date}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,color:"#34d399"}}>+${o.total.toLocaleString()}</p></div></div>
  ))}</div>}
  </div>}
 
@@ -568,9 +583,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {sellerOrders.map((o,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div onClick={()=>setExpandedOrder(expandedOrder===i?null:i)} style={{padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}
  onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.03)"}
- onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:22}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>{o.id||o.order_number}</span><span style={{fontSize:11,color:"#555"}}>{o.date||new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}</span></div><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginTop:2}}>{o.items?o.items[0]?.title:o.product_title}</p></div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:o.statusColor||"#fbbf24",background:(o.statusColor||"#fbbf24")+"18",padding:"4px 10px",borderRadius:100}}>● {o.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#34d399"}}>Rs {Number(o.total||o.total_amount||0).toLocaleString()}</span><span style={{fontSize:11,color:"#555"}}>{expandedOrder===i?"▲":"▼"}</span></div></div>
+ onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:22}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>{o.id||o.order_number}</span><span style={{fontSize:11,color:"#555"}}>{o.date||new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}</span></div><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginTop:2}}>{o.items?o.items[0]?.title:o.product_title}</p></div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:o.statusColor||"#fbbf24",background:(o.statusColor||"#fbbf24")+"18",padding:"4px 10px",borderRadius:100}}>● {o.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#34d399"}}>${Number(o.total||o.total_amount||0).toLocaleString()}</span><span style={{fontSize:11,color:"#555"}}>{expandedOrder===i?"▲":"▼"}</span></div></div>
  {expandedOrder===i&&(
- <div style={{borderTop:"1px solid rgba(254,44,85,0.2)"}}><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:28}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.items?o.items[0]?.title:o.product_title}</p><p style={{fontSize:11,color:"#555"}}>Qty: {o.items?o.items[0]?.qty:o.quantity} · Rs {Number(o.items?o.items[0]?.price:o.unit_price||0).toLocaleString()} each</p></div><div style={{textAlign:"right"}}><p style={{fontSize:11,color:"#555",marginBottom:2}}>Shipping</p><p style={{fontSize:12,fontWeight:600,color:Number(o.shipping_fee)===0?"#34d399":"#fff"}}>{Number(o.shipping_fee)===0?"FREE":"Rs "+Number(o.shipping_fee||150).toLocaleString()}</p></div></div><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a"}}><p style={{fontSize:11,color:"#fe2c55",fontWeight:700,marginBottom:8}}>BUYER DETAILS</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+ <div style={{borderTop:"1px solid rgba(254,44,85,0.2)"}}><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:28}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.items?o.items[0]?.title:o.product_title}</p><p style={{fontSize:11,color:"#555"}}>Qty: {o.items?o.items[0]?.qty:o.quantity} · ${Number(o.items?o.items[0]?.price:o.unit_price||0).toLocaleString()} each</p></div><div style={{textAlign:"right"}}><p style={{fontSize:11,color:"#555",marginBottom:2}}>Shipping</p><p style={{fontSize:12,fontWeight:600,color:Number(o.shipping_fee)===0?"#34d399":"#fff"}}>{Number(o.shipping_fee)===0?"FREE":"$"+Number(o.shipping_fee||150).toLocaleString()}</p></div></div><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a"}}><p style={{fontSize:11,color:"#fe2c55",fontWeight:700,marginBottom:8}}>BUYER DETAILS</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
  {[["Name",o.shipping_name||o.buyer_name],["Phone",o.shipping_phone||o.buyer_phone],["City",o.shipping_city||o.buyer_city],["Payment",(o.payment_method||"COD").toUpperCase()]].map(([l,v])=>(
  <div key={l} style={{background:"rgba(0,0,0,0.03)",borderRadius:8,padding:"8px 12px"}}><p style={{fontSize:10,color:"#555",marginBottom:3}}>{l}</p><p style={{fontSize:13,fontWeight:600}}>{v||"—"}</p></div>
  ))}
@@ -600,7 +615,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {p.freeShipping&&(<span style={{fontSize:10,background:"rgba(37,244,238,0.1)",color:"#25f4ee",padding:"2px 7px",borderRadius:100}}>Free Ship</span>)}
  {p.featured&&(<span style={{fontSize:10,background:"rgba(251,191,36,0.1)",color:"#fbbf24",padding:"2px 7px",borderRadius:100}}>Featured</span>)}
  {p.promoCode&&<span style={{fontSize:10,background:"rgba(52,211,153,0.1)",color:"#34d399",padding:"2px 7px",borderRadius:100}}> {p.promoCode}</span>}
- </div></div><div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</p><span style={{fontSize:10,padding:"3px 9px",background:(p.status==="active"||p.status==="live")?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)",color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24",border:`1px solid ${(p.status==="active"||p.status==="live")?"#34d39930":"#fbbf2430"}`,borderRadius:100}}>{(p.status==="active"||p.status==="live")?" Live":"⏳ Pending"}</span><button onClick={()=>setEditProd(p)}
+ </div></div><div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</p><span style={{fontSize:10,padding:"3px 9px",background:(p.status==="active"||p.status==="live")?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)",color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24",border:`1px solid ${(p.status==="active"||p.status==="live")?"#34d39930":"#fbbf2430"}`,borderRadius:100}}>{(p.status==="active"||p.status==="live")?" Live":"⏳ Pending"}</span><button onClick={()=>setEditProd(p)}
  style={{background:"rgba(37,244,238,0.1)",border:"1px solid rgba(37,244,238,0.2)",color:"#25f4ee",padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Edit
  </button></div></div>
  ))}</div>}
@@ -653,8 +668,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  [""],
  ["SUMMARY"],
  ["Total Orders",filteredOrders.length],
- ["Total Revenue","Rs "+totalAmt.toLocaleString()],
- ["Average Order Value","Rs "+(filteredOrders.length?Math.round(totalAmt/filteredOrders.length):0).toLocaleString()],
+ ["Total Revenue","$"+totalAmt.toLocaleString()],
+ ["Average Order Value","$"+(filteredOrders.length?Math.round(totalAmt/filteredOrders.length):0).toLocaleString()],
  ];
  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(",")).join("\n");
  const blob=new Blob([csv],{type:"text/csv"});
@@ -665,7 +680,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  };
  return(
  <div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
- {[["Total Revenue","Rs "+totalRev.toLocaleString(),"#34d399"],["Total Orders",sellerOrders.length.toString(),"#25f4ee"],["Pending Payout","Rs 0","#fbbf24"],["Withdrawn","Rs 0","#a78bfa"]].map(([l,v,c])=>(
+ {[["Total Revenue","$"+totalRev.toLocaleString(),"#34d399"],["Total Orders",sellerOrders.length.toString(),"#25f4ee"],["Pending Payout","$0","#fbbf24"],["Withdrawn","$0","#a78bfa"]].map(([l,v,c])=>(
  <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:18}}><p style={{fontSize:11,color:"#555",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,color:c}}>{v}</p></div>
  ))}
  </div>
@@ -681,13 +696,13 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Monthly Summary</p>
  {["January","February","March","April","May","June"].map((m,i)=>(
- <div key={m} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span style={{fontSize:13,color:"rgba(0,0,0,0.6)"}}>{m} 2026</span><span style={{fontSize:13,fontWeight:600,color:"#34d399"}}>Rs {(i*2500).toLocaleString()}</span></div>
+ <div key={m} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span style={{fontSize:13,color:"rgba(0,0,0,0.6)"}}>{m} 2026</span><span style={{fontSize:13,fontWeight:600,color:"#34d399"}}>${(i*2500).toLocaleString()}</span></div>
  ))}
  </div></div>
  );
  })()}
 
- {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>Rs 0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>TikTokShop Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
+ {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>$0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>TikTokShop Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
 
  {sellerTab==="funds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Fund Records</p><div style={{display:"flex",gap:8,marginBottom:16}}>
  {["All","Deposit","Withdrawal","Refund"].map(f=>(
@@ -740,7 +755,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"50px 0"}}><p style={{fontSize:40,marginBottom:10}}></p><p style={{color:"#555",fontSize:13}}>No products yet — add products to see best sellers</p></div>
  :<div>
  {sorted.map((p,i)=>(
- <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"13px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:26,height:26,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":i===2?"rgba(254,44,85,0.1)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:12,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":i===2?"#fe2c55":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>Rs {(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
+ <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"13px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:26,height:26,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":i===2?"rgba(254,44,85,0.1)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:12,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":i===2?"#fe2c55":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>${(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
  ))}
  </div>
  }
@@ -856,7 +871,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={profileTab} setTab={setPT} onAddProduct={()=>{}} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={BUYER_TABS} showAdd={false}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{orders:" My Orders",wishlist:" Wishlist",reviews:"⭐ Reviews",settings:" Settings"}[profileTab]}
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome, {user?.name} </p></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22,background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16}}>
- {[[buyerOrders.length.toString(),"Orders"],[likedP.size.toString(),"Wishlist"],["0","Reviews"],["Rs "+buyerOrders.reduce((s,o)=>s+o.total,0).toLocaleString(),"Spent"]].map(([n,l])=>(
+ {[[buyerOrders.length.toString(),"Orders"],[likedP.size.toString(),"Wishlist"],["0","Reviews"],["$"+buyerOrders.reduce((s,o)=>s+o.total,0).toLocaleString(),"Spent"]].map(([n,l])=>(
  <div key={l} style={{textAlign:"center"}}><div style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16,color:"#fe2c55"}}>{n}</div><div style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginTop:2}}>{l}</div></div>
  ))}
  </div>
@@ -865,7 +880,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {buyerOrders.length===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"rgba(0,0,0,0.4)",marginBottom:16}}>No orders yet</p><button onClick={()=>setPage("shop")} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :<div style={{display:"flex",flexDirection:"column",gap:12}}>{buyerOrders.map((order,i)=>(
- <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,background:`${p.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
+ <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,background:`${p.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
  <div style={{padding:"10px 16px 14px"}}><div style={{display:"flex",alignItems:"center",gap:0}}>
  {["Placed","Confirmed","Shipped","Delivered"].map((s,si)=>{
  const done=["Placed","Confirmed"].includes(order.status)||si===0||(order.status==="Shipped"&&si<=2)||(order.status==="Delivered"&&si<=3);
@@ -886,7 +901,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {CATALOGUE.filter(p=>likedP.has(p.id)).map(p=>(
  <div key={p.id} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{aspectRatio:"1",background:`${p.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,position:"relative"}}>
  {p.emoji}
- <button onClick={()=>toggleLP(p.id)} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.5)",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:12}}></button></div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:7,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</span><button onClick={()=>addToCart(p)} style={{background:"#fe2c55",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>+</button></div></div></div>
+ <button onClick={()=>toggleLP(p.id)} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.5)",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:12}}></button></div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:7,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</span><button onClick={()=>addToCart(p)} style={{background:"#fe2c55",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>+</button></div></div></div>
  ))}
  </div>}
  </div>}
