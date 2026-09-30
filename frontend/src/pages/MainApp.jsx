@@ -297,7 +297,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  .content-with-sidebar{margin-left:220px;width:calc(100% - 220px);max-width:none;min-width:0;}
  @media(max-width:860px){
  .fixed-left-sidebar{display:none!important;}
- .content-with-sidebar{margin-left:0!important;}
+ .content-with-sidebar{margin-left:0!important;width:100%!important;max-width:100%!important;}
  }
  input:focus{outline:none;} select option{background:#fff;color:#111;}
  .hero-h1{font-size:clamp(30px,9vw,48px)!important;}
@@ -350,6 +350,58 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  .page-inner{padding:0 12px!important;}
  .trending-grid{gap:8px!important;}
  }
+
+ /* ===== FINAL RESPONSIVE PASS ===== */
+ html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
+ .content-with-sidebar{overflow-x:hidden;}
+ .page-inner{width:100%;max-width:100%;min-width:0;}
+ .shop-fullwidth{width:100%;max-width:100%;min-width:0;}
+ .cart-drawer{width:360px;max-width:100vw;}
+ .seller-dashboard-wrap{width:100%;min-width:0;}
+
+ @media(max-width:1200px){
+   .page-inner{padding-left:18px!important;padding-right:18px!important;}
+ }
+
+ @media(max-width:1024px){
+   .content-with-sidebar{margin-left:190px;width:calc(100% - 190px);}
+   .fixed-left-sidebar{width:190px!important;padding-left:16px!important;padding-right:16px!important;}
+ }
+
+ @media(max-width:900px){
+   .seller-dashboard-wrap{flex-direction:column!important;}
+ }
+
+ @media(max-width:860px){
+   .fixed-left-sidebar{display:none!important;}
+   .content-with-sidebar{margin-left:0!important;width:100%!important;max-width:100%!important;}
+   nav{padding-left:16px!important;padding-right:16px!important;}
+   .page-inner{padding-left:14px!important;padding-right:14px!important;}
+ }
+
+ @media(max-width:768px){
+   nav{height:54px!important;gap:10px!important;}
+   .page-inner{padding-left:12px!important;padding-right:12px!important;}
+   .seller-cta{padding:22px 16px!important;}
+ }
+
+ @media(max-width:640px){
+   .page-inner{padding-left:10px!important;padding-right:10px!important;}
+   .navbar-search{width:100%!important;max-width:100%!important;}
+   .shop-search-row{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;}
+   .related-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+ }
+
+ @media(max-width:520px){
+   .cart-drawer{width:100vw!important;}
+ }
+
+ @media(max-width:480px){
+   nav{padding-left:10px!important;padding-right:10px!important;}
+   .page-inner{padding-left:8px!important;padding-right:8px!important;}
+   .related-grid{grid-template-columns:1fr!important;}
+ }
+
  `}</style>
 
  {checkout&&(
@@ -419,7 +471,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  )}
 
  {cartOpen&&!checkout&&(
- <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:200}}/><div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:201,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
+ <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:200}}/><div className="cart-drawer" style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:201,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
  {cart.length===0
  ?<div style={{textAlign:"center",paddingTop:60}}><div style={{fontSize:46,marginBottom:12}}></div><p style={{color:"rgba(0,0,0,0.4)"}}>Cart is empty</p><button onClick={()=>{setCO(false);setPage("shop");}} style={{marginTop:16,background:"#fe2c55",color:"#fff",border:"none",padding:"10px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :cart.map(item=>(
@@ -495,7 +547,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(37,244,238,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🏪</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Set up your Seller Account first</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:360}}>You're currently signed in as a buyer. Create a seller account to unlock the Seller Dashboard and start listing products.</p><button onClick={()=>goAuth(S.ONBOARD)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 28px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Create Seller Account</button></div>
  )}
  {page==="seller"&&user&&user.role==="seller"&&(
- <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
+ <div className="seller-dashboard-wrap" style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{
  overview:" Dashboard",
  orders:" Shop Orders",
