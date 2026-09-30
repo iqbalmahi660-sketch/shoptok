@@ -6,6 +6,25 @@ import { Login } from "../auth/Login.jsx";
 import { MerchantAgreement } from "../auth/MerchantAgreement.jsx";
 import { Verify } from "../auth/Verify.jsx";
 
+const UploadBox=({id,file,label,icon,onChange})=>(
+ <div style={{flex:1}}><div onClick={()=>document.getElementById(id).click()}
+ style={{border:"2px dashed "+(file?"#fe2c55":"#d5d5d5"),borderRadius:10,padding:"18px 8px",textAlign:"center",cursor:"pointer",background:file?"rgba(254,44,85,0.06)":"#f7f7f8",transition:"all 0.2s",minHeight:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
+ {file
+ ? <><div style={{fontSize:22}}></div><p style={{color:"#fe2c55",fontSize:10,fontWeight:600,wordBreak:"break-all",padding:"0 4px"}}>{file.name.slice(0,16)}...</p></>
+ : <><div style={{width:36,height:36,borderRadius:8,background:"#f2f2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{icon}</div><p style={{color:"#555",fontSize:10,marginTop:2,lineHeight:1.4}}>{label}</p></>
+ }
+ </div><input id={id} type="file" accept="image/*" style={{display:"none"}} onChange={e=>onChange(e.target.files[0])}/></div>
+ );
+
+const SField=({label,value,onChange,placeholder,type="text",req=true})=>(
+ <div style={{marginBottom:16}}><label style={{display:"block",fontSize:13,color:"#888",marginBottom:7,fontWeight:500}}>
+ {req&&(<span style={{color:"#fe2c55",marginRight:4}}>*</span>)}{label}
+ </label><input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+ style={{width:"100%",padding:"12px 14px",background:"#ffffff",border:"1px solid #222",borderRadius:10,color:"#111",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",transition:"border-color 0.2s"}}
+ onFocus={e=>e.target.style.borderColor="#fe2c55"}
+ onBlur={e=>e.target.style.borderColor="#222"}/></div>
+ );
+
 export const SellerOnboard=({go,setUser})=>{
  const [loading,sl]=useState(false);
  const [agree,setAgree]=useState(false);
@@ -22,24 +41,7 @@ export const SellerOnboard=({go,setUser})=>{
  });
  const up=(k,v)=>sf(p=>({...p,[k]:v}));
 
- const UploadBox=({id,file,label,icon,onChange})=>(
- <div style={{flex:1}}><div onClick={()=>document.getElementById(id).click()}
- style={{border:"2px dashed "+(file?"#fe2c55":"#d5d5d5"),borderRadius:10,padding:"18px 8px",textAlign:"center",cursor:"pointer",background:file?"rgba(254,44,85,0.06)":"#f7f7f8",transition:"all 0.2s",minHeight:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
- {file
- ? <><div style={{fontSize:22}}></div><p style={{color:"#fe2c55",fontSize:10,fontWeight:600,wordBreak:"break-all",padding:"0 4px"}}>{file.name.slice(0,16)}...</p></>
- : <><div style={{width:36,height:36,borderRadius:8,background:"#f2f2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{icon}</div><p style={{color:"#555",fontSize:10,marginTop:2,lineHeight:1.4}}>{label}</p></>
- }
- </div><input id={id} type="file" accept="image/*" style={{display:"none"}} onChange={e=>onChange(e.target.files[0])}/></div>
- );
 
- const SField=({label,value,onChange,placeholder,type="text",req=true})=>(
- <div style={{marginBottom:16}}><label style={{display:"block",fontSize:13,color:"#888",marginBottom:7,fontWeight:500}}>
- {req&&(<span style={{color:"#fe2c55",marginRight:4}}>*</span>)}{label}
- </label><input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
- style={{width:"100%",padding:"12px 14px",background:"#ffffff",border:"1px solid #222",borderRadius:10,color:"#111",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",transition:"border-color 0.2s"}}
- onFocus={e=>e.target.style.borderColor="#fe2c55"}
- onBlur={e=>e.target.style.borderColor="#222"}/></div>
- );
 
  const submit=async()=>{
  if(!agree){alert("Please agree to the Occupancy Agreement to continue.");return;}
