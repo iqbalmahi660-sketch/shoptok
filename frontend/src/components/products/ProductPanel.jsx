@@ -62,7 +62,7 @@ export const ProductPanel=({prod,onClose,addToCart,setCart,onBuyNow,likedP,toggl
  {i<2&&(<span style={{color:"#fe2c55",fontWeight:800,fontSize:16}}>:</span>)}
  </span>
  ))}
- <span style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginLeft:6}}>then Rs. {Number(prod.orig).toLocaleString()}</span></div></div></div>
+ <span style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginLeft:6}}>then ${Number(prod.orig).toLocaleString()}</span></div></div></div>
  )}
 
  {/* Size selector - only show for clothing/fashion */}
@@ -87,12 +87,12 @@ export const ProductPanel=({prod,onClose,addToCart,setCart,onBuyNow,likedP,toggl
  <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:16}}><p style={{fontSize:12,color:"rgba(0,0,0,0.55)",fontWeight:600}}>Quantity:</p><div style={{display:"flex",alignItems:"center",gap:0,background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:10,overflow:"hidden"}}><button onClick={()=>setQty(q=>Math.max(1,q-1))} style={{width:40,height:40,background:"none",border:"none",color:"rgba(0,0,0,0.7)",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:16,minWidth:32,textAlign:"center",borderLeft:"1px solid rgba(0,0,0,0.08)",borderRight:"1px solid rgba(0,0,0,0.08)",lineHeight:"40px"}}>{qty}</span><button onClick={()=>setQty(q=>q+1)} style={{width:40,height:40,background:"none",border:"none",color:"rgba(0,0,0,0.7)",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button></div><span style={{fontSize:12,color:"#22c55e",fontWeight:600}}> {prod.stock||"In"} left in stock</span></div>
 
  {/* Price box — after qty so user sees update */}
- <div style={{background:"rgba(254,44,85,0.07)",border:"1px solid rgba(254,44,85,0.18)",borderRadius:14,padding:"16px 18px",marginBottom:16}}><div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:7,flexWrap:"wrap"}}><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:30,color:"#fe2c55",letterSpacing:"-1px"}}>Rs. {(Number(prod.price)*qty).toLocaleString()}</span>
- {qty>1&&<span style={{fontSize:13,color:"rgba(0,0,0,0.5)"}}>({qty} × Rs. {Number(prod.price).toLocaleString()})</span>}
- {prod.orig>prod.price&&<span style={{fontSize:14,color:"rgba(0,0,0,0.3)",textDecoration:"line-through"}}>Rs. {(Number(prod.orig)*qty).toLocaleString()}</span>}
+ <div style={{background:"rgba(254,44,85,0.07)",border:"1px solid rgba(254,44,85,0.18)",borderRadius:14,padding:"16px 18px",marginBottom:16}}><div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:7,flexWrap:"wrap"}}><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:30,color:"#fe2c55",letterSpacing:"-1px"}}>${(Number(prod.price)*qty).toLocaleString()}</span>
+ {qty>1&&<span style={{fontSize:13,color:"rgba(0,0,0,0.5)"}}>({qty} × ${Number(prod.price).toLocaleString()})</span>}
+ {prod.orig>prod.price&&<span style={{fontSize:14,color:"rgba(0,0,0,0.3)",textDecoration:"line-through"}}>${(Number(prod.orig)*qty).toLocaleString()}</span>}
  </div>
- {prod.orig>prod.price&&<p style={{fontSize:13,color:"#22c55e",fontWeight:600}}>You save: Rs. {((Number(prod.orig)-Number(prod.price))*qty).toLocaleString()} ({prod.disc}% OFF)</p>}
- {qty>1&&<p style={{fontSize:12,color:"#fbbf24",fontWeight:600,marginTop:4}}>Total for {qty} items: Rs. {(Number(prod.price)*qty).toLocaleString()}</p>}
+ {prod.orig>prod.price&&<p style={{fontSize:13,color:"#22c55e",fontWeight:600}}>You save: ${((Number(prod.orig)-Number(prod.price))*qty).toLocaleString()} ({prod.disc}% OFF)</p>}
+ {qty>1&&<p style={{fontSize:12,color:"#fbbf24",fontWeight:600,marginTop:4}}>Total for {qty} items: ${(Number(prod.price)*qty).toLocaleString()}</p>}
  </div>
 
  {/* CTA buttons */}
@@ -141,7 +141,7 @@ export const ProductPanel=({prod,onClose,addToCart,setCart,onBuyNow,likedP,toggl
  {CATALOGUE.filter(p=>p.id!==prod.id).slice(0,6).map(p=>(
  <div key={p.id} onClick={()=>onClose()} style={{background:"rgba(0,0,0,0.03)",border:"1px solid rgba(0,0,0,0.07)",borderRadius:14,overflow:"hidden",cursor:"pointer",transition:"all 0.2s"}}
  onMouseEnter={e=>e.currentTarget.style.borderColor="#fe2c55"}
- onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(0,0,0,0.07)"}><div style={{aspectRatio:"1",background:`${p.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{p.emoji}</div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)"}}>⭐{p.rating}</span></div></div></div>
+ onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(0,0,0,0.07)"}><div style={{aspectRatio:"1",background:`${p.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:48}}>{p.emoji}</div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)"}}>⭐{p.rating}</span></div></div></div>
  ))}
  </div>
 

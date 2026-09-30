@@ -63,8 +63,8 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  <>
  {inp("Product Title *","title","text","Enter product name")}
  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
- {inp("Sale Price (Rs) *","price","number","e.g. 2499")}
- {inp("Original Price (Rs)","orig","number","e.g. 3500")}
+ {inp("Sale Price ($) *","price","number","e.g. 2499")}
+ {inp("Original Price ($)","orig","number","e.g. 3500")}
  </div>
  {inp("Stock Quantity *","stock","number","e.g. 50")}
  <div style={{marginBottom:14}}><label style={{fontSize:11,color:"#666",display:"block",marginBottom:5,textTransform:"uppercase",letterSpacing:"0.05em"}}>Description</label><textarea value={f.description} onChange={e=>sf(p=>({...p,description:e.target.value}))} rows={3}
@@ -85,7 +85,7 @@ export const EditProductModal=({prod,onClose,onSave})=>{
 
  {/* Price preview */}
  {f.price&&f.orig&&Number(f.orig)>Number(f.price)&&(
- <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:14}}><p style={{fontSize:13,color:"#34d399"}}>Discount: {Math.round((1-f.price/f.orig)*100)}% OFF — Customer saves Rs {(f.orig-f.price).toLocaleString()}</p></div>
+ <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:14}}><p style={{fontSize:13,color:"#34d399"}}>Discount: {Math.round((1-f.price/f.orig)*100)}% OFF — Customer saves ${(f.orig-f.price).toLocaleString()}</p></div>
  )}
  </>
  )}
@@ -128,7 +128,7 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  <><div style={{background:"rgba(37,244,238,0.06)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:12,padding:16,marginBottom:14}}><p style={{fontWeight:700,fontSize:14,marginBottom:4}}>Shipping Settings</p><p style={{fontSize:12,color:"rgba(0,0,0,0.4)",marginBottom:14}}>Configure delivery options for this product</p>
  {inp("Weight (kg)","weight","number","e.g. 0.5")}
  {inp("SKU / Product Code","sku","text","e.g. PROD-001")}
- <div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,padding:"12px 14px"}}><p style={{fontSize:12,color:"#fbbf24"}}>Free delivery is automatically applied on orders above Rs 1,000. Enable "Free Shipping" in Promotions tab to always offer free delivery.</p></div></div></>
+ <div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,padding:"12px 14px"}}><p style={{fontSize:12,color:"#fbbf24"}}>Free delivery is automatically applied on orders above $1,000. Enable "Free Shipping" in Promotions tab to always offer free delivery.</p></div></div></>
  )}
 
  <div style={{display:"flex",gap:10,marginTop:16}}><button onClick={onClose} style={{flex:1,padding:"12px",background:"rgba(0,0,0,0.06)",border:"none",borderRadius:10,color:"rgba(0,0,0,0.6)",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Cancel</button><button onClick={save} disabled={loading}

@@ -15,8 +15,8 @@ export const VideoProductCard=({v,p,onOpen,onAdd,dark=true})=>{
  </div>
  {p&&<div style={{padding:"7px 8px 9px"}}><p style={{fontSize:12,fontWeight:400,lineHeight:1.35,marginBottom:5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",minHeight:32,color:"#111"}}>{p.title}</p><p style={{fontSize:11,color:"#333",marginBottom:3,display:"flex",alignItems:"center",gap:4}}><Stars rating={p.rating}/> {p.sold>=1000?(p.sold/1000).toFixed(1)+"K":p.sold} sold</p><div style={{display:"flex",alignItems:"baseline",gap:5,flexWrap:"wrap"}}>
  {p.disc>0&&<span style={{fontSize:12,fontWeight:700,color:"#fe2c55"}}>-{p.disc}%</span>}
- <span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:13,color:"#111"}}>Rs {p.price?.toLocaleString()}</span>
- {p.orig>p.price&&<span style={{fontSize:10.5,color:"#999",textDecoration:"line-through"}}>Rs {p.orig?.toLocaleString()}</span>}
+ <span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:13,color:"#111"}}>${p.price?.toLocaleString()}</span>
+ {p.orig>p.price&&<span style={{fontSize:10.5,color:"#999",textDecoration:"line-through"}}>${p.orig?.toLocaleString()}</span>}
  </div></div>}
  </div>
  );

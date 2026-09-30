@@ -3,7 +3,7 @@ import { API, SHOP_CATS, SIZES, SWATCH_COLORS } from "../../data/catalogue.js";
 import Btn from "../common/Btn.jsx";
 import Field from "../common/Field.jsx";
 
-const fmt = (n) => (n ? `Rs ${Number(n).toLocaleString()}` : "");
+const fmt = (n) => (n ? `$${Number(n).toLocaleString()}` : "");
 
 export const AddProductModal = ({ onClose, onAdded, showToast }) => {
   const [images, setImages] = useState([]); // {file, preview}
@@ -135,8 +135,8 @@ export const AddProductModal = ({ onClose, onAdded, showToast }) => {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Selling Price (Rs)" value={price} onChange={setPrice} placeholder="2499" type="number" />
-          <Field label="Original Price (Rs)" value={originalPrice} onChange={setOriginalPrice} placeholder="3500" type="number" req={false} />
+          <Field label="Selling Price ($)" value={price} onChange={setPrice} placeholder="2499" type="number" />
+          <Field label="Original Price ($)" value={originalPrice} onChange={setOriginalPrice} placeholder="3500" type="number" req={false} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Stock" value={stock} onChange={setStock} placeholder="100" type="number" />
