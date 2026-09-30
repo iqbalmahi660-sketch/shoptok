@@ -602,7 +602,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div key={l} style={{textAlign:"center",padding:"12px 8px",background:"rgba(0,0,0,0.03)",borderRadius:10,border:`1px solid ${c}20`}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:24,color:c,marginBottom:3}}>{v}</p><p style={{fontSize:11,color:"#555"}}>{l}</p></div>
  ))}
  </div>
- {sellerProds.length>=3&&(
+ {activePrds>=3&&(
  <div style={{padding:"14px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}>
   <div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}>
    <p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p>
@@ -822,7 +822,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ].map(([val,label,color])=>(
  <div key={label} style={{textAlign:"center",padding:"14px 10px",background:"rgba(0,0,0,0.03)",borderRadius:12,border:`1px solid ${color}20`}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:28,color,marginBottom:4}}>{val}</p><p style={{fontSize:11,color:"#555"}}>{label}</p></div>
  ))}
- </div><div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:80,height:80,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:2}}><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p><p style={{fontSize:12,color:"#14a37f",fontWeight:800}}>Verified</p><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p></div></div></div></div>
+ </div>{activePrds>=3&&(<div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:80,height:80,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:2}}><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p><p style={{fontSize:12,color:"#14a37f",fontWeight:800}}>Verified</p><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p></div></div>)}</div></div>
  );
  })()}
 
@@ -887,7 +887,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div><button onClick={()=>setPE(true)} style={{background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.3)",color:"#fe2c55",padding:"6px 14px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Change</button></div></div>
 
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Name</label><div style={{display:"flex",alignItems:"center",gap:10}}><input value={storeForm.contactPerson} onChange={e=>setStoreForm({...storeForm,contactPerson:e.target.value})}
- style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><span style={{background:"rgba(52,211,153,0.1)",color:"#34d399",fontSize:11,padding:"4px 10px",borderRadius:100,whiteSpace:"nowrap"}}>Verified</span><button style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>New</button></div></div>
+ style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/>{activePrds>=3&&<span style={{background:"rgba(52,211,153,0.1)",color:"#34d399",fontSize:11,padding:"4px 10px",borderRadius:100,whiteSpace:"nowrap"}}>Verified</span>}<button style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>New</button></div></div>
 
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Phone/Password</label><div style={{display:"flex",alignItems:"center",gap:10}}><input value={storeForm.storeMobile} onChange={e=>setStoreForm({...storeForm,storeMobile:e.target.value})}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><button onClick={()=>setPE(true)} style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>Change</button></div></div>
