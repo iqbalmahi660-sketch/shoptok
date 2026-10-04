@@ -58,18 +58,21 @@ export default function SingaporeStyleHome({
           min-width: 0;
           overflow: hidden;
           box-sizing: border-box;
+          padding-left: 2px;
+          padding-right: 2px;
         }
 
         .sg-category-track {
-          width: 100%;
-          max-width: 100%;
+          width: calc(100% - 4px);
+          max-width: calc(100% - 4px);
           min-width: 0;
           display: flex;
           flex-wrap: nowrap;
           gap: 12px;
           overflow-x: auto;
           overflow-y: hidden;
-          padding: 0 10px 6px;
+          padding: 0 8px 6px;
+          margin: 0 auto;
           box-sizing: border-box;
           scrollbar-width: none;
           -webkit-overflow-scrolling: touch;
@@ -96,6 +99,25 @@ export default function SingaporeStyleHome({
             padding-right: 0;
           }
         }
+
+        @media (max-width: 640px) {
+          .sg-home,
+          .sg-home .sg-section,
+          .sg-category-carousel {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+          }
+
+          .sg-category-track {
+            width: calc(100% - 8px) !important;
+            max-width: calc(100% - 8px) !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+          }
+        }
+
       `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
