@@ -304,68 +304,6 @@ export default function SingaporeStyleHome({
           }
         }
 
-
-
-        /* ===== MOBILE CATEGORIES: NO HORIZONTAL SCROLL ===== */
-        @media (max-width: 640px){
-          .sg-home .sg-categories{
-            display:grid !important;
-            grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-            gap:10px 6px !important;
-            width:100% !important;
-            max-width:100% !important;
-            overflow:visible !important;
-            padding-left:10px !important;
-            padding-right:10px !important;
-            padding-bottom:4px !important;
-            box-sizing:border-box !important;
-          }
-
-          .sg-home .sg-category{
-            width:100% !important;
-            min-width:0 !important;
-            max-width:100% !important;
-            flex:none !important;
-            padding:0 !important;
-            font-size:10px !important;
-            line-height:1.2 !important;
-          }
-
-          .sg-home .sg-category-icon{
-            width:42px !important;
-            height:42px !important;
-            margin-left:auto !important;
-            margin-right:auto !important;
-          }
-
-          .sg-home .sg-category > span:last-child{
-            display:block !important;
-            width:100% !important;
-            max-width:100% !important;
-            overflow:hidden !important;
-            text-overflow:ellipsis !important;
-            white-space:normal !important;
-            text-align:center !important;
-          }
-        }
-
-        @media (max-width: 360px){
-          .sg-home .sg-categories{
-            gap:8px 4px !important;
-            padding-left:8px !important;
-            padding-right:8px !important;
-          }
-
-          .sg-home .sg-category{
-            font-size:9.5px !important;
-          }
-
-          .sg-home .sg-category-icon{
-            width:40px !important;
-            height:40px !important;
-          }
-        }
-
 `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
