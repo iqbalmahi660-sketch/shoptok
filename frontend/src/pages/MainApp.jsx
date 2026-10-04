@@ -281,7 +281,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ];
 
  return(
- <div style={{fontFamily:"'Poppins',sans-serif",background:"#f7f7f8",color:"#111",minHeight:"100vh"}}><style>{`
+ <div style={{fontFamily:"'Poppins',sans-serif",background:"#f7f7f8",color:"#111",minHeight:"100vh",width:"100%",maxWidth:"100%",overflowX:"clip"}}><style>{`
  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
  *{margin:0;padding:0;box-sizing:border-box;}
  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#d0d0d0;border-radius:4px;}
@@ -561,6 +561,73 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .top-nav-actions .login-btn{
      padding:7px 12px!important;
+   }
+ }
+
+
+
+ /* ===== HORIZONTAL OVERFLOW FIX — SCOPED ===== */
+ @media(max-width:860px){
+   .content-with-sidebar,
+   .page-inner,
+   .shop-fullwidth,
+   .tz-top-nav,
+   .top-nav-actions{
+     min-width:0!important;
+   }
+
+   .content-with-sidebar,
+   .page-inner,
+   .shop-fullwidth{
+     width:100%!important;
+     max-width:100%!important;
+     overflow-x:clip!important;
+   }
+
+   .shop-fullwidth > *{
+     min-width:0!important;
+     max-width:100%!important;
+   }
+
+   .tz-top-nav{
+     overflow:visible!important;
+   }
+
+   .mobile-nav-brand{
+     min-width:0!important;
+     max-width:90px!important;
+     overflow:hidden!important;
+   }
+
+   .top-nav-actions{
+     flex:1 1 auto!important;
+     justify-content:flex-end!important;
+     overflow:visible!important;
+   }
+
+   .top-nav-actions > *{
+     min-width:0!important;
+   }
+
+   .login-popover{
+     box-sizing:border-box!important;
+     max-width:calc(100vw - 24px)!important;
+   }
+
+   .mobile-nav-menu{
+     box-sizing:border-box!important;
+     max-width:calc(100vw - 16px)!important;
+   }
+ }
+
+ @media(max-width:480px){
+   .page-inner,
+   .shop-fullwidth{
+     overflow-x:clip!important;
+   }
+
+   .top-nav-actions{
+     gap:5px!important;
    }
  }
 

@@ -243,6 +243,67 @@ export default function SingaporeStyleHome({
           }
         }
 
+
+
+        /* ===== MOBILE OVERFLOW CONTAINMENT ===== */
+        .sg-home,
+        .sg-home .sg-section,
+        .sg-full-row,
+        .sg-home .sg-product-grid{
+          min-width:0;
+          box-sizing:border-box;
+        }
+
+        .sg-home{
+          max-width:100%;
+          overflow-x:clip;
+        }
+
+        .sg-home .sg-section,
+        .sg-full-row,
+        .sg-home .sg-product-grid{
+          max-width:100%;
+        }
+
+        .sg-full-row > *,
+        .sg-home .sg-product-grid > *{
+          min-width:0 !important;
+          max-width:100% !important;
+        }
+
+        /* Categories are the only intentionally horizontal-scrolling row */
+        .sg-home .sg-categories{
+          width:100%;
+          max-width:100%;
+          min-width:0;
+          overflow-x:auto;
+          overflow-y:hidden;
+          overscroll-behavior-x:contain;
+          touch-action:pan-x;
+        }
+
+        @media(max-width:860px){
+          .sg-home{
+            width:100%!important;
+            max-width:100%!important;
+            margin:0!important;
+            overflow-x:clip!important;
+          }
+
+          .sg-home .sg-section{
+            width:100%!important;
+            max-width:100%!important;
+            min-width:0!important;
+          }
+
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            width:100%!important;
+            max-width:100%!important;
+            min-width:0!important;
+          }
+        }
+
 `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
