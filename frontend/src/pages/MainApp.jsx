@@ -515,7 +515,26 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {profileImg?<img src={profileImg} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
  :<div style={{width:"100%",height:"100%",background:"#fe2c55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{user.avatar}</div>}
  </div>
- :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}><button style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button><button onClick={()=>setLoginPopup(o=>!o)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
+ :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}><button onClick={async()=>{
+ const promptEvent=window.deferredPrompt;
+ if(promptEvent){
+   try{
+     promptEvent.prompt();
+     await promptEvent.userChoice;
+   }catch(e){
+     console.log("PWA install prompt failed",e);
+   }finally{
+     window.deferredPrompt=null;
+   }
+   return;
+ }
+ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+ if(isIOS){
+   alert("iPhone/iPad: Share button tap karein, phir Add to Home Screen select karein.");
+ }else{
+   alert("Chrome menu open karein aur Install TokZoo / Add to Home screen select karein.");
+ }
+}} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button><button onClick={()=>setLoginPopup(o=>!o)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
  {loginPopup&&(
  <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:150}}/><div style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:151,animation:"fadeUp 0.2s ease both"}}><p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p><p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p><div style={{display:"flex",alignItems:"center",gap:16}}><button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 26px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button><button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button></div></div></>
  )}
