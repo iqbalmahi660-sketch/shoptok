@@ -2,13 +2,18 @@ import { useMemo, useState } from "react";
 import { CATS, CATEGORY_ICONS, CATEGORY_SHORT_LABELS as CATEGORY_LABELS } from "../data/catalogue.js";
 import { ProductMiniCard } from "../components/products/ProductMiniCard.jsx";
 import { VideoProductCard } from "../components/products/VideoProductCard.jsx";
-import { ScrollRow } from "../components/shop/ScrollRow.jsx";
 
 const HomeSection = ({ title, children }) => (
   <section className="sg-section">
     <h2 className="sg-section-title">{title}</h2>
     {children}
   </section>
+);
+
+const FullWidthRow = ({ children }) => (
+  <div className="sg-full-row">
+    {children}
+  </div>
 );
 
 export default function SingaporeStyleHome({
@@ -49,94 +54,273 @@ export default function SingaporeStyleHome({
   }));
 
   return (
-    <main className="sg-home" style={{ maxWidth: 2400, width: "100%", margin: "0 auto" }}>
-
+    <main className="sg-home" style={{ width: "100%", maxWidth: "none", margin: 0, minWidth: 0 }}>
       <style>{`
-        .sg-category-carousel {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-          overflow: hidden;
-          box-sizing: border-box;
-          padding-left: 2px;
-          padding-right: 2px;
+        .sg-home{
+          width:100%;
+          max-width:none;
+          min-width:0;
         }
 
-        .sg-category-track {
-          width: calc(100% - 4px);
-          max-width: calc(100% - 4px);
-          min-width: 0;
-          display: flex;
-          flex-wrap: nowrap;
-          gap: 12px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          padding: 0 8px 6px;
-          margin: 0 auto;
-          box-sizing: border-box;
-          scrollbar-width: none;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior-x: contain;
-          scroll-snap-type: x proximity;
-          touch-action: pan-x;
+        .sg-home .sg-section{
+          width:100%;
+          max-width:none;
         }
 
-        .sg-category-track::-webkit-scrollbar {
-          display: none;
+        .sg-full-row{
+          width:100%;
+          display:grid;
+          grid-template-columns:repeat(5,minmax(0,1fr));
+          gap:12px;
+          align-items:stretch;
         }
 
-        .sg-category-track .sg-category {
-          flex: 0 0 78px;
-          width: 78px;
-          min-width: 78px;
-          max-width: 78px;
-          scroll-snap-align: start;
+        .sg-full-row > .hcard{
+          width:100% !important;
+          min-width:0 !important;
+          max-width:none !important;
         }
 
-        @media (min-width: 641px) {
-          .sg-category-track {
-            padding-left: 0;
-            padding-right: 0;
+        .sg-home .sg-product-grid{
+          width:100%;
+          max-width:none;
+          grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+          gap:12px !important;
+        }
+
+        .sg-home .sg-product-grid > .hcard{
+          width:100% !important;
+          min-width:0 !important;
+          max-width:none !important;
+        }
+
+        .sg-home .sg-categories{
+          width:100%;
+          max-width:none;
+          display:flex;
+          gap:12px;
+          overflow-x:auto;
+          overflow-y:hidden;
+          scrollbar-width:none;
+          padding-bottom:6px;
+          -webkit-overflow-scrolling:touch;
+        }
+
+        .sg-home .sg-categories::-webkit-scrollbar{
+          display:none;
+        }
+
+        .sg-home .sg-category{
+          flex:0 0 auto;
+        }
+
+        .sg-home .sg-section-title{
+          line-height:1.25;
+        }
+
+        @media (min-width: 1500px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(5,minmax(0,1fr)) !important;
           }
         }
 
-        @media (max-width: 640px) {
-          .sg-home,
+        @media (max-width: 1100px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+          }
+        }
+
+        @media (max-width: 860px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+          }
+        }
+
+        @media (max-width: 640px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+            gap:8px !important;
+          }
+        }
+
+        @media (max-width: 1200px){
+          .sg-home{
+            padding-left:0;
+            padding-right:0;
+          }
+        }
+
+        @media (max-width: 768px){
+          .sg-home .sg-section{
+            margin-bottom:24px;
+          }
+
+          .sg-home .sg-section-title{
+            font-size:18px !important;
+          }
+
+          .sg-home .sg-category{
+            min-width:86px;
+          }
+
+          .sg-home .sg-category-icon{
+            width:48px !important;
+            height:48px !important;
+          }
+        }
+
+        @media (max-width: 480px){
+          .sg-home .sg-section{
+            margin-bottom:20px;
+          }
+
+          .sg-home .sg-section-title{
+            font-size:16px !important;
+          }
+
+          .sg-home .sg-category{
+            min-width:78px;
+            font-size:11px;
+          }
+
+          .sg-home .sg-category-icon{
+            width:44px !important;
+            height:44px !important;
+          }
+        }
+
+      
+
+        @media (max-width: 860px){
+          .sg-home{
+            width:100%;
+            max-width:100%;
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            background:#fff;
+          }
+
+          .sg-home .sg-categories-title{
+            padding-left:12px;
+            padding-right:12px;
+            margin-top:10px;
+          }
+
+          .sg-home .sg-categories{
+            padding-left:12px;
+            padding-right:12px;
+          }
+
+          .sg-home .sg-section{
+            width:100%;
+            max-width:100%;
+            padding-left:12px;
+            padding-right:12px;
+          }
+
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            width:100%;
+            max-width:100%;
+          }
+        }
+
+        @media (max-width: 480px){
           .sg-home .sg-section,
-          .sg-category-carousel {
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-            box-sizing: border-box !important;
+          .sg-home .sg-categories-title{
+            padding-left:10px;
+            padding-right:10px;
           }
 
-          .sg-category-track {
-            width: calc(100% - 8px) !important;
-            max-width: calc(100% - 8px) !important;
-            padding-left: 6px !important;
-            padding-right: 6px !important;
+          .sg-home .sg-categories{
+            padding-left:10px;
+            padding-right:10px;
           }
         }
 
-      `}</style>
+
+
+        /* ===== MOBILE OVERFLOW CONTAINMENT ===== */
+        .sg-home,
+        .sg-home .sg-section,
+        .sg-full-row,
+        .sg-home .sg-product-grid{
+          min-width:0;
+          box-sizing:border-box;
+        }
+
+        .sg-home{
+          max-width:100%;
+          overflow-x:clip;
+        }
+
+        .sg-home .sg-section,
+        .sg-full-row,
+        .sg-home .sg-product-grid{
+          max-width:100%;
+        }
+
+        .sg-full-row > *,
+        .sg-home .sg-product-grid > *{
+          min-width:0 !important;
+          max-width:100% !important;
+        }
+
+        /* Categories are the only intentionally horizontal-scrolling row */
+        .sg-home .sg-categories{
+          width:100%;
+          max-width:100%;
+          min-width:0;
+          overflow-x:auto;
+          overflow-y:hidden;
+          overscroll-behavior-x:contain;
+          touch-action:pan-x;
+        }
+
+        @media(max-width:860px){
+          .sg-home{
+            width:100%!important;
+            max-width:100%!important;
+            margin:0!important;
+            overflow-x:clip!important;
+          }
+
+          .sg-home .sg-section{
+            width:100%!important;
+            max-width:100%!important;
+            min-width:0!important;
+          }
+
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            width:100%!important;
+            max-width:100%!important;
+            min-width:0!important;
+          }
+        }
+
+`}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
-      <div className="sg-category-carousel" aria-label="Categories carousel">
-        <div className="sg-category-track">
-          {CATS.filter((c) => c.s !== "all").map((c) => (
-            <button
-              key={c.s}
-              type="button"
-              className={`sg-category ${cat === c.s ? "active" : ""}`}
-              onClick={() => setCat(c.s)}
-            >
-              <span className="sg-category-icon">
-                <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
-              </span>
-              <span>{CATEGORY_LABELS[c.s] || c.l}</span>
-            </button>
-          ))}
-        </div>
+      <div className="sg-categories" aria-label="Categories">
+        {CATS.filter((c) => c.s !== "all").map((c) => (
+          <button
+            key={c.s}
+            type="button"
+            className={`sg-category ${cat === c.s ? "active" : ""}`}
+            onClick={() => setCat(c.s)}
+          >
+            <span className="sg-category-icon">
+              <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
+            </span>
+            <span>{CATEGORY_LABELS[c.s] || c.l}</span>
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -156,35 +340,35 @@ export default function SingaporeStyleHome({
       ) : (
         <>
           <HomeSection title="Savings for you">
-            <ScrollRow>
+            <FullWidthRow>
               {savings.map(({ v, p }, i) => p ? (
                 <VideoProductCard key={`${v.id}-${i}`} v={v} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
               ) : null)}
-            </ScrollRow>
+            </FullWidthRow>
           </HomeSection>
 
           <HomeSection title="Top deals for you">
-            <ScrollRow>
+            <FullWidthRow>
               {topDeals.map((p, i) => (
                 <ProductMiniCard key={`${p.id}-top-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
               ))}
-            </ScrollRow>
+            </FullWidthRow>
           </HomeSection>
 
           <HomeSection title="Popular items">
-            <ScrollRow>
+            <FullWidthRow>
               {popular.map((p, i) => (
                 <ProductMiniCard key={`${p.id}-popular-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
               ))}
-            </ScrollRow>
+            </FullWidthRow>
           </HomeSection>
 
           <HomeSection title="4+ star deals for you">
-            <ScrollRow>
+            <FullWidthRow>
               {starDeals.map((p, i) => (
                 <ProductMiniCard key={`${p.id}-star-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
               ))}
-            </ScrollRow>
+            </FullWidthRow>
           </HomeSection>
 
           <HomeSection title="Best sellers">
