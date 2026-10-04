@@ -94,25 +94,6 @@ export default function SingaporeStyleHome({
           max-width:none !important;
         }
 
-        .sg-home .sg-categories{
-          width:100%;
-          max-width:none;
-          display:flex;
-          gap:12px;
-          overflow-x:auto;
-          overflow-y:hidden;
-          scrollbar-width:none;
-          padding-bottom:6px;
-          -webkit-overflow-scrolling:touch;
-        }
-
-        .sg-home .sg-categories::-webkit-scrollbar{
-          display:none;
-        }
-
-        .sg-home .sg-category{
-          flex:0 0 auto;
-        }
 
         .sg-home .sg-section-title{
           line-height:1.25;
@@ -163,9 +144,6 @@ export default function SingaporeStyleHome({
             font-size:18px !important;
           }
 
-          .sg-home .sg-category{
-            min-width:86px;
-          }
 
           .sg-home .sg-category-icon{
             width:48px !important;
@@ -182,10 +160,6 @@ export default function SingaporeStyleHome({
             font-size:16px !important;
           }
 
-          .sg-home .sg-category{
-            min-width:78px;
-            font-size:11px;
-          }
 
           .sg-home .sg-category-icon{
             width:44px !important;
@@ -211,10 +185,6 @@ export default function SingaporeStyleHome({
             margin-top:10px;
           }
 
-          .sg-home .sg-categories{
-            padding-left:12px;
-            padding-right:12px;
-          }
 
           .sg-home .sg-section{
             width:100%;
@@ -237,10 +207,6 @@ export default function SingaporeStyleHome({
             padding-right:10px;
           }
 
-          .sg-home .sg-categories{
-            padding-left:10px;
-            padding-right:10px;
-          }
         }
 
 
@@ -271,16 +237,6 @@ export default function SingaporeStyleHome({
           max-width:100% !important;
         }
 
-        /* Categories are the only intentionally horizontal-scrolling row */
-        .sg-home .sg-categories{
-          width:100%;
-          max-width:100%;
-          min-width:0;
-          overflow-x:auto;
-          overflow-y:hidden;
-          overscroll-behavior-x:contain;
-          touch-action:pan-x;
-        }
 
         @media(max-width:860px){
           .sg-home{
@@ -306,57 +262,89 @@ export default function SingaporeStyleHome({
 
 
 
-        /* ===== MOBILE CATEGORY CAROUSEL: 4 FULLY VISIBLE ===== */
-        @media (max-width: 640px){
-          .sg-home .sg-categories{
-            display:flex !important;
-            flex-wrap:nowrap !important;
-            width:100% !important;
-            max-width:100% !important;
-            overflow-x:auto !important;
-            overflow-y:hidden !important;
-            gap:0 !important;
-            padding:0 10px 6px !important;
-            box-sizing:border-box !important;
-            scrollbar-width:none !important;
-            -webkit-overflow-scrolling:touch !important;
-            overscroll-behavior-x:contain !important;
-            scroll-snap-type:x mandatory !important;
+
+
+
+        /* ===== FINAL CATEGORY CAROUSEL: internal scroll only ===== */
+        .sg-home .sg-category-viewport{
+          width:100%;
+          max-width:100%;
+          min-width:0;
+          overflow:hidden;
+          box-sizing:border-box;
+        }
+
+        .sg-home .sg-categories{
+          width:100%;
+          max-width:100%;
+          min-width:0;
+          display:flex;
+          flex-wrap:nowrap;
+          overflow-x:auto;
+          overflow-y:hidden;
+          margin:0;
+          box-sizing:border-box;
+          scrollbar-width:none;
+          -webkit-overflow-scrolling:touch;
+          overscroll-behavior-x:contain;
+          touch-action:pan-x;
+        }
+
+        .sg-home .sg-categories::-webkit-scrollbar{
+          display:none;
+        }
+
+        @media (max-width:640px){
+          .sg-home .sg-category-viewport{
+            padding:0 10px;
           }
 
-          .sg-home .sg-categories::-webkit-scrollbar{
-            display:none !important;
+          .sg-home .sg-categories{
+            gap:0 !important;
+            padding:0 0 6px !important;
+            scroll-snap-type:x mandatory;
           }
 
           .sg-home .sg-category{
             flex:0 0 25% !important;
             width:25% !important;
-            min-width:25% !important;
+            min-width:0 !important;
             max-width:25% !important;
+            padding:0 4px !important;
+            margin:0 !important;
             box-sizing:border-box !important;
-            padding-left:4px !important;
-            padding-right:4px !important;
-            scroll-snap-align:start !important;
+            scroll-snap-align:start;
+          }
+
+          .sg-home .sg-category > span:last-child{
+            width:100%;
+            max-width:100%;
+            display:block;
+            white-space:normal;
+            overflow-wrap:anywhere;
+            text-align:center;
           }
         }
 
 `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
-      <div className="sg-categories" aria-label="Categories">
-        {CATS.filter((c) => c.s !== "all").map((c) => (
-          <button
-            key={c.s}
-            type="button"
-            className={`sg-category ${cat === c.s ? "active" : ""}`}
-            onClick={() => setCat(c.s)}
-          >
-            <span className="sg-category-icon">
-              <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
-            </span>
-            <span>{CATEGORY_LABELS[c.s] || c.l}</span>
-          </button>
-        ))}
+      <div className="sg-category-viewport">
+        <div className="sg-categories" aria-label="Categories">
+          {CATS.filter((c) => c.s !== "all").map((c) => (
+            <button
+              key={c.s}
+              type="button"
+              className={`sg-category ${cat === c.s ? "active" : ""}`}
+              onClick={() => setCat(c.s)}
+            >
+              <span className="sg-category-icon">
+                <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
+              </span>
+              <span>{CATEGORY_LABELS[c.s] || c.l}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
