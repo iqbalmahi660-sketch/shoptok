@@ -193,7 +193,57 @@ export default function SingaporeStyleHome({
           }
         }
 
-      `}</style>
+      
+
+        @media (max-width: 860px){
+          .sg-home{
+            width:100%;
+            max-width:100%;
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            background:#fff;
+          }
+
+          .sg-home .sg-categories-title{
+            padding-left:12px;
+            padding-right:12px;
+            margin-top:10px;
+          }
+
+          .sg-home .sg-categories{
+            padding-left:12px;
+            padding-right:12px;
+          }
+
+          .sg-home .sg-section{
+            width:100%;
+            max-width:100%;
+            padding-left:12px;
+            padding-right:12px;
+          }
+
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            width:100%;
+            max-width:100%;
+          }
+        }
+
+        @media (max-width: 480px){
+          .sg-home .sg-section,
+          .sg-home .sg-categories-title{
+            padding-left:10px;
+            padding-right:10px;
+          }
+
+          .sg-home .sg-categories{
+            padding-left:10px;
+            padding-right:10px;
+          }
+        }
+
+`}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
       <div className="sg-categories" aria-label="Categories">

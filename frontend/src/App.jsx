@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import "./styles/mobile.css";
 import { API, S } from "./data/catalogue";
 import Landing from "./pages/auth/Landing";
 import Login from "./pages/auth/Login";

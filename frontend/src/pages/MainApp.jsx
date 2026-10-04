@@ -37,6 +37,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [storeSaving,setStoreSaving] = useState(false);
  const [cart,setCart] = useState([]);
  const [loginPopup,setLoginPopup] = useState(false);
+ const [mobileMenu,setMobileMenu] = useState(false);
  const [cartOpen,setCO] = useState(false);
  const [checkout,setCheckout]= useState(false);
  const [likedP,setLP] = useState(new Set());
@@ -404,7 +405,166 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    .related-grid{grid-template-columns:1fr!important;}
  }
 
- `}</style>
+ 
+
+ /* ===== SAFE MOBILE HEADER + SHOP LAYOUT ===== */
+ .mobile-nav-brand,
+ .mobile-menu-btn,
+ .mobile-nav-menu{display:none;}
+
+ @media(max-width:860px){
+   .content-with-sidebar{
+     margin-left:0!important;
+     width:100%!important;
+     max-width:100%!important;
+   }
+
+   nav.tz-top-nav{
+     width:100%!important;
+     max-width:100%!important;
+     height:58px!important;
+     min-height:58px!important;
+     padding:0 10px!important;
+     margin:0!important;
+     display:flex!important;
+     align-items:center!important;
+     gap:8px!important;
+     box-sizing:border-box!important;
+   }
+
+   .mobile-nav-brand{
+     display:flex!important;
+     align-items:center;
+     flex:0 0 auto;
+     min-width:0;
+     cursor:pointer;
+   }
+
+   .mobile-nav-brand img{
+     display:block;
+     height:32px!important;
+     width:auto!important;
+     max-width:86px!important;
+     object-fit:contain;
+   }
+
+   .top-nav-actions{
+     margin-left:auto!important;
+     gap:6px!important;
+     min-width:0!important;
+   }
+
+   .top-nav-actions > button{
+     min-height:36px!important;
+   }
+
+   .top-nav-actions .get-app-btn{
+     padding:0 4px!important;
+     font-size:11px!important;
+     white-space:nowrap!important;
+   }
+
+   .top-nav-actions .login-btn{
+     padding:8px 14px!important;
+     font-size:12px!important;
+     white-space:nowrap!important;
+   }
+
+   .mobile-menu-btn{
+     display:flex!important;
+     align-items:center!important;
+     justify-content:center!important;
+     width:36px!important;
+     height:36px!important;
+     flex:0 0 36px!important;
+     border:1px solid rgba(0,0,0,.12)!important;
+     background:#fff!important;
+     color:#111!important;
+     border-radius:10px!important;
+     cursor:pointer!important;
+     font-size:20px!important;
+     line-height:1!important;
+   }
+
+   .mobile-nav-menu{
+     display:flex!important;
+     position:absolute!important;
+     left:8px!important;
+     right:8px!important;
+     top:calc(100% + 6px)!important;
+     z-index:220!important;
+     background:#fff!important;
+     border:1px solid #e9e9e9!important;
+     border-radius:14px!important;
+     padding:8px!important;
+     box-shadow:0 14px 40px rgba(0,0,0,.16)!important;
+     flex-direction:column!important;
+     gap:2px!important;
+   }
+
+   .mobile-nav-menu button{
+     width:100%!important;
+     min-height:42px!important;
+     border:none!important;
+     background:transparent!important;
+     color:#111!important;
+     text-align:left!important;
+     border-radius:9px!important;
+     padding:10px 12px!important;
+     font-family:inherit!important;
+     font-size:13px!important;
+     font-weight:600!important;
+     cursor:pointer!important;
+   }
+
+   .mobile-nav-menu button:active{
+     background:#f7f7f8!important;
+   }
+
+   .login-popover{
+     position:fixed!important;
+     top:66px!important;
+     left:12px!important;
+     right:12px!important;
+     width:auto!important;
+     max-width:none!important;
+     border-radius:14px!important;
+     padding:18px!important;
+     z-index:251!important;
+   }
+
+   .page-inner{
+     width:100%!important;
+     max-width:100%!important;
+     margin:0!important;
+     padding-left:0!important;
+     padding-right:0!important;
+   }
+
+   .shop-fullwidth{
+     width:100%!important;
+     max-width:100%!important;
+     margin:0!important;
+     padding:0!important;
+   }
+ }
+
+ @media(max-width:380px){
+   .mobile-nav-brand img{
+     height:29px!important;
+     max-width:76px!important;
+   }
+
+   .top-nav-actions .get-app-btn{
+     display:none!important;
+   }
+
+   .top-nav-actions .login-btn{
+     padding:7px 12px!important;
+   }
+ }
+
+`}</style>
 
  {checkout&&(
  <CheckoutFlow
@@ -507,7 +667,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
- <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}><div style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
+ <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}>
+ <div className="mobile-nav-brand" onClick={()=>{setPage("shop");setMobileMenu(false);}}>
+   <img src="/logo.png" alt="TokZoo"/>
+ </div>
+
+ <div className="top-nav-actions" style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
  {(user||cartCount>0)&&(
  <button onClick={()=>setCO(o=>!o)} style={{position:"relative",background:"none",border:"none",color:"#111",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontFamily:"inherit",flexShrink:0}}>Cart{cartCount>0&&<span style={{position:"absolute",top:-8,right:-14,background:"#fe2c55",color:"#fff",fontSize:9,fontWeight:700,width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cartCount}</span>}
  </button>
@@ -517,7 +682,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {profileImg?<img src={profileImg} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
  :<div style={{width:"100%",height:"100%",background:"#fe2c55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{user.avatar}</div>}
  </div>
- :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}><button onClick={async()=>{
+ :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}>
+   <button className="get-app-btn" onClick={async()=>{
  const promptEvent=window.deferredPrompt;
  if(promptEvent){
    try{
@@ -536,13 +702,27 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }else{
    alert("To install TokZoo, open your browser menu and select Install TokZoo or Add to Home Screen.");
  }
-}} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button><button onClick={()=>setLoginPopup(o=>!o)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
+}} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button>
+   <button className="login-btn" onClick={()=>{setLoginPopup(o=>!o);setMobileMenu(false);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
  {loginPopup&&(
- <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:150}}/><div style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:151,animation:"fadeUp 0.2s ease both"}}><p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p><p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p><div style={{display:"flex",alignItems:"center",gap:16}}><button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 26px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button><button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button></div></div></>
+ <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:250}}/><div className="login-popover" style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:251,animation:"fadeUp 0.2s ease both"}}><p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p><p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p><div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 24px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button><button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button></div></div></>
  )}
  </div>
  }
- </div></nav>
+ </div>
+
+ <button className="mobile-menu-btn" aria-label="Open navigation" onClick={()=>{setMobileMenu(v=>!v);setLoginPopup(false);}}>
+   {mobileMenu?"×":"☰"}
+ </button>
+
+ {mobileMenu&&(
+   <div className="mobile-nav-menu">
+     {[["Shop","shop"],["Sell","seller"],["More","sitemap"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([label,target])=>(
+       <button key={label} onClick={()=>{setPage(target);setMobileMenu(false);}}>{label}</button>
+     ))}
+   </div>
+ )}
+ </nav>
 
  <div style={{width:"100%",maxWidth:"100%",margin:0,padding:page==="seller"||page==="profile"?0:"0 24px",boxSizing:"border-box",display:"block"}} className="page-inner">
 
