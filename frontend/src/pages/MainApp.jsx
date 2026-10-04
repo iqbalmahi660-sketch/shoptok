@@ -404,7 +404,25 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    .related-grid{grid-template-columns:1fr!important;}
  }
 
- `}</style>
+ 
+
+ @media(max-width:860px){
+   .seller-dashboard-wrap{display:block!important;width:100%!important;min-height:auto!important;}
+   .seller-dashboard-wrap>div:last-child{width:100%!important;min-width:0!important;padding:18px 14px 92px!important;overflow:visible!important;}
+ }
+ @media(max-width:640px){
+   .seller-dashboard-wrap>div:last-child{padding:14px 10px 94px!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(2,1fr)"],
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(3,1fr)"],
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(4,1fr)"],
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(5,1fr)"]{grid-template-columns:1fr!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:1fr 260px"],
+   .seller-dashboard-wrap [style*="grid-template-columns:1fr 280px"]{grid-template-columns:1fr!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:140px 1fr"]{grid-template-columns:1fr!important;gap:6px!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:140px 1fr"]>label{text-align:left!important;padding-top:0!important;}
+ }
+
+`}</style>
 
  {checkout&&(
  <CheckoutFlow
