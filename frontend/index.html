@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
 
     <title>TokZoo</title>
 
@@ -11,31 +14,37 @@
       content="TokZoo - Shop, discover products, and connect with sellers."
     />
 
-    <!-- Favicon -->
+    <meta
+      name="robots"
+      content="noindex, nofollow, noarchive, nosnippet"
+    />
+    <meta
+      name="googlebot"
+      content="noindex, nofollow, noarchive, nosnippet"
+    />
+
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
 
-    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <!-- App / Theme -->
     <meta name="theme-color" content="#fe2c55" />
     <meta name="application-name" content="TokZoo" />
     <meta name="msapplication-TileColor" content="#fe2c55" />
 
-    <!-- iPhone / iPad -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="default"
+    />
     <meta name="apple-mobile-web-app-title" content="TokZoo" />
   </head>
 
   <body>
     <div id="root"></div>
 
-    <!-- Vite React Entry -->
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- Save browser install prompt for the header "Get app" button -->
     <script>
       window.deferredPrompt = null;
 
@@ -49,14 +58,16 @@
       });
     </script>
 
-    <!-- Register Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
             .register("/sw.js")
             .catch((error) => {
-              console.error("Service worker registration failed:", error);
+              console.error(
+                "Service worker registration failed:",
+                error
+              );
             });
         });
       }
