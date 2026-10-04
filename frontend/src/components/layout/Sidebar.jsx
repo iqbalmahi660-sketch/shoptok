@@ -1,58 +1,327 @@
-import { useState, useEffect, useRef } from "react";
-import { PROD_MGMT_KEYS } from "../../data/catalogue.js";
+import { useMemo } from "react";
 
-export const Sidebar=({user,profileImg,tab,setTab,onAddProduct,onLogout,onEditProfile,tabs,showAdd})=>{
- const [prodOpen,setProdOpen]=useState(true);
- const topTabs=tabs.filter(t=>!PROD_MGMT_KEYS.includes(t.key));
- const prodTabs=tabs.filter(t=>PROD_MGMT_KEYS.includes(t.key));
- const NavBtn=({item,indent=false})=>(
- <button onClick={()=>setTab(item.key)}
- style={{width:"100%",display:"flex",alignItems:"center",gap:7,padding:"6px 8px",paddingLeft:indent?"22px":"8px",borderRadius:8,border:"none",
- background:tab===item.key?"rgba(254,44,85,0.12)":"transparent",
- color:tab===item.key?"#fe2c55":"rgba(0,0,0,0.5)",
- cursor:"pointer",fontFamily:"inherit",fontSize:11,fontWeight:tab===item.key?600:400,marginBottom:1,textAlign:"left",transition:"all 0.15s"}}><span style={{fontSize:13,flexShrink:0}}>{item.icon}</span><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{item.label}</span>
- {item.badge>0&&<span style={{marginLeft:"auto",background:"#fe2c55",color:"#fff",fontSize:8,fontWeight:700,minWidth:14,height:14,borderRadius:100,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px",flexShrink:0}}>{item.badge}</span>}
- </button>
- );
- return(
- <div style={{width:220,flexShrink:0,background:"#ffffff",borderRight:"1px solid rgba(0,0,0,0.07)",display:"flex",flexDirection:"column",position:"sticky",top:60,height:"calc(100vh - 60px)",overflowY:"auto",overflowX:"hidden"}}>
- {/* Profile compact */}
- <div onClick={onEditProfile} style={{padding:"12px 14px",borderBottom:"1px solid rgba(0,0,0,0.06)",cursor:"pointer",display:"flex",alignItems:"center",gap:10,flexShrink:0}}
- onMouseEnter={e=>e.currentTarget.style.background="rgba(254,44,85,0.05)"}
- onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{position:"relative",flexShrink:0}}>
- {profileImg?<img src={profileImg} alt="" style={{width:38,height:38,borderRadius:"50%",objectFit:"cover",border:"2px solid #fe2c55"}}/>
- :<div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{user?.avatar||""}</div>}
- <div style={{position:"absolute",bottom:-1,right:-1,width:14,height:14,borderRadius:"50%",background:"#fe2c55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,border:"1px solid #0d0d0d"}}></div></div><div style={{minWidth:0,flex:1}}><p style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:12,marginBottom:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user?.name}</p><span style={{fontSize:9,background:user?.role==="seller"?"rgba(37,244,238,0.1)":"rgba(254,44,85,0.1)",color:user?.role==="seller"?"#25f4ee":"#fe2c55",padding:"2px 7px",borderRadius:100}}>{user?.role==="seller"?" Seller":" Buyer"}</span></div></div>
- {/* Nav */}
- <nav style={{padding:"6px 6px",flex:1,overflow:"hidden",display:"flex",flexDirection:"column",justifyContent:"space-between"}}><div>
- {/* Top tabs — non product-mgmt */}
- {topTabs.filter(t=>!["storesetting","venture","bestsellers"].includes(t.key)).map(item=>(
- <NavBtn key={item.key} item={item}/>
- ))}
+export const Sidebar = ({
+  user,
+  profileImg,
+  tab,
+  setTab,
+  onAddProduct,
+  onLogout,
+  onEditProfile,
+  tabs = [],
+  showAdd = false,
+}) => {
+  const visibleTabs = useMemo(() => tabs.filter(Boolean), [tabs]);
 
- {/* Product Management collapsible */}
- {prodTabs.length>0&&(
- <div style={{marginTop:4}}><button onClick={()=>setProdOpen(o=>!o)}
- style={{width:"100%",display:"flex",alignItems:"center",gap:7,padding:"6px 8px",borderRadius:8,border:"none",background:"rgba(0,0,0,0.03)",color:"rgba(0,0,0,0.6)",cursor:"pointer",fontFamily:"inherit",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:2}}><span style={{fontSize:12}}></span><span style={{flex:1,textAlign:"left"}}>Product Manag...</span><span style={{fontSize:12,transition:"transform 0.2s",transform:prodOpen?"rotate(180deg)":"rotate(0deg)"}}>▾</span></button>
- {prodOpen&&(
- <div style={{background:"rgba(0,0,0,0.02)",borderRadius:8,padding:"2px 0",marginBottom:4}}>
- {prodTabs.map(item=><NavBtn key={item.key} item={item} indent={true}/>)}
- </div>
- )}
- </div>
- )}
+  const productKeys = new Set(["products", "refunds", "reviews", "warehouse"]);
+  const topTabs = visibleTabs.filter(t => !productKeys.has(t.key) && !["bestsellers", "storesetting", "venture"].includes(t.key));
+  const productTabs = visibleTabs.filter(t => productKeys.has(t.key));
+  const bottomTabs = visibleTabs.filter(t => ["bestsellers", "storesetting", "venture"].includes(t.key));
 
- {/* Bottom tabs */}
- {topTabs.filter(t=>["bestsellers","storesetting","venture"].includes(t.key)).map(item=>(
- <NavBtn key={item.key} item={item}/>
- ))}
- </div><div style={{borderTop:"1px solid rgba(0,0,0,0.06)",paddingTop:6}}>
- {showAdd&&<button onClick={onAddProduct} style={{width:"100%",padding:"7px",borderRadius:8,border:"none",background:"rgba(254,44,85,0.1)",color:"#fe2c55",cursor:"pointer",fontFamily:"'TikTok Sans',sans-serif",fontSize:11,fontWeight:700,marginBottom:4}}>+ Add Product</button>}
- <button onClick={onLogout} style={{width:"100%",padding:"7px",borderRadius:8,border:"none",background:"transparent",color:"rgba(0,0,0,0.3)",cursor:"pointer",fontFamily:"inherit",fontSize:11}}>Log Out</button></div></nav></div>
-);};
+  const TabButton = ({ item }) => (
+    <button
+      className={`seller-side-tab ${tab === item.key ? "active" : ""}`}
+      onClick={() => setTab(item.key)}
+      type="button"
+    >
+      {item.icon ? <span className="seller-side-tab-icon">{item.icon}</span> : null}
+      <span className="seller-side-tab-label">{item.label}</span>
+      {item.badge ? <span className="seller-side-tab-badge">{item.badge}</span> : null}
+    </button>
+  );
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+  return (
+    <aside className="seller-sidebar">
+      <style>{`
+        .seller-sidebar{
+          width:220px;
+          flex:0 0 220px;
+          min-height:calc(100vh - 60px);
+          background:#fff;
+          border-right:1px solid rgba(0,0,0,.07);
+          display:flex;
+          flex-direction:column;
+          overflow:hidden;
+        }
 
-// ─── REVIEWS DATA ─────────────────────────────────────────────────────────────
+        .seller-sidebar-profile{
+          padding:12px 14px;
+          border-bottom:1px solid rgba(0,0,0,.06);
+          display:flex;
+          align-items:center;
+          gap:10px;
+          flex-shrink:0;
+          cursor:pointer;
+        }
+
+        .seller-sidebar-avatar{
+          width:38px;
+          height:38px;
+          border-radius:50%;
+          overflow:hidden;
+          background:linear-gradient(135deg,#fe2c55,#ff6b35);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          flex:0 0 38px;
+          position:relative;
+        }
+
+        .seller-sidebar-avatar img{
+          width:100%;
+          height:100%;
+          object-fit:cover;
+        }
+
+        .seller-sidebar-name{
+          min-width:0;
+          flex:1;
+        }
+
+        .seller-sidebar-name p{
+          font-size:12px;
+          font-weight:700;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+          margin:0 0 2px;
+        }
+
+        .seller-role{
+          display:inline-block;
+          font-size:9px;
+          padding:2px 7px;
+          border-radius:999px;
+          background:rgba(37,244,238,.10);
+          color:#0aa7a1;
+        }
+
+        .seller-sidebar-scroll{
+          flex:1;
+          overflow-y:auto;
+          padding:8px;
+        }
+
+        .seller-side-group-title{
+          font-size:9px;
+          font-weight:800;
+          color:#666;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          padding:8px 8px 5px;
+        }
+
+        .seller-side-tab{
+          width:100%;
+          border:none;
+          background:transparent;
+          color:rgba(0,0,0,.55);
+          min-height:34px;
+          border-radius:8px;
+          padding:7px 8px;
+          margin:1px 0;
+          display:flex;
+          align-items:center;
+          gap:7px;
+          text-align:left;
+          font-family:inherit;
+          font-size:11px;
+          cursor:pointer;
+        }
+
+        .seller-side-tab.active{
+          background:rgba(254,44,85,.12);
+          color:#fe2c55;
+          font-weight:700;
+        }
+
+        .seller-side-tab-label{
+          overflow:hidden;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+          min-width:0;
+          flex:1;
+        }
+
+        .seller-side-tab-badge{
+          min-width:18px;
+          height:18px;
+          padding:0 5px;
+          border-radius:9px;
+          background:#fe2c55;
+          color:#fff;
+          font-size:9px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+
+        .seller-sidebar-footer{
+          padding:8px;
+          border-top:1px solid rgba(0,0,0,.06);
+        }
+
+        .seller-add-btn,
+        .seller-logout-btn{
+          width:100%;
+          min-height:34px;
+          border:none;
+          border-radius:8px;
+          font-family:inherit;
+          cursor:pointer;
+          font-size:11px;
+        }
+
+        .seller-add-btn{
+          background:rgba(254,44,85,.10);
+          color:#fe2c55;
+          font-weight:700;
+          margin-bottom:4px;
+        }
+
+        .seller-logout-btn{
+          background:transparent;
+          color:rgba(0,0,0,.38);
+        }
+
+        @media(max-width:900px){
+          .seller-sidebar{
+            width:100%;
+            max-width:100%;
+            flex:0 0 auto;
+            min-height:0;
+            border-right:none;
+            border-bottom:1px solid rgba(0,0,0,.08);
+            overflow:visible;
+          }
+
+          .seller-sidebar-profile{
+            padding:10px 12px;
+          }
+
+          .seller-sidebar-avatar{
+            width:34px;
+            height:34px;
+            flex-basis:34px;
+          }
+
+          .seller-sidebar-scroll{
+            display:flex;
+            align-items:center;
+            gap:6px;
+            overflow-x:auto;
+            overflow-y:hidden;
+            padding:8px 10px;
+            scrollbar-width:none;
+            -webkit-overflow-scrolling:touch;
+          }
+
+          .seller-sidebar-scroll::-webkit-scrollbar{
+            display:none;
+          }
+
+          .seller-side-group-title{
+            display:none;
+          }
+
+          .seller-side-tab{
+            width:auto;
+            min-width:max-content;
+            flex:0 0 auto;
+            min-height:38px;
+            margin:0;
+            padding:8px 12px;
+            border:1px solid #eee;
+            background:#fff;
+            border-radius:999px;
+            white-space:nowrap;
+          }
+
+          .seller-side-tab.active{
+            border-color:rgba(254,44,85,.22);
+            background:rgba(254,44,85,.10);
+          }
+
+          .seller-side-tab-label{
+            overflow:visible;
+            text-overflow:clip;
+            white-space:nowrap;
+          }
+
+          .seller-sidebar-footer{
+            display:flex;
+            gap:8px;
+            padding:0 10px 10px;
+            border-top:none;
+          }
+
+          .seller-add-btn,
+          .seller-logout-btn{
+            width:auto;
+            flex:1;
+            min-height:38px;
+            margin:0;
+          }
+        }
+
+        @media(max-width:480px){
+          .seller-sidebar-profile{
+            padding:8px 10px;
+          }
+
+          .seller-sidebar-name p{
+            font-size:11px;
+          }
+
+          .seller-sidebar-scroll{
+            padding:7px 8px;
+            gap:5px;
+          }
+
+          .seller-side-tab{
+            font-size:10.5px;
+            padding:8px 11px;
+          }
+
+          .seller-sidebar-footer{
+            padding:0 8px 8px;
+          }
+        }
+      `}</style>
+
+      <div className="seller-sidebar-profile" onClick={onEditProfile}>
+        <div className="seller-sidebar-avatar">
+          {profileImg
+            ? <img src={profileImg} alt="" />
+            : <span>{user?.avatar || user?.name?.[0]?.toUpperCase() || "U"}</span>}
+        </div>
+        <div className="seller-sidebar-name">
+          <p>{user?.name || "Seller"}</p>
+          <span className="seller-role">Seller</span>
+        </div>
+      </div>
+
+      <nav className="seller-sidebar-scroll" aria-label="Seller dashboard">
+        {topTabs.map(item => <TabButton key={item.key} item={item} />)}
+
+        {productTabs.length > 0 && <div className="seller-side-group-title">Product Management</div>}
+        {productTabs.map(item => <TabButton key={item.key} item={item} />)}
+
+        {bottomTabs.map(item => <TabButton key={item.key} item={item} />)}
+      </nav>
+
+      <div className="seller-sidebar-footer">
+        {showAdd && (
+          <button className="seller-add-btn" onClick={onAddProduct} type="button">
+            + Add Product
+          </button>
+        )}
+        <button className="seller-logout-btn" onClick={onLogout} type="button">
+          Log Out
+        </button>
+      </div>
+    </aside>
+  );
+};
 
 export default Sidebar;

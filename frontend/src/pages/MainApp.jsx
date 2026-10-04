@@ -631,6 +631,83 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    }
  }
 
+
+
+ /* ===== SELLER DASHBOARD MOBILE ===== */
+ @media(max-width:900px){
+   .seller-dashboard-wrap{
+     display:flex!important;
+     flex-direction:column!important;
+     width:100%!important;
+     max-width:100%!important;
+     min-height:calc(100vh - 58px)!important;
+     overflow-x:hidden!important;
+   }
+
+   .seller-dashboard-content{
+     width:100%!important;
+     max-width:100%!important;
+     min-width:0!important;
+     flex:1 1 auto!important;
+     padding:18px 14px 80px!important;
+     overflow-x:hidden!important;
+   }
+
+   .seller-dashboard-content > div{
+     max-width:100%!important;
+     min-width:0!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:repeat(2,1fr)"]{
+     grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:repeat(3,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(4,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"]{
+     grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:1fr 1fr"]{
+     grid-template-columns:1fr!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:140px 1fr"]{
+     grid-template-columns:1fr!important;
+     gap:6px!important;
+   }
+ }
+
+ @media(max-width:560px){
+   .seller-dashboard-content{
+     padding:14px 10px 72px!important;
+   }
+
+   .seller-dashboard-content h1{
+     font-size:19px!important;
+     line-height:1.25!important;
+   }
+
+   .seller-dashboard-content h2{
+     font-size:17px!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:repeat(2,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(3,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(4,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"]{
+     grid-template-columns:1fr!important;
+   }
+
+   .seller-dashboard-content [style*="display:flex"][style*="gap:12"]{
+     flex-wrap:wrap!important;
+   }
+
+   .seller-dashboard-content button{
+     max-width:100%;
+   }
+ }
+
 `}</style>
 
  {checkout&&(
@@ -815,7 +892,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(37,244,238,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🏪</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Set up your Seller Account first</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:360}}>You're currently signed in as a buyer. Create a seller account to unlock the Seller Dashboard and start listing products.</p><button onClick={()=>goAuth(S.ONBOARD)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 28px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Create Seller Account</button></div>
  )}
  {page==="seller"&&user&&user.role==="seller"&&(
- <div className="seller-dashboard-wrap" style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
+ <div className="seller-dashboard-wrap" style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div className="seller-dashboard-content" style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{
  overview:" Dashboard",
  orders:" Shop Orders",
