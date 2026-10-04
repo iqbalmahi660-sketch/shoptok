@@ -2,18 +2,13 @@ import { useMemo, useState } from "react";
 import { CATS, CATEGORY_ICONS, CATEGORY_SHORT_LABELS as CATEGORY_LABELS } from "../data/catalogue.js";
 import { ProductMiniCard } from "../components/products/ProductMiniCard.jsx";
 import { VideoProductCard } from "../components/products/VideoProductCard.jsx";
+import { ScrollRow } from "../components/shop/ScrollRow.jsx";
 
 const HomeSection = ({ title, children }) => (
   <section className="sg-section">
     <h2 className="sg-section-title">{title}</h2>
     {children}
   </section>
-);
-
-const FullWidthRow = ({ children }) => (
-  <div className="sg-full-row">
-    {children}
-  </div>
 );
 
 export default function SingaporeStyleHome({
@@ -54,257 +49,37 @@ export default function SingaporeStyleHome({
   }));
 
   return (
-    <main className="sg-home" style={{ width: "100%", maxWidth: "none", margin: 0, minWidth: 0 }}>
+    <main className="sg-home" style={{ maxWidth: 2400, width: "100%", margin: "0 auto" }}>
+
       <style>{`
-        .sg-home{
-          width:100%;
-          max-width:none;
-          min-width:0;
-        }
-
-        .sg-home .sg-section{
-          width:100%;
-          max-width:none;
-        }
-
-        .sg-full-row{
-          width:100%;
-          display:grid;
-          grid-template-columns:repeat(5,minmax(0,1fr));
-          gap:12px;
-          align-items:stretch;
-        }
-
-        .sg-full-row > .hcard{
-          width:100% !important;
-          min-width:0 !important;
-          max-width:none !important;
-        }
-
-        .sg-home .sg-product-grid{
-          width:100%;
-          max-width:none;
-          grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-          gap:12px !important;
-        }
-
-        .sg-home .sg-product-grid > .hcard{
-          width:100% !important;
-          min-width:0 !important;
-          max-width:none !important;
-        }
-
-        .sg-home .sg-categories{
-          width:100%;
-          max-width:none;
-          display:flex;
-          gap:12px;
-          overflow-x:auto;
-          overflow-y:hidden;
-          scrollbar-width:none;
-          padding-bottom:6px;
-          -webkit-overflow-scrolling:touch;
-        }
-
-        .sg-home .sg-categories::-webkit-scrollbar{
-          display:none;
-        }
-
-        .sg-home .sg-category{
-          flex:0 0 auto;
-        }
-
-        .sg-home .sg-section-title{
-          line-height:1.25;
-        }
-
-        @media (min-width: 1500px){
-          .sg-full-row,
-          .sg-home .sg-product-grid{
-            grid-template-columns:repeat(5,minmax(0,1fr)) !important;
-          }
-        }
-
-        @media (max-width: 1100px){
-          .sg-full-row,
-          .sg-home .sg-product-grid{
-            grid-template-columns:repeat(4,minmax(0,1fr)) !important;
-          }
-        }
-
-        @media (max-width: 860px){
-          .sg-full-row,
-          .sg-home .sg-product-grid{
-            grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-          }
-        }
-
-        @media (max-width: 640px){
-          .sg-full-row,
-          .sg-home .sg-product-grid{
-            grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-            gap:8px !important;
-          }
-        }
-
-        @media (max-width: 1200px){
-          .sg-home{
-            padding-left:0;
-            padding-right:0;
-          }
-        }
-
-        @media (max-width: 768px){
-          .sg-home .sg-section{
-            margin-bottom:24px;
+        @media (max-width: 640px) {
+          .sg-categories {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            gap: 12px !important;
+            padding: 0 10px 6px !important;
+            box-sizing: border-box !important;
+            scrollbar-width: none !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior-x: contain !important;
           }
 
-          .sg-home .sg-section-title{
-            font-size:18px !important;
+          .sg-categories::-webkit-scrollbar {
+            display: none !important;
           }
 
-          .sg-home .sg-category{
-            min-width:86px;
-          }
-
-          .sg-home .sg-category-icon{
-            width:48px !important;
-            height:48px !important;
+          .sg-category {
+            flex: 0 0 78px !important;
+            width: 78px !important;
+            min-width: 78px !important;
+            max-width: 78px !important;
           }
         }
-
-        @media (max-width: 480px){
-          .sg-home .sg-section{
-            margin-bottom:20px;
-          }
-
-          .sg-home .sg-section-title{
-            font-size:16px !important;
-          }
-
-          .sg-home .sg-category{
-            min-width:78px;
-            font-size:11px;
-          }
-
-          .sg-home .sg-category-icon{
-            width:44px !important;
-            height:44px !important;
-          }
-        }
-
-      
-
-        @media (max-width: 860px){
-          .sg-home{
-            width:100%;
-            max-width:100%;
-            margin:0;
-            padding:0;
-            overflow:hidden;
-            background:#fff;
-          }
-
-          .sg-home .sg-categories-title{
-            padding-left:12px;
-            padding-right:12px;
-            margin-top:10px;
-          }
-
-          .sg-home .sg-categories{
-            padding-left:12px;
-            padding-right:12px;
-          }
-
-          .sg-home .sg-section{
-            width:100%;
-            max-width:100%;
-            padding-left:12px;
-            padding-right:12px;
-          }
-
-          .sg-full-row,
-          .sg-home .sg-product-grid{
-            width:100%;
-            max-width:100%;
-          }
-        }
-
-        @media (max-width: 480px){
-          .sg-home .sg-section,
-          .sg-home .sg-categories-title{
-            padding-left:10px;
-            padding-right:10px;
-          }
-
-          .sg-home .sg-categories{
-            padding-left:10px;
-            padding-right:10px;
-          }
-        }
-
-
-
-        /* ===== MOBILE OVERFLOW CONTAINMENT ===== */
-        .sg-home,
-        .sg-home .sg-section,
-        .sg-full-row,
-        .sg-home .sg-product-grid{
-          min-width:0;
-          box-sizing:border-box;
-        }
-
-        .sg-home{
-          max-width:100%;
-          overflow-x:clip;
-        }
-
-        .sg-home .sg-section,
-        .sg-full-row,
-        .sg-home .sg-product-grid{
-          max-width:100%;
-        }
-
-        .sg-full-row > *,
-        .sg-home .sg-product-grid > *{
-          min-width:0 !important;
-          max-width:100% !important;
-        }
-
-        /* Categories are the only intentionally horizontal-scrolling row */
-        .sg-home .sg-categories{
-          width:100%;
-          max-width:100%;
-          min-width:0;
-          overflow-x:auto;
-          overflow-y:hidden;
-          overscroll-behavior-x:contain;
-          touch-action:pan-x;
-        }
-
-        @media(max-width:860px){
-          .sg-home{
-            width:100%!important;
-            max-width:100%!important;
-            margin:0!important;
-            overflow-x:clip!important;
-          }
-
-          .sg-home .sg-section{
-            width:100%!important;
-            max-width:100%!important;
-            min-width:0!important;
-          }
-
-          .sg-full-row,
-          .sg-home .sg-product-grid{
-            width:100%!important;
-            max-width:100%!important;
-            min-width:0!important;
-          }
-        }
-
-`}</style>
+      `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
       <div className="sg-categories" aria-label="Categories">
@@ -340,35 +115,35 @@ export default function SingaporeStyleHome({
       ) : (
         <>
           <HomeSection title="Savings for you">
-            <FullWidthRow>
+            <ScrollRow>
               {savings.map(({ v, p }, i) => p ? (
                 <VideoProductCard key={`${v.id}-${i}`} v={v} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
               ) : null)}
-            </FullWidthRow>
+            </ScrollRow>
           </HomeSection>
 
           <HomeSection title="Top deals for you">
-            <FullWidthRow>
+            <ScrollRow>
               {topDeals.map((p, i) => (
                 <ProductMiniCard key={`${p.id}-top-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
               ))}
-            </FullWidthRow>
+            </ScrollRow>
           </HomeSection>
 
           <HomeSection title="Popular items">
-            <FullWidthRow>
+            <ScrollRow>
               {popular.map((p, i) => (
                 <ProductMiniCard key={`${p.id}-popular-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
               ))}
-            </FullWidthRow>
+            </ScrollRow>
           </HomeSection>
 
           <HomeSection title="4+ star deals for you">
-            <FullWidthRow>
+            <ScrollRow>
               {starDeals.map((p, i) => (
                 <ProductMiniCard key={`${p.id}-star-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
               ))}
-            </FullWidthRow>
+            </ScrollRow>
           </HomeSection>
 
           <HomeSection title="Best sellers">
