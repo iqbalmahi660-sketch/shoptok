@@ -12,8 +12,43 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(
+    window.matchMedia?.("(display-mode: standalone)")?.matches || false
+  );
 
   const go = (nextScreen) => setScreen(nextScreen);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+
+    const handleInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
+  }, []);
+
+  const installApp = async () => {
+    if (!installPrompt) return;
+
+    try {
+      await installPrompt.prompt();
+      await installPrompt.userChoice;
+    } finally {
+      setInstallPrompt(null);
+    }
+  };
 
   // Restore session from a saved token on page load/refresh
   useEffect(() => {
@@ -48,6 +83,54 @@ export default function App() {
     <>
       {screen === S.LAND && <Landing go={go} />}
       {screen === S.LOGIN && <Login go={go} setUser={setUser} />}
+
+      {screen === S.LOGIN && installPrompt && !isInstalled && (
+        <div
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: 24,
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            width: "calc(100% - 32px)",
+            maxWidth: 448,
+            padding: 12,
+            background: "#ffffff",
+            border: "1px solid rgba(0,0,0,0.10)",
+            borderRadius: 14,
+            boxShadow: "0 12px 40px rgba(0,0,0,0.16)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={installApp}
+            style={{
+              width: "100%",
+              border: "none",
+              borderRadius: 10,
+              padding: "13px 16px",
+              background: "linear-gradient(135deg,#fe2c55,#ff6b35)",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            Install TokZoo App
+          </button>
+          <p
+            style={{
+              margin: "8px 4px 0",
+              textAlign: "center",
+              fontSize: 11,
+              color: "#666",
+            }}
+          >
+            Install once to add TokZoo to your home screen or desktop.
+          </p>
+        </div>
+      )}
       {screen === S.REG && <Register go={go} setUser={setUser} />}
       {screen === S.VERIFY && <Verify go={go} />}
       {screen === S.ONBOARD && <SellerOnboard go={go} setUser={setUser} />}
