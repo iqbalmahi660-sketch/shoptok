@@ -56,7 +56,7 @@ const Toast = ({ msg, type, onClose }) => {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, []);
   const c = { success:"#34d399", error:"#fe2c55", info:"#25f4ee", warn:"#fbbf24" }[type] || "#34d399";
   return (
-    <div style={{ position:"fixed", top:20, right:20, zIndex:9999, background:"#1a1a1a", border:`1px solid ${c}30`, borderLeft:`3px solid ${c}`, borderRadius:12, padding:"14px 18px", minWidth:280, display:"flex", alignItems:"center", gap:12, boxShadow:"0 8px 32px rgba(0,0,0,.5)", animation:"slideIn .3s ease" }}>
+    <div style={{ position:"fixed", top:20, right:20, zIndex:9999, background:"#1a1a1a", border:`1px solid ${c}30`, borderLeft:`3px solid ${c}`, borderRadius:12, padding:"14px 18px", minWidth:240, maxWidth:"calc(100vw - 40px)", display:"flex", alignItems:"center", gap:12, boxShadow:"0 8px 32px rgba(0,0,0,.5)", animation:"slideIn .3s ease" }}>
       <span style={{ fontSize:18 }}>{type==="success"?"✅":type==="error"?"❌":type==="warn"?"⚠️":"ℹ️"}</span>
       <span style={{ flex:1, fontSize:13, color:"rgba(255,255,255,.85)" }}>{msg}</span>
       <button onClick={onClose} style={{ background:"none", border:"none", color:"#555", cursor:"pointer", fontSize:18, lineHeight:1 }}>×</button>
@@ -78,10 +78,10 @@ const Modal = ({ title, onClose, children, width=540 }) => (
 );
 
 const SearchBar = ({ value, onChange, placeholder }) => (
-  <div style={{ position:"relative" }}>
+  <div style={{ position:"relative", flex:"1 1 160px", maxWidth:260 }}>
     <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"rgba(255,255,255,.3)", fontSize:14 }}>🔍</span>
     <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
-      style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"9px 14px 9px 36px", color:"#fff", fontSize:13, fontFamily:"inherit", outline:"none", width:220 }} />
+      style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"9px 14px 9px 36px", color:"#fff", fontSize:13, fontFamily:"inherit", outline:"none", width:"100%" }} />
   </div>
 );
 
@@ -137,7 +137,8 @@ export default function AdminApp() {
   const [toast, setToast]             = useState(null);
   const [modal, setModal]             = useState(null);
   const [loading, setLoading]         = useState(false);
-  const [sideOpen, setSideOpen]       = useState(true);
+  const [isMobile, setIsMobile]     = useState(() => window.innerWidth <= 768);
+  const [sideOpen, setSideOpen]       = useState(() => window.innerWidth > 768);
   const [notifs, setNotifs]           = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifs, setShowNotifs]   = useState(false);
@@ -162,6 +163,16 @@ export default function AdminApp() {
   const [search,        setSearch]        = useState("");
 
   const addToast = (msg, type="success") => setToast({ msg, type });
+
+  // ── Responsive: track screen size ─────────────────────────────────────────────
+  useEffect(() => {
+    const onResize = () => {
+      const m = window.innerWidth <= 768;
+      setIsMobile(prev => { if (prev !== m) setSideOpen(!m); return m; });
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // ── Download Analytics ────────────────────────────────────────────────────────
   const downloadAnalytics = (format = "csv") => {
@@ -434,6 +445,22 @@ export default function AdminApp() {
     th{text-align:left;padding:11px 14px;font-size:11px;color:rgba(255,255,255,.35);font-weight:600;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.06);}
     td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
     .card{background:#111;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;}
+    .tcard{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    html,body{overflow-x:hidden;}
+    .hamburger{display:none;}
+    @media (max-width:768px){
+      .hamburger{display:flex!important;}
+      .live-pill{display:none!important;}
+      .hdr{padding:0 12px!important;}
+      .content{padding:14px!important;}
+      .card{padding:14px;border-radius:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+      .card table{min-width:640px;}
+      .g-stats{grid-template-columns:repeat(2,1fr)!important;gap:10px!important;}
+      .g-1col{grid-template-columns:1fr!important;gap:14px!important;}
+      input,select,textarea{font-size:16px!important;}
+      th,td{white-space:nowrap;}
+      td p{white-space:normal;}
+    }
   `;
 
   // ════════════════════════════════════════════════════════════════════════
@@ -442,7 +469,7 @@ export default function AdminApp() {
   if (!authed) return (
     <div style={{ minHeight:"100vh", background:"#080808", display:"flex", alignItems:"center", justifyContent:"center" }}>
       <style>{css}</style>
-      <div style={{ width:400, animation:"fadeUp .4s ease" }}>
+      <div style={{ width:"min(400px,92vw)", animation:"fadeUp .4s ease" }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
           <div style={{ width:60, height:60, background:"linear-gradient(135deg,#fe2c55,#ff6b35)", borderRadius:18, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, margin:"0 auto 16px" }}>⚡</div>
           <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:28, marginBottom:6 }}>ShopTok <span style={{ color:"#fe2c55" }}>Admin</span></h1>
@@ -518,7 +545,11 @@ export default function AdminApp() {
       `)}</style>
 
       {/* ── SIDEBAR ── */}
-      <aside style={{ width: sideOpen?224:60, flexShrink:0, background:"#0d0d0d", borderRight:"1px solid rgba(255,255,255,.07)", position:"sticky", top:0, height:"100vh", display:"flex", flexDirection:"column", transition:"width .2s ease", overflowY:"auto", overflowX:"hidden" }}>
+      {isMobile && sideOpen && <div onClick={()=>setSideOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.6)", zIndex:1400 }} />}
+      <aside style={{ width: isMobile?250:(sideOpen?224:60), flexShrink:0, background:"#0d0d0d", borderRight:"1px solid rgba(255,255,255,.07)",
+        position: isMobile?"fixed":"sticky", top:0, left:0, height:"100vh", zIndex: isMobile?1500:"auto",
+        transform: isMobile && !sideOpen ? "translateX(-100%)" : "none",
+        display:"flex", flexDirection:"column", transition: isMobile?"transform .25s ease":"width .2s ease", overflowY:"auto", overflowX:"hidden" }}>
         {/* Logo */}
         <div style={{ padding:"18px 12px", borderBottom:"1px solid rgba(255,255,255,.07)", display:"flex", alignItems:"center", gap:10 }}>
           <div onClick={()=>setSideOpen(o=>!o)} style={{ width:36, height:36, background:"linear-gradient(135deg,#fe2c55,#ff6b35)", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, cursor:"pointer", flexShrink:0 }}>⚡</div>
@@ -528,7 +559,7 @@ export default function AdminApp() {
         {/* Nav */}
         <nav style={{ flex:1, padding:"8px 8px" }}>
           {NAV.map(item => (
-            <button key={item.key} onClick={()=>setTab(item.key)}
+            <button key={item.key} onClick={()=>{ setTab(item.key); if(isMobile) setSideOpen(false); }}
               style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"10px 10px", borderRadius:10, border:"none", cursor:"pointer", marginBottom:2, position:"relative",
                 background: tab===item.key?"rgba(254,44,85,.12)":"transparent",
                 color: tab===item.key?"#fe2c55":"rgba(255,255,255,.5)", textAlign:"left" }}>
@@ -556,13 +587,17 @@ export default function AdminApp() {
       {/* ── MAIN ── */}
       <main style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column" }}>
         {/* Top bar */}
-        <header style={{ position:"sticky", top:0, zIndex:100, background:"rgba(8,8,8,.97)", backdropFilter:"blur(20px)", borderBottom:"1px solid rgba(255,255,255,.07)", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 28px" }}>
-          <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:17 }}>
+        <header className="hdr" style={{ position:"sticky", top:0, zIndex:100, background:"rgba(8,8,8,.97)", backdropFilter:"blur(20px)", borderBottom:"1px solid rgba(255,255,255,.07)", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 28px" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
+          <button className="hamburger" onClick={()=>setSideOpen(o=>!o)} aria-label="Menu"
+            style={{ width:38, height:38, borderRadius:10, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:18, color:adminDark?"#fff":"#333", flexShrink:0 }}>☰</button>
+          <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:17, whiteSpace:"nowrap" }}>
             {{ dashboard:"Dashboard",buyers:"Buyers",sellers:"Sellers",products:"Products",orders:"Orders",analytics:"Analytics",logs:"Activity Log",settings:"Settings" }[tab]}
           </h2>
+          </div>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             {/* Live indicator */}
-            <div style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(52,211,153,.1)", border:"1px solid rgba(52,211,153,.2)", borderRadius:100, padding:"5px 12px" }}>
+            <div className="live-pill" style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(52,211,153,.1)", border:"1px solid rgba(52,211,153,.2)", borderRadius:100, padding:"5px 12px" }}>
               <span style={{ width:7, height:7, borderRadius:"50%", background:"#34d399", animation:"pulse 2s infinite" }} />
               <span style={{ fontSize:11, color:"#34d399", fontWeight:600 }}>Live</span>
             </div>
@@ -577,7 +612,7 @@ export default function AdminApp() {
                 {unreadCount > 0 && <span style={{ position:"absolute", top:4, right:4, width:8, height:8, borderRadius:"50%", background:"#fe2c55" }} />}
               </button>
               {showNotifs && (
-                <div style={{ position:"absolute", right:0, top:48, width:340, background:"#141414", border:"1px solid rgba(255,255,255,.1)", borderRadius:14, zIndex:200, maxHeight:480, overflowY:"auto", boxShadow:"0 20px 60px rgba(0,0,0,.6)" }}>
+                <div style={{ position: isMobile?"fixed":"absolute", right: isMobile?"4vw":0, top: isMobile?66:48, width:"min(340px,92vw)", background:"#141414", border:"1px solid rgba(255,255,255,.1)", borderRadius:14, zIndex:200, maxHeight:480, overflowY:"auto", boxShadow:"0 20px 60px rgba(0,0,0,.6)" }}>
                   <div style={{ padding:"14px 16px", borderBottom:"1px solid rgba(255,255,255,.07)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                     <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14 }}>Notifications</p>
                     <button onClick={()=>setShowNotifs(false)} style={{ background:"none", border:"none", color:"#555", cursor:"pointer", fontSize:18 }}>×</button>
@@ -601,7 +636,7 @@ export default function AdminApp() {
           </div>
         </header>
 
-        <div style={{ flex:1, padding:28, overflowY:"auto" }}>
+        <div className="content" style={{ flex:1, padding:28, overflowY:"auto" }}>
 
           {/* ════════════════════════════════════════════
               DASHBOARD
@@ -609,14 +644,14 @@ export default function AdminApp() {
           {tab==="dashboard" && (
             <div style={{ animation:"fadeUp .35s ease" }}>
               {/* Stats grid */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16, marginBottom:24 }}>
+              <div className="g-stats" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16, marginBottom:24 }}>
                 <Stat icon="💰" label="Total Revenue" value={`Rs ${((dash?.revenue?.total||0)/1000).toFixed(0)}K`} sub={`Rs ${((dash?.revenue?.this_month||0)/1000).toFixed(0)}K this month`} color="#fe2c55" trend={18} />
                 <Stat icon="🛒" label="Total Orders"  value={dash?.orders?.total||0}   sub={`${dash?.orders?.pending||0} pending`}  color="#25f4ee" trend={12} />
                 <Stat icon="👥" label="Total Buyers"  value={dash?.users?.total||0}    sub={`${dash?.users?.active||0} active`}     color="#a78bfa" trend={8} />
                 <Stat icon="🏪" label="Active Sellers" value={dash?.sellers?.active||0} sub={`${dash?.sellers?.pending||0} pending`} color="#fbbf24" />
               </div>
 
-              <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:20, marginBottom:20 }}>
+              <div className="g-1col" style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:20, marginBottom:20 }}>
                 {/* Revenue chart */}
                 <div className="card">
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
@@ -722,7 +757,7 @@ export default function AdminApp() {
                   <button onClick={()=>loadSection("buyers")} style={{ width:36, height:36, borderRadius:"50%", background:"rgba(255,255,255,.06)", border:"none", cursor:"pointer", fontSize:16, color:"#fff" }}>↻</button>
                 </div>
               </div>
-              <div className="card" style={{ padding:0 }}>
+              <div className="card tcard" style={{ padding:0 }}>
                 <table>
                   <thead><tr>{["Buyer","Contact","City","Orders","Spent","Status","Actions"].map(h=><th key={h}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -819,7 +854,7 @@ export default function AdminApp() {
                   counts={{ pending: dash?.pendingProducts||0 }} />
                 <SearchBar value={search} onChange={setSearch} placeholder="Search products…" />
               </div>
-              <div className="card" style={{ padding:0 }}>
+              <div className="card tcard" style={{ padding:0 }}>
                 <table>
                   <thead><tr>{["Product","Seller","Category","Price","Stock","Sold","Status","Actions"].map(h=><th key={h}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -865,7 +900,7 @@ export default function AdminApp() {
                   counts={{ pending: dash?.orders?.pending||0 }} />
                 <SearchBar value={search} onChange={setSearch} placeholder="Search orders…" />
               </div>
-              <div style={{ marginBottom:12, display:"flex", gap:12 }}>
+              <div style={{ marginBottom:12, display:"flex", gap:10, flexWrap:"wrap" }}>
                 {[
                   ["Total",orders.length,"#25f4ee"],
                   ["Revenue","Rs "+(orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+(o.total_amount||0),0)/1000).toFixed(0)+"K","#34d399"],
@@ -873,13 +908,13 @@ export default function AdminApp() {
                   ["Delivered",orders.filter(o=>o.status==="delivered").length,"#34d399"],
                   ["Cancelled",orders.filter(o=>o.status==="cancelled").length,"#fe2c55"],
                 ].map(([l,v,c])=>(
-                  <div key={l} style={{ background:"#111", border:`1px solid ${c}20`, borderRadius:10, padding:"10px 16px", textAlign:"center", flex:1 }}>
+                  <div key={l} style={{ background:"#111", border:`1px solid ${c}20`, borderRadius:10, padding:"10px 16px", textAlign:"center", flex:"1 1 90px" }}>
                     <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:18, color:c }}>{v}</p>
                     <p style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginTop:2 }}>{l}</p>
                   </div>
                 ))}
               </div>
-              <div className="card" style={{ padding:0 }}>
+              <div className="card tcard" style={{ padding:0 }}>
                 <table>
                   <thead><tr>{["Order","Buyer","Product","Amount","Payment","Status","Date","Actions"].map(h=><th key={h}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -1014,7 +1049,7 @@ export default function AdminApp() {
                 </div>
 
                 {/* Summary stats */}
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:24 }}>
+                <div className="g-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:24 }}>
                   <Stat icon="💰" label="Revenue" value={`Rs ${(periodRev/1000).toFixed(0)}K`} sub="delivered orders" color="#fe2c55"/>
                   <Stat icon="🛒" label="Orders"  value={periodOrdsN} sub="all statuses" color="#25f4ee"/>
                   <Stat icon="✅" label="Delivered" value={deliveredP.length} sub="completed" color="#34d399"/>
@@ -1022,7 +1057,7 @@ export default function AdminApp() {
                 </div>
 
                 {/* Top Buyers + Top Sellers */}
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:20 }}>
+                <div className="g-1col" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:20 }}>
 
                   {/* Top Buyers */}
                   <div className="card">
@@ -1078,7 +1113,7 @@ export default function AdminApp() {
                 </div>
 
                 {/* Monthly Revenue Chart from backend */}
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:20 }}>
+                <div className="g-1col" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:20 }}>
                   <div className="card">
                     <h3 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, marginBottom:18 }}>📈 Monthly Revenue</h3>
                     {analytics?.monthly?.length > 0
@@ -1137,7 +1172,7 @@ export default function AdminApp() {
           ════════════════════════════════════════════ */}
           {tab==="logs" && (
             <div style={{ animation:"fadeUp .3s ease" }}>
-              <div className="card" style={{ padding:0 }}>
+              <div className="card tcard" style={{ padding:0 }}>
                 <table>
                   <thead><tr>{["Admin","Action","Target","Details","Time"].map(h=><th key={h}>{h}</th>)}</tr></thead>
                   <tbody>
