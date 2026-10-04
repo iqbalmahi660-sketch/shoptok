@@ -304,6 +304,42 @@ export default function SingaporeStyleHome({
           }
         }
 
+
+
+        /* ===== MOBILE CATEGORY CAROUSEL: 4 FULLY VISIBLE ===== */
+        @media (max-width: 640px){
+          .sg-home .sg-categories{
+            display:flex !important;
+            flex-wrap:nowrap !important;
+            width:100% !important;
+            max-width:100% !important;
+            overflow-x:auto !important;
+            overflow-y:hidden !important;
+            gap:0 !important;
+            padding:0 10px 6px !important;
+            box-sizing:border-box !important;
+            scrollbar-width:none !important;
+            -webkit-overflow-scrolling:touch !important;
+            overscroll-behavior-x:contain !important;
+            scroll-snap-type:x mandatory !important;
+          }
+
+          .sg-home .sg-categories::-webkit-scrollbar{
+            display:none !important;
+          }
+
+          .sg-home .sg-category{
+            flex:0 0 25% !important;
+            width:25% !important;
+            min-width:25% !important;
+            max-width:25% !important;
+            box-sizing:border-box !important;
+            padding-left:4px !important;
+            padding-right:4px !important;
+            scroll-snap-align:start !important;
+          }
+        }
+
 `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
