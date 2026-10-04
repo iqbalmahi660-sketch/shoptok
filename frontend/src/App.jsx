@@ -40,14 +40,28 @@ export default function App() {
   }, []);
 
   const installApp = async () => {
-    if (!installPrompt) return;
-
-    try {
-      await installPrompt.prompt();
-      await installPrompt.userChoice;
-    } finally {
-      setInstallPrompt(null);
+    if (installPrompt) {
+      try {
+        await installPrompt.prompt();
+        await installPrompt.userChoice;
+      } finally {
+        setInstallPrompt(null);
+      }
+      return;
     }
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    if (isIOS) {
+      alert(
+        "To install TokZoo on iPhone/iPad: tap Share, then choose Add to Home Screen."
+      );
+      return;
+    }
+
+    alert(
+      "TokZoo install prompt is not available yet. In Chrome, open the browser menu and choose Install TokZoo or Add to Home screen."
+    );
   };
 
   // Restore session from a saved token on page load/refresh
@@ -84,7 +98,7 @@ export default function App() {
       {screen === S.LAND && <Landing go={go} />}
       {screen === S.LOGIN && <Login go={go} setUser={setUser} />}
 
-      {screen === S.LOGIN && installPrompt && !isInstalled && (
+      {screen === S.LOGIN && !isInstalled && (
         <div
           style={{
             position: "fixed",
@@ -117,7 +131,7 @@ export default function App() {
               fontFamily: "inherit",
             }}
           >
-            Install TokZoo App
+            {installPrompt ? "Install TokZoo App" : "Add TokZoo to Home Screen"}
           </button>
           <p
             style={{
