@@ -406,70 +406,97 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  
 
- .mobile-nav-brand{display:none;}
  @media(max-width:860px){
-   .mobile-nav-brand{
-     display:flex!important;
-     align-items:center;
-     min-width:0;
-     cursor:pointer;
-     margin-right:auto;
+   .seller-dashboard-wrap{display:block!important;width:100%!important;min-height:auto!important;}
+   .seller-dashboard-wrap>div:last-child{width:100%!important;min-width:0!important;padding:18px 14px 92px!important;overflow:visible!important;}
+ }
+ @media(max-width:640px){
+   .seller-dashboard-wrap>div:last-child{padding:14px 10px 94px!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(2,1fr)"],
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(3,1fr)"],
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(4,1fr)"],
+   .seller-dashboard-wrap [style*="grid-template-columns:repeat(5,1fr)"]{grid-template-columns:1fr!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:1fr 260px"],
+   .seller-dashboard-wrap [style*="grid-template-columns:1fr 280px"]{grid-template-columns:1fr!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:140px 1fr"]{grid-template-columns:1fr!important;gap:6px!important;}
+   .seller-dashboard-wrap [style*="grid-template-columns:140px 1fr"]>label{text-align:left!important;padding-top:0!important;}
+ }
+
+
+
+ /* ===== MOBILE EDGE-TO-EDGE FIX ===== */
+ @media(max-width:860px){
+   html,body,#root{
+     width:100%!important;
+     max-width:100%!important;
+     margin:0!important;
+     padding:0!important;
+     overflow-x:hidden!important;
    }
-   .mobile-nav-brand img{
-     display:block;
-     height:36px!important;
-     width:auto!important;
-     max-width:112px!important;
-     object-fit:contain;
-   }
+
    .content-with-sidebar{
-     margin-left:0!important;
-     width:100%!important;
-     max-width:none!important;
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding:0!important;
    }
+
    nav{
-     width:100%!important;
-     max-width:none!important;
+     width:100vw!important;
+     max-width:100vw!important;
      margin:0!important;
-     padding:8px 12px!important;
-     min-height:56px!important;
-     height:56px!important;
-     display:flex!important;
-     align-items:center!important;
-     justify-content:space-between!important;
-     gap:10px!important;
+     left:0!important;
+     right:0!important;
+     box-sizing:border-box!important;
    }
-   nav>div:last-child{
-     margin-left:auto!important;
-     gap:8px!important;
-   }
+
    .page-inner{
-     width:100%!important;
-     max-width:none!important;
+     width:100vw!important;
+     max-width:100vw!important;
      margin:0!important;
-   }
-   .shop-fullwidth{
-     width:100%!important;
-     max-width:none!important;
-     margin:0!important;
-   }
- }
- @media(max-width:420px){
-   .mobile-nav-brand img{height:32px!important;max-width:98px!important;}
-   nav{padding:7px 10px!important;}
-   nav>div:last-child{gap:6px!important;}
- }
-
-
-
- @media(max-width:860px){
-   .page-inner{
      padding-left:0!important;
      padding-right:0!important;
+     box-sizing:border-box!important;
    }
+
    .shop-fullwidth{
-     padding-left:0!important;
-     padding-right:0!important;
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding:0!important;
+   }
+
+   .sg-home{
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding:0!important;
+     box-sizing:border-box!important;
+   }
+ }
+
+ @media(max-width:640px){
+   nav{
+     padding-left:10px!important;
+     padding-right:10px!important;
+   }
+
+   /* No outer page gutter. Give only the shop CONTENT its own small breathing room. */
+   .sg-home .sg-categories-title,
+   .sg-home .sg-section-title{
+     padding-left:12px!important;
+     padding-right:12px!important;
+   }
+
+   .sg-home .sg-categories{
+     padding-left:12px!important;
+     padding-right:12px!important;
+   }
+
+   .sg-home .sg-full-row,
+   .sg-home .sg-product-grid{
+     padding-left:8px!important;
+     padding-right:8px!important;
    }
  }
 
@@ -576,7 +603,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
- <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}><div className="mobile-nav-brand" onClick={()=>setPage("shop")}><img src="/logo.png" alt="TokZoo"/></div><div style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
+ <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}><div style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
  {(user||cartCount>0)&&(
  <button onClick={()=>setCO(o=>!o)} style={{position:"relative",background:"none",border:"none",color:"#111",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontFamily:"inherit",flexShrink:0}}>Cart{cartCount>0&&<span style={{position:"absolute",top:-8,right:-14,background:"#fe2c55",color:"#fff",fontSize:9,fontWeight:700,width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cartCount}</span>}
  </button>
