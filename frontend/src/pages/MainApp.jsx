@@ -422,36 +422,45 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    nav.tz-top-nav{
      width:100%!important;
      max-width:100%!important;
-     height:58px!important;
-     min-height:58px!important;
-     padding:0 10px!important;
+     min-width:0!important;
+     height:56px!important;
+     min-height:56px!important;
+     padding:0 8px!important;
      margin:0!important;
      display:flex!important;
      align-items:center!important;
-     gap:8px!important;
+     gap:5px!important;
      box-sizing:border-box!important;
    }
 
    .mobile-nav-brand{
      display:flex!important;
      align-items:center;
-     flex:0 0 auto;
-     min-width:0;
+     flex:0 0 82px!important;
+     width:82px!important;
+     max-width:82px!important;
+     min-width:0!important;
+     overflow:hidden!important;
      cursor:pointer;
    }
 
    .mobile-nav-brand img{
      display:block;
-     height:36px!important;
+     height:32px!important;
      width:auto!important;
-     max-width:110px!important;
+     max-width:82px!important;
      object-fit:contain;
    }
 
    .top-nav-actions{
      margin-left:auto!important;
-     gap:6px!important;
+     display:flex!important;
+     align-items:center!important;
+     justify-content:flex-end!important;
+     flex:1 1 auto!important;
+     gap:5px!important;
      min-width:0!important;
+     max-width:calc(100% - 126px)!important;
    }
 
    .top-nav-actions > button{
@@ -459,24 +468,26 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    }
 
    .top-nav-actions .get-app-btn{
-     padding:0 4px!important;
+     padding:0 3px!important;
      font-size:11px!important;
      white-space:nowrap!important;
+     flex:0 0 auto!important;
    }
 
    .top-nav-actions .login-btn{
-     padding:8px 14px!important;
-     font-size:12px!important;
+     padding:7px 12px!important;
+     font-size:11px!important;
      white-space:nowrap!important;
+     flex:0 0 auto!important;
    }
 
    .mobile-menu-btn{
      display:flex!important;
      align-items:center!important;
      justify-content:center!important;
-     width:36px!important;
-     height:36px!important;
-     flex:0 0 36px!important;
+     width:34px!important;
+     height:34px!important;
+     flex:0 0 34px!important;
      border:1px solid rgba(0,0,0,.12)!important;
      background:#fff!important;
      color:#111!important;
@@ -549,18 +560,30 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    }
  }
 
- @media(max-width:380px){
-   .mobile-nav-brand img{
-     height:34px!important;
-     max-width:100px!important;
-   }
-
+ @media(max-width:520px){
    .top-nav-actions .get-app-btn{
      display:none!important;
    }
 
+   .top-nav-actions{
+     max-width:calc(100% - 121px)!important;
+   }
+ }
+
+ @media(max-width:380px){
+   .mobile-nav-brand{
+     flex-basis:72px!important;
+     width:72px!important;
+     max-width:72px!important;
+   }
+
+   .mobile-nav-brand img{
+     height:30px!important;
+     max-width:72px!important;
+   }
+
    .top-nav-actions .login-btn{
-     padding:7px 12px!important;
+     padding:7px 10px!important;
    }
  }
 
@@ -595,7 +618,6 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .mobile-nav-brand{
      min-width:0!important;
-     max-width:90px!important;
      overflow:hidden!important;
    }
 
@@ -705,6 +727,23 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .seller-dashboard-content button{
      max-width:100%;
+   }
+ }
+
+
+
+ @media(max-width:860px){
+   .top-nav-actions > *{
+     max-width:100%!important;
+   }
+
+   .top-nav-actions > button,
+   .top-nav-actions > div{
+     flex-shrink:0!important;
+   }
+
+   .tz-top-nav{
+     contain:layout!important;
    }
  }
 
