@@ -281,7 +281,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ];
 
  return(
- <div style={{fontFamily:"'Poppins',sans-serif",background:"#f7f7f8",color:"#111",minHeight:"100vh",width:"100%",maxWidth:"100%",overflowX:"clip"}}><style>{`
+ <div style={{fontFamily:"'Poppins',sans-serif",background:"#f7f7f8",color:"#111",minHeight:"100vh"}}><style>{`
  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
  *{margin:0;padding:0;box-sizing:border-box;}
  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#d0d0d0;border-radius:4px;}
@@ -407,262 +407,141 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  
 
- /* ===== SAFE MOBILE HEADER + SHOP LAYOUT ===== */
- .mobile-nav-brand,
+ /* ===== AUTHORITATIVE MOBILE LAYOUT ===== */
+ .mobile-brand-btn,
  .mobile-menu-btn,
  .mobile-nav-menu{display:none;}
 
- @media(max-width:860px){
-   .content-with-sidebar{
-     margin-left:0!important;
-     width:100%!important;
-     max-width:100%!important;
-   }
+ @media(max-width:900px){
+   html,body,#root{max-width:100%;overflow-x:hidden;}
+   .content-with-sidebar{margin-left:0!important;width:100%!important;max-width:100%!important;overflow-x:hidden!important;}
+   .page-inner{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important;}
+   .shop-fullwidth{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important;}
 
-   nav.tz-top-nav{
+   .tz-top-nav{
+     position:sticky!important;
+     top:0!important;
      width:100%!important;
      max-width:100%!important;
      min-width:0!important;
      height:56px!important;
-     min-height:56px!important;
      padding:0 8px!important;
      margin:0!important;
+     display:grid!important;
+     grid-template-columns:auto minmax(0,1fr) auto!important;
+     align-items:center!important;
+     gap:6px!important;
+     overflow:visible!important;
+   }
+
+   .mobile-brand-btn{
      display:flex!important;
      align-items:center!important;
-     gap:5px!important;
-     box-sizing:border-box!important;
-   }
-
-   .mobile-nav-brand{
-     display:flex!important;
-     align-items:center;
-     flex:0 0 82px!important;
-     width:82px!important;
-     max-width:82px!important;
-     min-width:0!important;
+     justify-content:flex-start!important;
+     width:86px!important;
+     min-width:86px!important;
+     max-width:86px!important;
+     height:44px!important;
+     padding:0!important;
+     margin:0!important;
+     border:0!important;
+     background:transparent!important;
      overflow:hidden!important;
-     cursor:pointer;
+     cursor:pointer!important;
    }
 
-   .mobile-nav-brand img{
-     display:block;
+   .mobile-brand-btn img{
+     display:block!important;
      height:32px!important;
      width:auto!important;
-     max-width:82px!important;
-     object-fit:contain;
+     max-width:86px!important;
+     object-fit:contain!important;
    }
 
    .top-nav-actions{
-     margin-left:auto!important;
-     display:flex!important;
-     align-items:center!important;
-     justify-content:flex-end!important;
-     flex:1 1 auto!important;
-     gap:5px!important;
+     grid-column:2!important;
+     margin-left:0!important;
      min-width:0!important;
-     max-width:calc(100% - 126px)!important;
+     max-width:100%!important;
+     display:flex!important;
+     justify-content:flex-end!important;
+     align-items:center!important;
+     gap:5px!important;
+     overflow:visible!important;
    }
 
-   .top-nav-actions > button{
-     min-height:36px!important;
-   }
-
-   .top-nav-actions .get-app-btn{
-     padding:0 3px!important;
-     font-size:11px!important;
-     white-space:nowrap!important;
-     flex:0 0 auto!important;
-   }
-
-   .top-nav-actions .login-btn{
-     padding:7px 12px!important;
-     font-size:11px!important;
-     white-space:nowrap!important;
-     flex:0 0 auto!important;
-   }
+   .guest-nav-actions{min-width:0!important;gap:5px!important;}
+   .get-app-btn{display:none!important;}
+   .login-btn{padding:7px 12px!important;font-size:11px!important;white-space:nowrap!important;}
+   .mobile-cart-btn{font-size:11px!important;padding:0 2px!important;}
+   .mobile-profile-btn{width:32px!important;height:32px!important;flex:0 0 32px!important;}
 
    .mobile-menu-btn{
      display:flex!important;
+     grid-column:3!important;
      align-items:center!important;
      justify-content:center!important;
      width:34px!important;
      height:34px!important;
-     flex:0 0 34px!important;
+     min-width:34px!important;
+     max-width:34px!important;
+     padding:0!important;
      border:1px solid rgba(0,0,0,.12)!important;
      background:#fff!important;
      color:#111!important;
-     border-radius:10px!important;
-     cursor:pointer!important;
+     border-radius:9px!important;
      font-size:20px!important;
      line-height:1!important;
+     cursor:pointer!important;
    }
 
    .mobile-nav-menu{
      display:flex!important;
      position:absolute!important;
+     top:62px!important;
      left:8px!important;
      right:8px!important;
-     top:calc(100% + 6px)!important;
-     z-index:220!important;
-     background:#fff!important;
-     border:1px solid #e9e9e9!important;
-     border-radius:14px!important;
-     padding:8px!important;
-     box-shadow:0 14px 40px rgba(0,0,0,.16)!important;
+     width:auto!important;
+     max-width:calc(100vw - 16px)!important;
      flex-direction:column!important;
      gap:2px!important;
+     padding:8px!important;
+     border:1px solid #e9e9e9!important;
+     border-radius:14px!important;
+     background:#fff!important;
+     box-shadow:0 14px 40px rgba(0,0,0,.16)!important;
+     z-index:220!important;
    }
 
    .mobile-nav-menu button{
      width:100%!important;
      min-height:42px!important;
-     border:none!important;
+     padding:10px 12px!important;
+     border:0!important;
+     border-radius:9px!important;
      background:transparent!important;
      color:#111!important;
      text-align:left!important;
-     border-radius:9px!important;
-     padding:10px 12px!important;
-     font-family:inherit!important;
-     font-size:13px!important;
-     font-weight:600!important;
-     cursor:pointer!important;
-   }
-
-   .mobile-nav-menu button:active{
-     background:#f7f7f8!important;
+     font:600 13px 'Poppins',sans-serif!important;
    }
 
    .login-popover{
      position:fixed!important;
-     top:66px!important;
-     left:12px!important;
-     right:12px!important;
+     top:64px!important;
+     left:10px!important;
+     right:10px!important;
      width:auto!important;
-     max-width:none!important;
-     border-radius:14px!important;
-     padding:18px!important;
-     z-index:251!important;
-   }
-
-   .page-inner{
-     width:100%!important;
-     max-width:100%!important;
-     margin:0!important;
-     padding-left:0!important;
-     padding-right:0!important;
-   }
-
-   .shop-fullwidth{
-     width:100%!important;
-     max-width:100%!important;
-     margin:0!important;
-     padding:0!important;
-   }
- }
-
- @media(max-width:520px){
-   .top-nav-actions .get-app-btn{
-     display:none!important;
-   }
-
-   .top-nav-actions{
-     max-width:calc(100% - 121px)!important;
-   }
- }
-
- @media(max-width:380px){
-   .mobile-nav-brand{
-     flex-basis:72px!important;
-     width:72px!important;
-     max-width:72px!important;
-   }
-
-   .mobile-nav-brand img{
-     height:30px!important;
-     max-width:72px!important;
-   }
-
-   .top-nav-actions .login-btn{
-     padding:7px 10px!important;
-   }
- }
-
-
-
- /* ===== HORIZONTAL OVERFLOW FIX — SCOPED ===== */
- @media(max-width:860px){
-   .content-with-sidebar,
-   .page-inner,
-   .shop-fullwidth,
-   .tz-top-nav,
-   .top-nav-actions{
-     min-width:0!important;
-   }
-
-   .content-with-sidebar,
-   .page-inner,
-   .shop-fullwidth{
-     width:100%!important;
-     max-width:100%!important;
-     overflow-x:clip!important;
-   }
-
-   .shop-fullwidth > *{
-     min-width:0!important;
-     max-width:100%!important;
-   }
-
-   .tz-top-nav{
-     overflow:visible!important;
-   }
-
-   .mobile-nav-brand{
-     min-width:0!important;
-     overflow:hidden!important;
-   }
-
-   .top-nav-actions{
-     flex:1 1 auto!important;
-     justify-content:flex-end!important;
-     overflow:visible!important;
-   }
-
-   .top-nav-actions > *{
-     min-width:0!important;
-   }
-
-   .login-popover{
+     max-width:calc(100vw - 20px)!important;
      box-sizing:border-box!important;
-     max-width:calc(100vw - 24px)!important;
    }
 
-   .mobile-nav-menu{
-     box-sizing:border-box!important;
-     max-width:calc(100vw - 16px)!important;
-   }
- }
-
- @media(max-width:480px){
-   .page-inner,
-   .shop-fullwidth{
-     overflow-x:clip!important;
-   }
-
-   .top-nav-actions{
-     gap:5px!important;
-   }
- }
-
-
-
- /* ===== SELLER DASHBOARD MOBILE ===== */
- @media(max-width:900px){
    .seller-dashboard-wrap{
      display:flex!important;
      flex-direction:column!important;
      width:100%!important;
      max-width:100%!important;
-     min-height:calc(100vh - 58px)!important;
+     min-width:0!important;
+     min-height:calc(100vh - 56px)!important;
      overflow-x:hidden!important;
    }
 
@@ -671,11 +550,11 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
      max-width:100%!important;
      min-width:0!important;
      flex:1 1 auto!important;
-     padding:18px 14px 80px!important;
+     padding:16px 12px 72px!important;
      overflow-x:hidden!important;
    }
 
-   .seller-dashboard-content > div{
+   .seller-dashboard-content > *{
      max-width:100%!important;
      min-width:0!important;
    }
@@ -686,90 +565,26 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .seller-dashboard-content [style*="grid-template-columns:repeat(3,1fr)"],
    .seller-dashboard-content [style*="grid-template-columns:repeat(4,1fr)"],
-   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"]{
-     grid-template-columns:repeat(2,minmax(0,1fr))!important;
-   }
-
-   .seller-dashboard-content [style*="grid-template-columns:1fr 1fr"]{
-     grid-template-columns:1fr!important;
-   }
-
+   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:1fr 1fr"],
    .seller-dashboard-content [style*="grid-template-columns:140px 1fr"]{
      grid-template-columns:1fr!important;
-     gap:6px!important;
    }
  }
 
- @media(max-width:560px){
-   .seller-dashboard-content{
-     padding:14px 10px 72px!important;
-   }
-
-   .seller-dashboard-content h1{
-     font-size:19px!important;
-     line-height:1.25!important;
-   }
-
-   .seller-dashboard-content h2{
-     font-size:17px!important;
-   }
-
-   .seller-dashboard-content [style*="grid-template-columns:repeat(2,1fr)"],
-   .seller-dashboard-content [style*="grid-template-columns:repeat(3,1fr)"],
-   .seller-dashboard-content [style*="grid-template-columns:repeat(4,1fr)"],
-   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"]{
-     grid-template-columns:1fr!important;
-   }
-
-   .seller-dashboard-content [style*="display:flex"][style*="gap:12"]{
-     flex-wrap:wrap!important;
-   }
-
-   .seller-dashboard-content button{
-     max-width:100%;
-   }
+ @media(max-width:520px){
+   .mobile-brand-btn{width:78px!important;min-width:78px!important;max-width:78px!important;}
+   .mobile-brand-btn img{height:30px!important;max-width:78px!important;}
+   .seller-dashboard-content{padding:14px 10px 68px!important;}
+   .seller-dashboard-content h1{font-size:19px!important;line-height:1.25!important;}
+   .seller-dashboard-content [style*="grid-template-columns:repeat(2,1fr)"]{grid-template-columns:1fr!important;}
  }
 
-
-
- @media(max-width:860px){
-   .top-nav-actions > *{
-     max-width:100%!important;
-   }
-
-   .top-nav-actions > button,
-   .top-nav-actions > div{
-     flex-shrink:0!important;
-   }
-
-   .tz-top-nav{
-     contain:layout!important;
-   }
- }
-
- /* ===== LOGO STANDARD SIZE + OVERFLOW FINAL ===== */
- .brand-logo{height:44px;width:auto;max-width:160px;object-fit:contain;display:block;}
- @media(max-width:860px){
-   .mobile-nav-brand{flex:0 0 auto!important;width:auto!important;max-width:110px!important;overflow:visible!important;}
-   .mobile-nav-brand img{height:32px!important;width:auto!important;max-width:110px!important;object-fit:contain!important;display:block;}
-   html,body{overflow-x:hidden!important;max-width:100vw!important;}
-   img,video,canvas,iframe{max-width:100%;}
-   input,select,textarea{max-width:100%;}
-   .content-with-sidebar,.content-with-sidebar>*{max-width:100%!important;min-width:0!important;}
-   .content-with-sidebar p,.content-with-sidebar h1,.content-with-sidebar h2,.content-with-sidebar h3{overflow-wrap:anywhere;}
-   [style*="grid-template-columns"]>*{min-width:0;}
-   [style*="grid-template-columns: repeat(3, 1fr)"],
-   [style*="grid-template-columns: repeat(4, 1fr)"],
-   [style*="grid-template-columns: repeat(5, 1fr)"],
-   [style*="grid-template-columns: 1fr 1fr 1fr"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-   [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-   [style*="grid-template-columns: 1fr 260px"],
-   [style*="grid-template-columns: 1fr 280px"]{grid-template-columns:minmax(0,1fr)!important;}
-   [style*="grid-template-columns: 44px 1fr 110px 120px"]{grid-template-columns:28px minmax(0,1fr) 64px 78px!important;padding-left:10px!important;padding-right:10px!important;gap:6px!important;}
- }
- @media(max-width:640px){
-   [style*="grid-template-columns: 140px 1fr"]{grid-template-columns:minmax(0,1fr)!important;gap:6px!important;}
-   [style*="grid-template-columns: 140px 1fr"]>label{text-align:left!important;padding-top:0!important;}
+ @media(max-width:360px){
+   .mobile-brand-btn{width:70px!important;min-width:70px!important;max-width:70px!important;}
+   .mobile-brand-btn img{height:28px!important;max-width:70px!important;}
+   .login-btn{padding:7px 9px!important;font-size:10.5px!important;}
+   .mobile-menu-btn{width:32px!important;height:32px!important;min-width:32px!important;max-width:32px!important;}
  }
 
 `}</style>
@@ -856,7 +671,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div></>
  )}
 
- <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img className="brand-logo" src="/logo.png" alt="TokZoo"/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
+ <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TokZoo" style={{height:54,width:"auto",maxWidth:150,objectFit:"contain",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
  {!user&&(
@@ -876,32 +691,27 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
  <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}>
- <div className="mobile-nav-brand" onClick={()=>{setPage("shop");setMobileMenu(false);}}>
+ <button className="mobile-brand-btn" onClick={()=>{setPage("shop");setMobileMenu(false);}} aria-label="TokZoo home">
    <img src="/logo.png" alt="TokZoo"/>
- </div>
+ </button>
 
  <div className="top-nav-actions" style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
  {(user||cartCount>0)&&(
- <button onClick={()=>setCO(o=>!o)} style={{position:"relative",background:"none",border:"none",color:"#111",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontFamily:"inherit",flexShrink:0}}>Cart{cartCount>0&&<span style={{position:"absolute",top:-8,right:-14,background:"#fe2c55",color:"#fff",fontSize:9,fontWeight:700,width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cartCount}</span>}
+ <button className="mobile-cart-btn" onClick={()=>setCO(o=>!o)} style={{position:"relative",background:"none",border:"none",color:"#111",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontFamily:"inherit",flexShrink:0}}>Cart{cartCount>0&&<span style={{position:"absolute",top:-8,right:-14,background:"#fe2c55",color:"#fff",fontSize:9,fontWeight:700,width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cartCount}</span>}
  </button>
  )}
  {user
- ?<div onClick={()=>user.role==="seller"?setPage("seller"):setPage("profile")} style={{width:36,height:36,borderRadius:"50%",overflow:"hidden",cursor:"pointer",border:"2px solid rgba(0,0,0,0.15)",flexShrink:0}}>
+ ?<div className="mobile-profile-btn" onClick={()=>user.role==="seller"?setPage("seller"):setPage("profile")} style={{width:36,height:36,borderRadius:"50%",overflow:"hidden",cursor:"pointer",border:"2px solid rgba(0,0,0,0.15)",flexShrink:0}}>
  {profileImg?<img src={profileImg} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
  :<div style={{width:"100%",height:"100%",background:"#fe2c55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{user.avatar}</div>}
  </div>
- :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}>
+ :<div className="guest-nav-actions" style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}>
    <button className="get-app-btn" onClick={async()=>{
  const promptEvent=window.deferredPrompt;
  if(promptEvent){
-   try{
-     promptEvent.prompt();
-     await promptEvent.userChoice;
-   }catch(e){
-     console.log("PWA install prompt failed",e);
-   }finally{
-     window.deferredPrompt=null;
-   }
+   try{ promptEvent.prompt(); await promptEvent.userChoice; }
+   catch(e){ console.log("PWA install prompt failed",e); }
+   finally{ window.deferredPrompt=null; }
    return;
  }
  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -912,23 +722,32 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
 }} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button>
    <button className="login-btn" onClick={()=>{setLoginPopup(o=>!o);setMobileMenu(false);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
- {loginPopup&&(
- <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:250}}/><div className="login-popover" style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:251,animation:"fadeUp 0.2s ease both"}}><p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p><p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p><div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 24px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button><button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button></div></div></>
- )}
+
+   {loginPopup&&(
+   <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:150}}/>
+   <div className="login-popover" style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:151,animation:"fadeUp 0.2s ease both"}}>
+     <p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p>
+     <p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p>
+     <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+       <button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 24px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button>
+       <button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button>
+     </div>
+   </div></>
+   )}
  </div>
  }
  </div>
 
- <button className="mobile-menu-btn" aria-label="Open navigation" onClick={()=>{setMobileMenu(v=>!v);setLoginPopup(false);}}>
+ <button className="mobile-menu-btn" type="button" aria-label="Menu" onClick={()=>{setMobileMenu(v=>!v);setLoginPopup(false);}}>
    {mobileMenu?"×":"☰"}
  </button>
 
  {mobileMenu&&(
-   <div className="mobile-nav-menu">
-     {[["Shop","shop"],["Sell","seller"],["More","sitemap"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([label,target])=>(
-       <button key={label} onClick={()=>{setPage(target);setMobileMenu(false);}}>{label}</button>
-     ))}
-   </div>
+ <div className="mobile-nav-menu">
+   {[["Shop","shop"],["Sell","seller"],["More","sitemap"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([label,target])=>(
+     <button type="button" key={label} onClick={()=>{setPage(target);setMobileMenu(false);}}>{label}</button>
+   ))}
+ </div>
  )}
  </nav>
 
@@ -1329,7 +1148,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your account</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to view your orders, wishlist, and settings.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
  )}
  {page==="profile"&&user&&(
- <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={profileTab} setTab={setPT} onAddProduct={()=>{}} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={BUYER_TABS} showAdd={false}/><div className="seller-dashboard-content" style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
+ <div className="seller-dashboard-wrap" style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={profileTab} setTab={setPT} onAddProduct={()=>{}} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={BUYER_TABS} showAdd={false}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{orders:" My Orders",wishlist:" Wishlist",reviews:"⭐ Reviews",settings:" Settings"}[profileTab]}
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome, {user?.name} </p></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22,background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16}}>
  {[[buyerOrders.length.toString(),"Orders"],[likedP.size.toString(),"Wishlist"],["0","Reviews"],["$"+buyerOrders.reduce((s,o)=>s+o.total,0).toLocaleString(),"Spent"]].map(([n,l])=>(
