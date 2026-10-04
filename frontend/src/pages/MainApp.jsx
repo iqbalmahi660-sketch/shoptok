@@ -422,6 +422,84 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    .seller-dashboard-wrap [style*="grid-template-columns:140px 1fr"]>label{text-align:left!important;padding-top:0!important;}
  }
 
+
+
+ /* ===== MOBILE EDGE-TO-EDGE FIX ===== */
+ @media(max-width:860px){
+   html,body,#root{
+     width:100%!important;
+     max-width:100%!important;
+     margin:0!important;
+     padding:0!important;
+     overflow-x:hidden!important;
+   }
+
+   .content-with-sidebar{
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding:0!important;
+   }
+
+   nav{
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     left:0!important;
+     right:0!important;
+     box-sizing:border-box!important;
+   }
+
+   .page-inner{
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding-left:0!important;
+     padding-right:0!important;
+     box-sizing:border-box!important;
+   }
+
+   .shop-fullwidth{
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding:0!important;
+   }
+
+   .sg-home{
+     width:100vw!important;
+     max-width:100vw!important;
+     margin:0!important;
+     padding:0!important;
+     box-sizing:border-box!important;
+   }
+ }
+
+ @media(max-width:640px){
+   nav{
+     padding-left:10px!important;
+     padding-right:10px!important;
+   }
+
+   /* No outer page gutter. Give only the shop CONTENT its own small breathing room. */
+   .sg-home .sg-categories-title,
+   .sg-home .sg-section-title{
+     padding-left:12px!important;
+     padding-right:12px!important;
+   }
+
+   .sg-home .sg-categories{
+     padding-left:12px!important;
+     padding-right:12px!important;
+   }
+
+   .sg-home .sg-full-row,
+   .sg-home .sg-product-grid{
+     padding-left:8px!important;
+     padding-right:8px!important;
+   }
+ }
+
 `}</style>
 
  {checkout&&(
