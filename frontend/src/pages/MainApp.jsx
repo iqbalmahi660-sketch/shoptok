@@ -442,9 +442,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .mobile-nav-brand img{
      display:block;
-     height:38px!important;
-     width:auto!important;
-     max-width:110px!important;
+     height:42px!important;
+     width:42px!important;
+     max-width:42px!important;
      object-fit:contain;
    }
 
@@ -551,8 +551,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  @media(max-width:380px){
    .mobile-nav-brand img{
-     height:34px!important;
-     max-width:95px!important;
+     height:38px!important;
+     width:38px!important;
+     max-width:38px!important;
    }
 
    .top-nav-actions .get-app-btn{
@@ -792,7 +793,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div></>
  )}
 
- <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TokZoo" style={{height:64,width:"auto",maxWidth:175,objectFit:"contain",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
+ <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TokZoo" style={{height:84,width:84,maxWidth:84,objectFit:"contain",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
  {!user&&(
