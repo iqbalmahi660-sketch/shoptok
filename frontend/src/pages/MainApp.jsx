@@ -747,6 +747,31 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    }
  }
 
+ /* ===== LOGO STANDARD SIZE + OVERFLOW FINAL ===== */
+ .brand-logo{height:44px;width:auto;max-width:160px;object-fit:contain;display:block;}
+ @media(max-width:860px){
+   .mobile-nav-brand{flex:0 0 auto!important;width:auto!important;max-width:110px!important;overflow:visible!important;}
+   .mobile-nav-brand img{height:32px!important;width:auto!important;max-width:110px!important;object-fit:contain!important;display:block;}
+   html,body{overflow-x:hidden!important;max-width:100vw!important;}
+   img,video,canvas,iframe{max-width:100%;}
+   input,select,textarea{max-width:100%;}
+   .content-with-sidebar,.content-with-sidebar>*{max-width:100%!important;min-width:0!important;}
+   .content-with-sidebar p,.content-with-sidebar h1,.content-with-sidebar h2,.content-with-sidebar h3{overflow-wrap:anywhere;}
+   [style*="grid-template-columns"]>*{min-width:0;}
+   [style*="grid-template-columns: repeat(3, 1fr)"],
+   [style*="grid-template-columns: repeat(4, 1fr)"],
+   [style*="grid-template-columns: repeat(5, 1fr)"],
+   [style*="grid-template-columns: 1fr 1fr 1fr"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+   [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+   [style*="grid-template-columns: 1fr 260px"],
+   [style*="grid-template-columns: 1fr 280px"]{grid-template-columns:minmax(0,1fr)!important;}
+   [style*="grid-template-columns: 44px 1fr 110px 120px"]{grid-template-columns:28px minmax(0,1fr) 64px 78px!important;padding-left:10px!important;padding-right:10px!important;gap:6px!important;}
+ }
+ @media(max-width:640px){
+   [style*="grid-template-columns: 140px 1fr"]{grid-template-columns:minmax(0,1fr)!important;gap:6px!important;}
+   [style*="grid-template-columns: 140px 1fr"]>label{text-align:left!important;padding-top:0!important;}
+ }
+
 `}</style>
 
  {checkout&&(
@@ -831,7 +856,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div></>
  )}
 
- <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TokZoo" style={{height:54,width:"auto",maxWidth:150,objectFit:"contain",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
+ <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img className="brand-logo" src="/logo.png" alt="TokZoo"/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
  {!user&&(
@@ -1304,7 +1329,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your account</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to view your orders, wishlist, and settings.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
  )}
  {page==="profile"&&user&&(
- <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={profileTab} setTab={setPT} onAddProduct={()=>{}} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={BUYER_TABS} showAdd={false}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
+ <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={profileTab} setTab={setPT} onAddProduct={()=>{}} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={BUYER_TABS} showAdd={false}/><div className="seller-dashboard-content" style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{orders:" My Orders",wishlist:" Wishlist",reviews:"⭐ Reviews",settings:" Settings"}[profileTab]}
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome, {user?.name} </p></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22,background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16}}>
  {[[buyerOrders.length.toString(),"Orders"],[likedP.size.toString(),"Wishlist"],["0","Reviews"],["$"+buyerOrders.reduce((s,o)=>s+o.total,0).toLocaleString(),"Spent"]].map(([n,l])=>(
