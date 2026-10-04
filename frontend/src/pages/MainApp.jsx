@@ -530,9 +530,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
  if(isIOS){
-   alert("iPhone/iPad: Share button tap karein, phir Add to Home Screen select karein.");
+   alert("To install TokZoo on iPhone or iPad, tap the Share button and then select Add to Home Screen.");
  }else{
-   alert("Chrome menu open karein aur Install TokZoo / Add to Home screen select karein.");
+   alert("To install TokZoo, open your browser menu and select Install TokZoo or Add to Home Screen.");
  }
 }} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button><button onClick={()=>setLoginPopup(o=>!o)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
  {loginPopup&&(
