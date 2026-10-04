@@ -52,50 +52,69 @@ export default function SingaporeStyleHome({
     <main className="sg-home" style={{ maxWidth: 2400, width: "100%", margin: "0 auto" }}>
 
       <style>{`
-        @media (max-width: 640px) {
-          .sg-categories {
-            display: flex !important;
-            flex-wrap: nowrap !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            gap: 12px !important;
-            padding: 0 10px 6px !important;
-            box-sizing: border-box !important;
-            scrollbar-width: none !important;
-            -webkit-overflow-scrolling: touch !important;
-            overscroll-behavior-x: contain !important;
-          }
+        .sg-category-carousel {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
 
-          .sg-categories::-webkit-scrollbar {
-            display: none !important;
-          }
+        .sg-category-track {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          display: flex;
+          flex-wrap: nowrap;
+          gap: 12px;
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding: 0 10px 6px;
+          box-sizing: border-box;
+          scrollbar-width: none;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+          scroll-snap-type: x proximity;
+          touch-action: pan-x;
+        }
 
-          .sg-category {
-            flex: 0 0 78px !important;
-            width: 78px !important;
-            min-width: 78px !important;
-            max-width: 78px !important;
+        .sg-category-track::-webkit-scrollbar {
+          display: none;
+        }
+
+        .sg-category-track .sg-category {
+          flex: 0 0 78px;
+          width: 78px;
+          min-width: 78px;
+          max-width: 78px;
+          scroll-snap-align: start;
+        }
+
+        @media (min-width: 641px) {
+          .sg-category-track {
+            padding-left: 0;
+            padding-right: 0;
           }
         }
       `}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
-      <div className="sg-categories" aria-label="Categories">
-        {CATS.filter((c) => c.s !== "all").map((c) => (
-          <button
-            key={c.s}
-            type="button"
-            className={`sg-category ${cat === c.s ? "active" : ""}`}
-            onClick={() => setCat(c.s)}
-          >
-            <span className="sg-category-icon">
-              <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
-            </span>
-            <span>{CATEGORY_LABELS[c.s] || c.l}</span>
-          </button>
-        ))}
+      <div className="sg-category-carousel" aria-label="Categories carousel">
+        <div className="sg-category-track">
+          {CATS.filter((c) => c.s !== "all").map((c) => (
+            <button
+              key={c.s}
+              type="button"
+              className={`sg-category ${cat === c.s ? "active" : ""}`}
+              onClick={() => setCat(c.s)}
+            >
+              <span className="sg-category-icon">
+                <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
+              </span>
+              <span>{CATEGORY_LABELS[c.s] || c.l}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
