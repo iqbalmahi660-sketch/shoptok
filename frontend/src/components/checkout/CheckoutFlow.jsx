@@ -13,7 +13,7 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  const [countryCityData,setCountryCityData]=useState([]);
  const [locationLoading,setLocationLoading]=useState(true);
  const [locationError,setLocationError]=useState(false);
- const [pay,setPay]=useState({method:"Bank Transfer",txRef:"",cryptoType:"BTC"});
+ const [pay,setPay]=useState({method:"USDT",txRef:"",cryptoType:"BTC"});
 
  const STEPS=["Review","Shipping","Payment","Confirm"];
 
@@ -133,16 +133,12 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  {/* STEP 2 — Payment */}
  {step===2&&(
  <div><h2 style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:22,marginBottom:20}}>Payment Method</h2><div style={{display:"flex",gap:10,marginBottom:20}}>
- {[["Bank Transfer"," Bank Transfer"],["USDT"," USDT"],["Crypto","₿ Crypto"]].map(([m,l])=>(
+ {[["USDT"," USDT"],["Crypto","₿ Crypto"]].map(([m,l])=>(
  <button key={m} onClick={()=>setPay({...pay,method:m})} style={{flex:1,padding:"10px 6px",borderRadius:10,border:`2px solid ${pay.method===m?"#fe2c55":"#e5e5e5"}`,background:pay.method===m?"rgba(254,44,85,0.08)":"#f7f7f8",color:pay.method===m?"#fe2c55":"#666",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:pay.method===m?700:400,textAlign:"center",transition:"all 0.2s"}}>{l}</button>
  ))}
  </div>
 
- {pay.method==="Bank Transfer"&&(
- <div style={{background:"#ffffff",border:"1px solid #e5e5e5",borderRadius:14,padding:20,marginBottom:16}}><div style={{background:"linear-gradient(135deg,#1a3a5c,#0d2137)",borderRadius:12,padding:20,marginBottom:16,textAlign:"center"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:16,marginBottom:4,color:"#fff"}}>Bank Transfer</p><p style={{fontSize:12,color:"rgba(255,255,255,0.6)"}}>Transfer to our bank account</p></div><div style={{background:"rgba(37,244,238,0.06)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:10,padding:14,marginBottom:12}}><p style={{fontSize:12,color:"#25f4ee",marginBottom:6,fontWeight:700}}>Bank Details:</p><p style={{fontSize:13,color:"rgba(0,0,0,0.8)",lineHeight:1.8}}>Bank: <strong>HBL</strong><br/>Account Title: <strong>ShopTok PK</strong><br/>Account No: <strong>1234-5678-9012</strong><br/>IBAN: <strong>PK36HABB0000001123456702</strong></p></div><Field label="Transaction Reference / Receipt No." value={pay.txRef||""} onChange={v=>setPay({...pay,txRef:v})} placeholder="e.g. TXN123456"/><div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:8,padding:"10px 14px"}}><p style={{fontSize:12,color:"#fbbf24"}}>Please transfer the exact amount and provide transaction reference for faster processing.</p></div></div>
- )}
-
- {pay.method==="USDT"&&(
+  {pay.method==="USDT"&&(
  <div style={{background:"#ffffff",border:"1px solid #e5e5e5",borderRadius:14,padding:20,marginBottom:16}}><div style={{background:"linear-gradient(135deg,#1a3a1a,#0d2d0d)",borderRadius:12,padding:20,marginBottom:16,textAlign:"center"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700,fontSize:16,marginBottom:4,color:"#fff"}}>USDT (TRC-20)</p><p style={{fontSize:12,color:"rgba(255,255,255,0.6)"}}>Tether USD — Tron Network</p></div><div style={{background:"rgba(52,211,153,0.06)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:14,marginBottom:12}}><p style={{fontSize:12,color:"#34d399",marginBottom:6,fontWeight:700}}>USDT Wallet Address (TRC-20):</p><p style={{fontSize:12,fontFamily:"monospace",color:"rgba(0,0,0,0.8)",wordBreak:"break-all",letterSpacing:"0.05em"}}>TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p></div><Field label="Your TxHash / Transaction ID" value={pay.txRef||""} onChange={v=>setPay({...pay,txRef:v})} placeholder="e.g. abc123def456..."/><div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:8,padding:"10px 14px"}}><p style={{fontSize:12,color:"#fbbf24"}}>Only TRC-20 network. Send exact USDT amount and provide TxHash for verification.</p></div></div>
  )}
 
