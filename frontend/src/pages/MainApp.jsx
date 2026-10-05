@@ -77,6 +77,19 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  const showToast=(msg)=>{setToast(msg);setTimeout(()=>setToast(null),2500);};
  const addToCart=(p)=>{setCart(prev=>{const ex=prev.find(i=>i.id===p.id);return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,qty:1}];});showToast(`${p.emoji} Added to cart!`);};
+ const startCheckout=(directProduct=null)=>{
+   const token=localStorage.getItem("shopToken");
+   if(!user||!token){
+     showToast("Please log in to place an order.");
+     goAuth(S.LOGIN);
+     return;
+   }
+   if(directProduct){
+     setCart([{...directProduct,qty:1}]);
+   }
+   setCO(false);
+   setCheckout(true);
+ };
  const removeFromCart=(id)=>setCart(prev=>prev.filter(i=>i.id!==id));
  const updateQty=(id,d)=>setCart(prev=>prev.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i));
  const cartTotal=cart.reduce((s,i)=>s+i.price*i.qty,0);
@@ -100,7 +113,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  rating:Number(p.rating)||0,
  sold:Number(p.sold)||0,
  emoji:p.emoji||"",
- img:p.image_url||p.image||p.thumbnail||p.img||null,
+ img:Array.isArray(p.images)&&p.images.length?p.images[0]:(p.image_url||p.image||p.thumbnail||p.img||null),
  })));
  setDbLoading(false);
  }).catch(()=>setDbLoading(false));
@@ -802,7 +815,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  onClose={()=>setSP(null)}
  addToCart={addToCart}
  setCart={setCart}
- onBuyNow={()=>{setCO(false);setCheckout(true);}}
+ onBuyNow={()=>startCheckout(selProd)}
  likedP={likedP}
  toggleLP={toggleLP}
  showToast={showToast}
@@ -830,7 +843,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  </div>
  {cart.length>0&&(
- <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>${cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add $"+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — ${(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
+ <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>${cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add $"+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>startCheckout()} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — ${(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
  </button></div>
  )}
  </div></>
