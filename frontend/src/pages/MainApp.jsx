@@ -220,6 +220,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(d.orders){
  setSO(d.orders.map(o=>({
  ...o,
+ dbId:o.id,
  id:o.order_number||`#ORD-${o.id}`,
  items:[{title:o.product_title,emoji:o.product_emoji||"",qty:o.quantity,price:Number(o.unit_price)||0}],
  total:Number(o.total_amount)||0,
@@ -270,6 +271,30 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }catch(e){console.log("Seller videos load failed",e);}
  };
  useEffect(()=>{loadSellerVideos();},[user]);
+
+ const updateSellerOrderStatus=async(order,status)=>{
+   if(status!=="delivered") return;
+   const token=localStorage.getItem("shopToken");
+   if(!token){showToast("Please log in again.");return;}
+   try{
+     const orderId=order.dbId||order.id;
+     const res=await fetch(`${API}/orders/seller/${orderId}/status`,{
+       method:"PATCH",
+       headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
+       body:JSON.stringify({status})
+     });
+     const data=await res.json();
+     if(!res.ok) throw new Error(data.message||"Could not update delivery status");
+     setSO(prev=>prev.map(o=>(o.dbId||o.id)===orderId?{
+       ...o,
+       status:"Delivered",
+       statusColor:"#34d399"
+     }:o));
+     showToast("Order marked as Delivered");
+   }catch(err){
+     showToast(err.message||"Could not update delivery status");
+   }
+ };
 
  const SELLER_TABS=[
  {key:"overview", icon:"", label:"Dashboard", badge:0},
@@ -1046,15 +1071,25 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div>
  {o.shipping_address&&<div style={{marginTop:8,background:"rgba(0,0,0,0.03)",borderRadius:8,padding:"8px 12px"}}><p style={{fontSize:10,color:"#555",marginBottom:3}}>Address</p><p style={{fontSize:13}}>{o.shipping_address}, {o.shipping_city}</p>{o.rider_note&&<p style={{fontSize:11,color:"#fbbf24",marginTop:4}}> {o.rider_note}</p>}</div>}
- </div><div style={{padding:"12px 18px"}}><p style={{fontSize:11,color:"#25f4ee",fontWeight:700,marginBottom:10}}>DELIVERY STATUS</p><div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(0,0,0,0.03)",borderRadius:10,padding:"12px 16px"}}><span style={{fontSize:22}}>{
- (o.status||"").toLowerCase()==="delivered"?"":
- (o.status||"").toLowerCase()==="shipped"?"":
- (o.status||"").toLowerCase()==="cancelled"?"":"⏳"
- }</span><div><p style={{fontSize:13,fontWeight:700,color:
- (o.status||"").toLowerCase()==="delivered"?"#34d399":
- (o.status||"").toLowerCase()==="shipped"?"#25f4ee":
- (o.status||"").toLowerCase()==="cancelled"?"#ef4444":"#fbbf24"
- }}>{o.status||"Processing"}</p><p style={{fontSize:11,color:"#555",marginTop:2}}>Status is managed by admin</p></div></div></div></div>
+ </div><div style={{padding:"12px 18px"}}>
+ <p style={{fontSize:11,color:"#25f4ee",fontWeight:700,marginBottom:10}}>DELIVERY STATUS</p>
+ <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,background:"rgba(0,0,0,0.03)",borderRadius:10,padding:"12px 16px",flexWrap:"wrap"}}>
+   <div>
+     <p style={{fontSize:13,fontWeight:700,color:(o.status||"").toLowerCase()==="delivered"?"#34d399":"#fbbf24"}}>
+       {(o.status||"").toLowerCase()==="delivered"?"Delivered":"Processing"}
+     </p>
+     <p style={{fontSize:11,color:"#555",marginTop:2}}>Processing starts automatically. Seller marks order Delivered.</p>
+   </div>
+   {(o.status||"").toLowerCase()!=="delivered"&&(
+     <button
+       onClick={()=>updateSellerOrderStatus(o,"delivered")}
+       style={{padding:"9px 14px",border:"none",borderRadius:8,background:"#34d399",color:"#fff",fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}
+     >
+       Mark as Delivered
+     </button>
+   )}
+ </div>
+</div></div>
  )}
  </div>
  ))}
@@ -1092,7 +1127,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div key={i} style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:46,height:46,borderRadius:10,background:"rgba(254,44,85,0.08)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:26}}>{p.emoji}</span>}</div><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{p.title}</p><p style={{fontSize:11,color:"#fbbf24"}}>⏳ Awaiting admin review</p></div><span style={{fontSize:11,color:"#fbbf24",background:"rgba(251,191,36,0.1)",padding:"5px 12px",borderRadius:100,fontWeight:600}}>Pending</span></div>
  ))}
  {sellerOrders.filter(o=>o.status==="Processing").map((o,i)=>(
- <div key={i} style={{background:"rgba(37,244,238,0.05)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#25f4ee"}}>⏳ Processing — admin will update status</p></div><span style={{fontSize:11,color:"#25f4ee",background:"rgba(37,244,238,0.1)",padding:"5px 12px",borderRadius:100,fontWeight:600}}>Processing</span></div>
+ <div key={i} style={{background:"rgba(37,244,238,0.05)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#25f4ee"}}>⏳ Processing — update status from Shop Orders</p></div><span style={{fontSize:11,color:"#25f4ee",background:"rgba(37,244,238,0.1)",padding:"5px 12px",borderRadius:100,fontWeight:600}}>Processing</span></div>
  ))}
  </div>}
  </div>}
