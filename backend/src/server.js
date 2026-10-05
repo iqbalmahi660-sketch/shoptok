@@ -1,4 +1,3 @@
-```js
 require('dotenv').config();
 
 const express = require('express');
@@ -194,4 +193,3 @@ server.listen(PORT, () => {
 });
 
 module.exports = { app, io };
-```
