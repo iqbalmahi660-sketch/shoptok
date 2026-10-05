@@ -1,4 +1,3 @@
-```js
 const express = require('express');
 const { query } = require('../database/db');
 const { authUser, authSeller } = require('../middleware/auth');
@@ -275,4 +274,3 @@ router.get('/my', authUser, async (req, res) => {
 
 
 module.exports = router;
-```
