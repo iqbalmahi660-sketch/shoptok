@@ -2,7 +2,7 @@ import AboutUs from "./AboutUs.jsx";
 import VideoFeed from "./VideoFeed.jsx";
 import { useState, useEffect, useRef } from "react";
 import  SingaporeStyleHome  from "./SingaporeStyleHome.jsx";
-import { API, CATS, S, CATALOGUE } from "../data/catalogue.js";
+import { API, CATS, S } from "../data/catalogue.js";
 import Btn from "../components/common/Btn.jsx";
 import { AddProductModal } from "../components/modals/AddProductModal.jsx";
 import { CheckoutFlow } from "../components/checkout/CheckoutFlow.jsx";
@@ -812,6 +812,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {selProd&&(
  <div className="content-with-sidebar" style={{position:"fixed",top:0,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:120,overflowY:"auto"}}><FullProductPage
  prod={selProd}
+ products={dbProducts}
  onClose={()=>setSP(null)}
  addToCart={addToCart}
  setCart={setCart}
@@ -1352,7 +1353,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {likedP.size===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"rgba(0,0,0,0.4)",marginBottom:16}}>Wishlist empty</p><button onClick={()=>setPage("shop")} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:12}}>
- {CATALOGUE.filter(p=>likedP.has(p.id)).map(p=>(
+ {dbProducts.filter(p=>likedP.has(p.id)).map(p=>(
  <div key={p.id} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{aspectRatio:"1",background:`${p.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,position:"relative"}}>
  {p.emoji}
  <button onClick={()=>toggleLP(p.id)} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.5)",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:12}}></button></div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:7,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</span><button onClick={()=>addToCart(p)} style={{background:"#fe2c55",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>+</button></div></div></div>
@@ -1372,7 +1373,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div>
  {page==="feed"&&(
  <VideoFeed
- products={dbProducts.length ? dbProducts : CATALOGUE}
+ products={dbProducts}
  onOpen={setSP}
  onAdd={addToCart}
  likedV={likedV}

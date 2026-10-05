@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { CATALOGUE, PRODUCT_REVIEWS, SIZES, SWATCH_COLORS } from "../../data/catalogue.js";
+import { PRODUCT_REVIEWS, SIZES, SWATCH_COLORS } from "../../data/catalogue.js";
 
 const Stars = ({ rating = 0, size = 13, gap = 2 }) => (
   <div style={{ display: "flex", gap, lineHeight: 1 }}>
@@ -22,6 +22,7 @@ const PAGE_SIZE = 5;
 
 export const FullProductPage = ({
   prod,
+  products = [],
   onClose,
   addToCart,
   setCart,
@@ -101,13 +102,15 @@ export const FullProductPage = ({
   const totalPages = Math.max(1, Math.ceil(filteredReviews.length / PAGE_SIZE));
   const pagedReviews = filteredReviews.slice((reviewPage - 1) * PAGE_SIZE, reviewPage * PAGE_SIZE);
 
-  const related = CATALOGUE.filter((p) => p.id !== prod.id && p.cat === prod.cat)
+  const related = products
+    .filter((p) => p.id !== prod.id && (p.cat === prod.cat || p.category === prod.category))
     .slice(0, 10)
-    .concat(CATALOGUE.filter((p) => p.id !== prod.id).slice(0, 10))
+    .concat(products.filter((p) => p.id !== prod.id).slice(0, 10))
+    .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
     .slice(0, 15);
 
-  const fromSeller = CATALOGUE
-    .filter((p) => p.id !== prod.id && (p.seller || p.brand) === (prod.seller || prod.brand))
+  const fromSeller = products
+    .filter((p) => p.id !== prod.id && (p.seller || p.brand || p.seller_id) === (prod.seller || prod.brand || prod.seller_id))
     .slice(0, 5);
   const sellerName = prod.seller || prod.brand || "this seller";
 
@@ -175,8 +178,8 @@ export const FullProductPage = ({
             {/* Price row */}
             <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
               {hasDiscount && <span style={{ color: "#fe2c55", fontWeight: 800, fontSize: 18 }}>-{prod.disc}%</span>}
-              <span style={{ color: "#fe2c55", fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 32 }}>Rs {Number(prod.price).toLocaleString()}</span>
-              {hasDiscount && <span style={{ fontSize: 15, color: "#aaa", textDecoration: "line-through" }}>Rs {Number(prod.orig).toLocaleString()}</span>}
+              <span style={{ color: "#fe2c55", fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 32 }}>${Number(prod.price).toLocaleString()}</span>
+              {hasDiscount && <span style={{ fontSize: 15, color: "#aaa", textDecoration: "line-through" }}>${Number(prod.orig).toLocaleString()}</span>}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 18, color: "#0aa15c", fontSize: 12.5, fontWeight: 600 }}>
@@ -186,7 +189,7 @@ export const FullProductPage = ({
             <h1 style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.4, color: "#111", marginBottom: 10 }}>{prod.title}</h1>
 
             <div style={{ fontSize: 12.5, color: "#888", marginBottom: 8 }}>
-              Sold by <span style={{ color: "#111", fontWeight: 600 }}>{prod.seller || prod.brand || "ShopTok Seller"}</span>
+              Sold by <span style={{ color: "#111", fontWeight: 600 }}>{prod.seller || prod.brand || "TikTok Shop Seller"}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
               <Stars rating={rating} size={14} />
@@ -250,7 +253,7 @@ export const FullProductPage = ({
             {/* Trust badges */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
               {[
-                ["🚚", "Free Delivery", "On orders above Rs 1,000"],
+                ["🚚", "Free Delivery", "On orders above $1,000"],
                 ["💵", "Cash on Delivery", "Pay when you receive"],
                 ["↩️", "7-Day Returns", "Easy return policy"],
                 ["🔒", "Secure Payment", "USDT, Bank & Crypto"],
@@ -386,12 +389,12 @@ export const FullProductPage = ({
               <div style={{ padding: "24px 20px", maxWidth: 800 }}>
                 <p style={{ fontSize: 13.5, color: "#555", lineHeight: 1.9, marginBottom: 20, maxHeight: descExpanded ? "none" : 96, overflow: "hidden" }}>
                   {prod.description ||
-                    `${prod.title} — a premium quality product available on ShopTok. This product is carefully curated to meet the highest standards of quality and value.`}
+                    `${prod.title} — a premium quality product available on TikTok Shop. This product is carefully curated to meet the highest standards of quality and value.`}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
                   {[
                     ["Category", prod.cat || "General"],
-                    ["Brand", prod.brand || "ShopTok Select"],
+                    ["Brand", prod.brand || "TikTok Shop Select"],
                     ["Stock", `${prod.stock || 0} units`],
                     ["Sold", `${sold.toLocaleString()} units`],
                   ].map(([k, v]) => (
@@ -448,7 +451,7 @@ const ProductCard = ({ p, onClose }) => (
     <div style={{ padding: 12 }}>
       <p style={{ fontSize: 12.5, fontWeight: 500, marginBottom: 6, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</p>
       {Number(p.disc) > 0 && <p style={{ fontSize: 11, fontWeight: 700, color: "#fe2c55", marginBottom: 2 }}>-{p.disc}%</p>}
-      <p style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, color: "#fe2c55", fontSize: 13.5 }}>Rs {Number(p.price).toLocaleString()}</p>
+      <p style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, color: "#fe2c55", fontSize: 13.5 }}>${Number(p.price).toLocaleString()}</p>
     </div>
   </div>
 );
