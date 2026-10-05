@@ -1372,11 +1372,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  :<div style={{display:"flex",flexDirection:"column",gap:12}}>{buyerOrders.map((order,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,background:`${p.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
  <div style={{padding:"10px 16px 14px"}}><div style={{display:"flex",alignItems:"center",gap:0}}>
- {["Placed","Confirmed","Shipped","Delivered"].map((s,si)=>{
- const done=["Placed","Confirmed"].includes(order.status)||si===0||(order.status==="Shipped"&&si<=2)||(order.status==="Delivered"&&si<=3);
+ {["Processing","Delivered"].map((s,si)=>{
+ const isDelivered=(order.status||"").toLowerCase()==="delivered";
+ const done=si===0||isDelivered;
  return(
- <div key={s} style={{display:"flex",alignItems:"center",flex:si<3?1:"auto"}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:18,height:18,borderRadius:"50%",background:done?"#34d399":"#222",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9}}>{done?"":""}</div><span style={{fontSize:9,color:done?"#34d399":"#444",whiteSpace:"nowrap"}}>{s}</span></div>
- {si<3&&(<div style={{flex:1,height:2,background:done?"#34d399":"#222",margin:"0 4px",marginBottom:14}}/>)}
+ <div key={s} style={{display:"flex",alignItems:"center",flex:si<1?1:"auto"}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:18,height:18,borderRadius:"50%",background:done?"#34d399":"#222",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9}}>{done?"":""}</div><span style={{fontSize:9,color:done?"#34d399":"#444",whiteSpace:"nowrap"}}>{s}</span></div>
+ {si<1&&(<div style={{flex:1,height:2,background:isDelivered?"#34d399":"#222",margin:"0 4px",marginBottom:14}}/>)}
  </div>
  );
  })}
