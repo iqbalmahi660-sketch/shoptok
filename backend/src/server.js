@@ -35,7 +35,6 @@ const io = new Server(server, {
 socketMgr.init(io);
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -51,13 +50,13 @@ app.use(
 );
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// Allow TokZoo web/admin domains, Railway app domains and local development.
-// Using a function keeps production flexible while still rejecting unknown origins.
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
 
   try {
-    const { hostname, protocol } = new URL(origin);
+    const parsed = new URL(origin);
+    const hostname = parsed.hostname;
+    const protocol = parsed.protocol;
 
     if (
       protocol === 'https:' &&
@@ -76,7 +75,7 @@ const isAllowedOrigin = (origin) => {
     ) {
       return true;
     }
-  } catch (_) {
+  } catch (err) {
     return false;
   }
 
@@ -84,29 +83,42 @@ const isAllowedOrigin = (origin) => {
 };
 
 const corsOptions = {
-  origin(origin, callback) {
+  origin: function (origin, callback) {
     if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
 
     console.log('❌ CORS blocked origin:', origin);
-    return callback(new Error(`Not allowed by CORS: ${origin}`));
+
+    return callback(
+      new Error('Not allowed by CORS: ' + origin)
+    );
   },
 
   credentials: true,
 
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+  ],
 
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+  ],
 
-  exposedHeaders: ['Content-Length'],
+  exposedHeaders: [
+    'Content-Length',
+  ],
 
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-
-// cors() middleware already handles OPTIONS/preflight requests.
 
 // ── Body parsers ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
@@ -136,7 +148,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/videos', require('./routes/videos'));
 
-// ── Health check ──────────────────────────────────────────────────────────────
+// ── Health checks ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -176,9 +188,9 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log('\n🚀 ShopTok Backend v2.0');
-  console.log(`   Port:   ${PORT}`);
-  console.log(`   Env:    ${process.env.NODE_ENV}`);
-  console.log(`   Health: http://localhost:${PORT}/health\n`);
+  console.log('   Port:   ' + PORT);
+  console.log('   Env:    ' + process.env.NODE_ENV);
+  console.log('   Health: http://localhost:' + PORT + '/health\n');
 });
 
 module.exports = { app, io };
