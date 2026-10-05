@@ -9,10 +9,47 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  const [orderId,setOrderId]=useState(`#ORD-${Date.now().toString().slice(-6)}`);
  const shipping=cartTotal>=1000?0:150;
  const total=cartTotal+shipping;
- const [addr,setAddr]=useState({name:user?.name||"",phone:"",address:"",city:"",note:""});
+ const [addr,setAddr]=useState({name:user?.name||"",phone:"",address:"",country:"Pakistan",city:"",note:""});
+ const [countryCityData,setCountryCityData]=useState([]);
+ const [locationLoading,setLocationLoading]=useState(true);
+ const [locationError,setLocationError]=useState(false);
  const [pay,setPay]=useState({method:"Bank Transfer",txRef:"",cryptoType:"BTC"});
 
  const STEPS=["Review","Shipping","Payment","Confirm"];
+
+ useEffect(()=>{
+   let active=true;
+   const loadLocations=async()=>{
+     setLocationLoading(true);
+     setLocationError(false);
+     try{
+       const res=await fetch("https://countriesnow.space/api/v0.1/countries");
+       const data=await res.json();
+       if(!res.ok||data?.error||!Array.isArray(data?.data)) throw new Error("Location data unavailable");
+       if(active){
+         setCountryCityData(
+           data.data
+             .filter(x=>x?.country)
+             .map(x=>({country:x.country,cities:Array.isArray(x.cities)?x.cities:[]}))
+             .sort((a,b)=>a.country.localeCompare(b.country))
+         );
+       }
+     }catch(e){
+       if(active){
+         setLocationError(true);
+         setCountryCityData([{country:"Pakistan",cities:CITIES||[]}]);
+       }
+     }finally{
+       if(active) setLocationLoading(false);
+     }
+   };
+   loadLocations();
+   return()=>{active=false;};
+ },[]);
+
+ const countries=countryCityData.map(x=>x.country);
+ const selectedCountry=countryCityData.find(x=>x.country===addr.country);
+ const availableCities=(selectedCountry?.cities||[]).filter(Boolean).sort((a,b)=>a.localeCompare(b));
 
  if(step===3){
  return(
@@ -20,7 +57,7 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  {cart.map((item,i)=>(
  <div key={i} style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}><div style={{width:38,height:38,borderRadius:8,background:`${item.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{item.emoji}</div><div style={{flex:1}}><p style={{fontSize:12,fontWeight:500}}>{item.title}</p><p style={{fontSize:11,color:"#555"}}>Qty: {item.qty}</p></div><span style={{fontSize:13,fontWeight:600,color:"#fe2c55"}}>${(item.price*item.qty).toLocaleString()}</span></div>
  ))}
- <div style={{borderTop:"1px solid #1a1a1a",paddingTop:12,marginTop:4}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,color:"#555"}}>Subtotal</span><span style={{fontSize:12}}>${cartTotal.toLocaleString()}</span></div><div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:12,color:"#555"}}>Shipping</span><span style={{fontSize:12,color:shipping===0?"#34d399":"#fff"}}>{shipping===0?"Free":"$"+shipping}</span></div><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700}}>Total</span><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:16,color:"#fe2c55"}}>${total.toLocaleString()}</span></div></div></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16,marginBottom:24,textAlign:"left"}}><p style={{fontSize:12,color:"#555",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.06em"}}>Delivery To</p><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{addr.name}</p><p style={{fontSize:12,color:"#888"}}>{addr.address}, {addr.city}</p><p style={{fontSize:12,color:"#888"}}>{addr.phone}</p></div><div style={{display:"flex",gap:10}}><Btn full variant="success" onClick={onDone}>Continue Shopping</Btn></div></div></div>
+ <div style={{borderTop:"1px solid #1a1a1a",paddingTop:12,marginTop:4}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12,color:"#555"}}>Subtotal</span><span style={{fontSize:12}}>${cartTotal.toLocaleString()}</span></div><div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:12,color:"#555"}}>Shipping</span><span style={{fontSize:12,color:shipping===0?"#34d399":"#fff"}}>{shipping===0?"Free":"$"+shipping}</span></div><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:700}}>Total</span><span style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:16,color:"#fe2c55"}}>${total.toLocaleString()}</span></div></div></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16,marginBottom:24,textAlign:"left"}}><p style={{fontSize:12,color:"#555",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.06em"}}>Delivery To</p><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{addr.name}</p><p style={{fontSize:12,color:"#888"}}>{addr.address}, {addr.city}{addr.country ? `, ${addr.country}` : ""}</p><p style={{fontSize:12,color:"#888"}}>{addr.phone}</p></div><div style={{display:"flex",gap:10}}><Btn full variant="success" onClick={onDone}>Continue Shopping</Btn></div></div></div>
  );
  }
 
@@ -48,8 +85,49 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
 
  {/* STEP 1 — Shipping */}
  {step===1&&(
- <div><h2 style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:22,marginBottom:20}}>Shipping Details</h2><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20,marginBottom:20}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Field label="Full Name *" value={addr.name} onChange={v=>setAddr({...addr,name:v})} placeholder="Muhammad Ali"/><Field label="Phone *" value={addr.phone} onChange={v=>setAddr({...addr,phone:v})} placeholder="03001234567"/></div><Field label="Address *" value={addr.address} onChange={v=>setAddr({...addr,address:v})} placeholder="House/Street/Area"/><div><label style={{fontSize:10,color:"#666",display:"block",marginBottom:5,textTransform:"uppercase"}}>City *</label><select value={addr.city} onChange={e=>setAddr({...addr,city:e.target.value})} style={{width:"100%",padding:"11px 12px",background:"#ffffff",border:"1px solid #e5e5e5",borderRadius:8,color:addr.city?"#111":"#888",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:14}}><option value="">Select city</option>{CITIES.map(c=><option key={c}>{c}</option>)}
- </select></div><Field label="Note for rider (optional)" value={addr.note} onChange={v=>setAddr({...addr,note:v})} placeholder="e.g. Call before delivery"/></div><div style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.15)",borderRadius:12,padding:14,marginBottom:20,display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:24}}></span><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>Estimated Delivery</p><p style={{fontSize:12,color:"#888"}}>3–5 business days · {shipping===0?"Free Shipping":"$"+shipping+" shipping fee"}</p></div></div><Btn full disabled={!addr.name||!addr.phone||!addr.address||!addr.city} onClick={()=>setStep(2)}>Continue to Payment →</Btn></div>
+ <div><h2 style={{fontFamily:"'TikTok Sans',sans-serif",fontWeight:800,fontSize:22,marginBottom:20}}>Shipping Details</h2><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20,marginBottom:20}}><div className="shipping-name-phone" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Field label="Full Name *" value={addr.name} onChange={v=>setAddr({...addr,name:v})} placeholder="Muhammad Ali"/><Field label="Phone *" value={addr.phone} onChange={v=>setAddr({...addr,phone:v})} placeholder="+1 555 123 4567"/></div><Field label="Address *" value={addr.address} onChange={v=>setAddr({...addr,address:v})} placeholder="House / Street / Area"/>
+
+ <div className="shipping-location-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+   <div>
+     <label style={{fontSize:10,color:"#666",display:"block",marginBottom:5,textTransform:"uppercase"}}>Country *</label>
+     <select
+       value={addr.country}
+       disabled={locationLoading}
+       onChange={e=>setAddr({...addr,country:e.target.value,city:""})}
+       style={{width:"100%",padding:"11px 12px",background:"#ffffff",border:"1px solid #e5e5e5",borderRadius:8,color:addr.country?"#111":"#888",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:14}}
+     >
+       <option value="">{locationLoading?"Loading countries...":"Select country"}</option>
+       {countries.map(c=><option key={c} value={c}>{c}</option>)}
+     </select>
+   </div>
+
+   <div>
+     <label style={{fontSize:10,color:"#666",display:"block",marginBottom:5,textTransform:"uppercase"}}>City *</label>
+     {availableCities.length>0 ? (
+       <select
+         value={addr.city}
+         disabled={!addr.country||locationLoading}
+         onChange={e=>setAddr({...addr,city:e.target.value})}
+         style={{width:"100%",padding:"11px 12px",background:"#ffffff",border:"1px solid #e5e5e5",borderRadius:8,color:addr.city?"#111":"#888",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:14}}
+       >
+         <option value="">{!addr.country?"Select country first":"Select city"}</option>
+         {availableCities.map(c=><option key={c} value={c}>{c}</option>)}
+       </select>
+     ) : (
+       <input
+         value={addr.city}
+         onChange={e=>setAddr({...addr,city:e.target.value})}
+         placeholder={!addr.country?"Select country first":"Enter city"}
+         disabled={!addr.country}
+         style={{width:"100%",padding:"11px 12px",background:"#ffffff",border:"1px solid #e5e5e5",borderRadius:8,color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:14}}
+       />
+     )}
+   </div>
+ </div>
+
+ {locationError&&<p style={{fontSize:11,color:"#b45309",marginTop:-6,marginBottom:12}}>Worldwide city service is temporarily unavailable. You can still enter your city manually.</p>}
+
+ <Field label="Note for rider (optional)" value={addr.note} onChange={v=>setAddr({...addr,note:v})} placeholder="e.g. Call before delivery"/></div><div style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.15)",borderRadius:12,padding:14,marginBottom:20,display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:24}}></span><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>Estimated Delivery</p><p style={{fontSize:12,color:"#888"}}>3–5 business days · {shipping===0?"Free Shipping":"$"+shipping+" shipping fee"}</p></div></div><Btn full disabled={!addr.name||!addr.phone||!addr.address||!addr.country||!addr.city} onClick={()=>setStep(2)}>Continue to Payment →</Btn></div>
  )}
 
  {/* STEP 2 — Payment */}
@@ -144,6 +222,15 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  {pay.method==="cod"?" Place Order (COD)":pay.method==="card"?" Pay $"+total.toLocaleString():" Confirm & Pay $"+total.toLocaleString()}
  </Btn></div>
  )}
+ <style>{`
+   @media(max-width:600px){
+     .shipping-name-phone,
+     .shipping-location-grid{
+       grid-template-columns:1fr!important;
+       gap:0!important;
+     }
+   }
+ `}</style>
  </div></div>
  );
 };
