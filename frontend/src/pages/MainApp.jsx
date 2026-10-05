@@ -2,7 +2,7 @@ import AboutUs from "./AboutUs.jsx";
 import VideoFeed from "./VideoFeed.jsx";
 import { useState, useEffect, useRef } from "react";
 import  SingaporeStyleHome  from "./SingaporeStyleHome.jsx";
-import { API, CATS, S } from "../data/catalogue.js";
+import { API, CATS, S, CATALOGUE } from "../data/catalogue.js";
 import Btn from "../components/common/Btn.jsx";
 import { AddProductModal } from "../components/modals/AddProductModal.jsx";
 import { CheckoutFlow } from "../components/checkout/CheckoutFlow.jsx";
@@ -408,9 +408,39 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  
 
  /* ===== SAFE MOBILE HEADER + SHOP LAYOUT ===== */
- .mobile-nav-brand,
  .mobile-menu-btn,
  .mobile-nav-menu{display:none;}
+
+ .mobile-nav-brand{
+   position:fixed;
+   top:0;
+   left:0;
+   width:220px;
+   height:72px;
+   padding:0 20px;
+   background:#fff;
+   border-right:1px solid rgba(0,0,0,0.08);
+   border-bottom:1px solid rgba(0,0,0,0.08);
+   display:flex;
+   align-items:center;
+   flex:0 0 auto;
+   min-width:0;
+   cursor:pointer;
+   z-index:130;
+   box-sizing:border-box;
+ }
+
+ .mobile-nav-brand img{
+   display:block;
+   height:56px;
+   width:auto;
+   max-width:180px;
+   object-fit:contain;
+ }
+
+ .fixed-left-sidebar{
+   padding-top:92px!important;
+ }
 
  @media(max-width:860px){
    .content-with-sidebar{
@@ -433,18 +463,27 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
    }
 
    .mobile-nav-brand{
+     position:static!important;
+     width:auto!important;
+     height:auto!important;
+     padding:0!important;
+     background:transparent!important;
+     border:0!important;
      display:flex!important;
      align-items:center;
      flex:0 0 auto;
      min-width:0;
+     max-width:160px!important;
+     overflow:visible!important;
      cursor:pointer;
+     z-index:auto!important;
    }
 
    .mobile-nav-brand img{
      display:block;
-     height:42px!important;
-     width:42px!important;
-     max-width:42px!important;
+     height:50px!important;
+     width:auto!important;
+     max-width:150px!important;
      object-fit:contain;
    }
 
@@ -551,9 +590,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  @media(max-width:380px){
    .mobile-nav-brand img{
-     height:38px!important;
-     width:38px!important;
-     max-width:38px!important;
+     height:46px!important;
+     width:auto!important;
+     max-width:132px!important;
    }
 
    .top-nav-actions .get-app-btn{
@@ -596,8 +635,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .mobile-nav-brand{
      min-width:0!important;
-     max-width:120px!important;
-     overflow:hidden!important;
+     max-width:160px!important;
+     overflow:visible!important;
    }
 
    .top-nav-actions{
@@ -793,7 +832,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div></>
  )}
 
- <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TokZoo" style={{height:120,width:120,maxWidth:120,objectFit:"contain",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
+ <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
  {!user&&(
@@ -812,7 +851,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
- <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}>
+ <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:72,display:"flex",alignItems:"center",gap:16}}>
  <div className="mobile-nav-brand" onClick={()=>{setPage("shop");setMobileMenu(false);}}>
    <img src="/logo.png" alt="TokZoo"/>
  </div>
@@ -874,16 +913,16 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {page==="shop"&&(
    <div className="shop-fullwidth">
      <SingaporeStyleHome
-  products={dbProducts}
-  vids={[]}
-  onOpen={setSP}
-  onAdd={addToCart}
-  search={search}
-  setSearch={setSearch}
-  cat={cat}
-  setCat={setCat}
-  loading={dbLoading}
-/>
+       products={dbProducts}
+       vids={[]}
+       onOpen={setSP}
+       onAdd={addToCart}
+       search={search}
+       setSearch={setSearch}
+       cat={cat}
+       setCat={setCat}
+       loading={dbLoading}
+     />
    </div>
  )}
  {page==="seller"&&!user&&(
