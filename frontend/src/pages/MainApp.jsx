@@ -2,7 +2,7 @@ import AboutUs from "./AboutUs.jsx";
 import VideoFeed from "./VideoFeed.jsx";
 import { useState, useEffect, useRef } from "react";
 import  SingaporeStyleHome  from "./SingaporeStyleHome.jsx";
-import { API, CATALOGUE, CATS, S, VIDS } from "../data/catalogue.js";
+import { API, CATS, S } from "../data/catalogue.js";
 import Btn from "../components/common/Btn.jsx";
 import { AddProductModal } from "../components/modals/AddProductModal.jsx";
 import { CheckoutFlow } from "../components/checkout/CheckoutFlow.jsx";
@@ -874,16 +874,16 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {page==="shop"&&(
    <div className="shop-fullwidth">
      <SingaporeStyleHome
-       products={dbProducts.length ? dbProducts : CATALOGUE}
-       vids={VIDS}
-       onOpen={setSP}
-       onAdd={addToCart}
-       search={search}
-       setSearch={setSearch}
-       cat={cat}
-       setCat={setCat}
-       loading={dbLoading}
-     />
+  products={dbProducts}
+  vids={[]}
+  onOpen={setSP}
+  onAdd={addToCart}
+  search={search}
+  setSearch={setSearch}
+  cat={cat}
+  setCat={setCat}
+  loading={dbLoading}
+/>
    </div>
  )}
  {page==="seller"&&!user&&(
