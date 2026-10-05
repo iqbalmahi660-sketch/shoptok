@@ -80,14 +80,45 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  setLoading(true);
  try {
  const token = localStorage.getItem("shopToken");
+ if(!token) throw new Error("Please log in again before placing your order.");
+
+ // Static catalogue cards can carry readable IDs such as "p05-running-shoes".
+ // The database uses UUID product IDs, so resolve any legacy/static cart ID
+ // against the live products API before creating the order.
+ const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+ let liveProducts = null;
+ const resolveProductId = async (item) => {
+   const rawId = String(item?.id || item?.product_id || "");
+   if(uuidRe.test(rawId)) return rawId;
+
+   if(!liveProducts){
+     const productsRes = await fetch(`${API}/products?limit=100`);
+     const productsData = await productsRes.json().catch(()=>({}));
+     if(!productsRes.ok) throw new Error(productsData.message || "Could not verify product before checkout.");
+     liveProducts = Array.isArray(productsData.products) ? productsData.products : [];
+   }
+
+   const wantedTitle = String(item?.title || "").trim().toLowerCase();
+   const match = liveProducts.find(p =>
+     uuidRe.test(String(p?.id || "")) &&
+     String(p?.title || "").trim().toLowerCase() === wantedTitle
+   );
+
+   if(!match?.id){
+     throw new Error(`Product "${item?.title || "Unknown product"}" is not linked to a live database product.`);
+   }
+   return match.id;
+ };
+
  // Send one order per cart item (backend handles one product per order)
  let lastOrder = null;
  for(const item of cart) {
+ const productId = await resolveProductId(item);
  const res = await fetch(`${API}/orders`, {
  method: "POST",
  headers: {"Content-Type":"application/json","Authorization":`Bearer ${token}`},
  body: JSON.stringify({
- product_id: item.id,
+ product_id: productId,
  quantity: item.qty,
  total_amount: Math.round(item.price * item.qty),
  shipping_fee: shipping,
