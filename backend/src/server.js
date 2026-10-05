@@ -1,3 +1,4 @@
+```js
 require('dotenv').config();
 
 const express = require('express');
@@ -50,53 +51,62 @@ app.use(
 );
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-const allowedOrigins = [
-  'https://admin.tokzoo.com',
-  'https://tokzoo.com',
-  'https://www.tokzoo.com',
-  'https://motivated-solace-production-5ac8.up.railway.app',
-  'http://localhost:5173',
-];
+// Allow TokZoo web/admin domains, Railway app domains and local development.
+// Using a function keeps production flexible while still rejecting unknown origins.
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests without Origin header
-    // (Postman, server-to-server requests, etc.)
-    if (!origin) {
-      return callback(null, true);
+  try {
+    const { hostname, protocol } = new URL(origin);
+
+    if (
+      protocol === 'https:' &&
+      (
+        hostname === 'tokzoo.com' ||
+        hostname.endsWith('.tokzoo.com') ||
+        hostname.endsWith('.up.railway.app')
+      )
+    ) {
+      return true;
     }
 
-    if (allowedOrigins.includes(origin)) {
+    if (
+      (hostname === 'localhost' || hostname === '127.0.0.1') &&
+      (protocol === 'http:' || protocol === 'https:')
+    ) {
+      return true;
+    }
+  } catch (_) {
+    return false;
+  }
+
+  return false;
+};
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
 
     console.log('❌ CORS blocked origin:', origin);
-    return callback(new Error('Not allowed by CORS'));
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
 
   credentials: true,
 
-  methods: [
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE',
-    'OPTIONS',
-  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-  ],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+
+  exposedHeaders: ['Content-Length'],
 
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
 
-// Explicitly handle browser preflight requests
-app.options('*', cors(corsOptions));
+// cors() middleware already handles OPTIONS/preflight requests.
 
 // ── Body parsers ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
@@ -135,6 +145,14 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    env: process.env.NODE_ENV,
+    time: new Date(),
+  });
+});
+
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
@@ -164,3 +182,4 @@ server.listen(PORT, () => {
 });
 
 module.exports = { app, io };
+```
