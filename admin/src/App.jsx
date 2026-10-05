@@ -259,22 +259,22 @@ export default function AdminApp() {
       rows.push([]);
       rows.push(["=== SUMMARY ==="]);
       rows.push(["Metric","Value"]);
-      rows.push(["Total Revenue (Rs)", totalRevenue]);
+      rows.push(["Total Revenue ($)", totalRevenue]);
       rows.push(["Total Orders", periodOrders.length]);
       rows.push(["Delivered", deliveredOrders.length]);
       rows.push(["Cancelled", periodOrders.filter(o=>o.status==="cancelled").length]);
       Object.entries(statusCounts).forEach(([s,c]) => rows.push([`Status: ${s}`, c]));
       rows.push([]);
       rows.push(["=== TOP BUYERS ==="]);
-      rows.push(["Rank","Name","City","Orders","Spent (Rs)"]);
+      rows.push(["Rank","Name","City","Orders","Spent ($)"]);
       topBuyers.forEach((b,i) => rows.push([i+1, b.name, b.city, b.orders, b.spent]));
       rows.push([]);
       rows.push(["=== TOP SELLERS ==="]);
-      rows.push(["Rank","Shop Name","Orders","Revenue (Rs)"]);
+      rows.push(["Rank","Shop Name","Orders","Revenue ($)"]);
       topSellers.forEach((s,i) => rows.push([i+1, s.name, s.orders, s.revenue]));
       rows.push([]);
       rows.push(["=== ALL ORDERS ==="]);
-      rows.push(["Order No","Buyer","Seller","Product","Amount (Rs)","Status","Payment","City","Date"]);
+      rows.push(["Order No","Buyer","Seller","Product","Amount ($)","Status","Payment","City","Date"]);
       periodOrders.forEach(o => rows.push([
         o.order_number, o.buyer_name, o.seller_name, o.product_title,
         o.total_amount, o.status, o.payment_method, o.shipping_city,
@@ -645,7 +645,7 @@ export default function AdminApp() {
             <div style={{ animation:"fadeUp .35s ease" }}>
               {/* Stats grid */}
               <div className="g-stats" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:16, marginBottom:24 }}>
-                <Stat icon="💰" label="Total Revenue" value={`Rs ${((dash?.revenue?.total||0)/1000).toFixed(0)}K`} sub={`Rs ${((dash?.revenue?.this_month||0)/1000).toFixed(0)}K this month`} color="#fe2c55" trend={18} />
+                <Stat icon="💰" label="Total Revenue" value={`$${((dash?.revenue?.total||0)/1000).toFixed(0)}K`} sub={`$${((dash?.revenue?.this_month||0)/1000).toFixed(0)}K this month`} color="#fe2c55" trend={18} />
                 <Stat icon="🛒" label="Total Orders"  value={dash?.orders?.total||0}   sub={`${dash?.orders?.pending||0} pending`}  color="#25f4ee" trend={12} />
                 <Stat icon="👥" label="Total Buyers"  value={dash?.users?.total||0}    sub={`${dash?.users?.active||0} active`}     color="#a78bfa" trend={8} />
                 <Stat icon="🏪" label="Active Sellers" value={dash?.sellers?.active||0} sub={`${dash?.sellers?.pending||0} pending`} color="#fbbf24" />
@@ -660,7 +660,7 @@ export default function AdminApp() {
                       <p style={{ fontSize:12, color:"rgba(255,255,255,.35)", marginTop:2 }}>Delivered orders only</p>
                     </div>
                     <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:20, color:"#fe2c55" }}>
-                      Rs {((dash?.revenue?.today||0)/1000).toFixed(0)}K today
+                      ${((dash?.revenue?.today||0)/1000).toFixed(0)}K today
                     </span>
                   </div>
                   {dash?.monthlyRevenue?.length > 0
@@ -668,9 +668,9 @@ export default function AdminApp() {
                     : <div style={{ height:80, display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(255,255,255,.2)", fontSize:13 }}>No data yet</div>
                   }
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginTop:20 }}>
-                    {[["This Week", `Rs ${((dash?.revenue?.this_week||0)/1000).toFixed(0)}K`, "#25f4ee"],
-                      ["This Month",`Rs ${((dash?.revenue?.this_month||0)/1000).toFixed(0)}K`, "#a78bfa"],
-                      ["All Time",  `Rs ${((dash?.revenue?.total||0)/1000).toFixed(0)}K`,      "#fe2c55"]
+                    {[["This Week", `$${((dash?.revenue?.this_week||0)/1000).toFixed(0)}K`, "#25f4ee"],
+                      ["This Month",`$${((dash?.revenue?.this_month||0)/1000).toFixed(0)}K`, "#a78bfa"],
+                      ["All Time",  `$${((dash?.revenue?.total||0)/1000).toFixed(0)}K`,      "#fe2c55"]
                     ].map(([l,v,c])=>(
                       <div key={l} style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"10px 14px" }}>
                         <p style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:4 }}>{l}</p>
@@ -733,7 +733,7 @@ export default function AdminApp() {
                         <td style={{ color:"#25f4ee", fontWeight:600 }}>{o.order_number}</td>
                         <td>{o.buyer_name}</td>
                         <td style={{ color:"rgba(255,255,255,.6)" }}>{o.product_emoji} {o.product_title}</td>
-                        <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>Rs {o.total_amount?.toLocaleString()}</td>
+                        <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>${o.total_amount?.toLocaleString()}</td>
                         <td><Badge status={o.status} /></td>
                         <td style={{ color:"rgba(255,255,255,.4)" }}>{new Date(o.created_at).toLocaleDateString()}</td>
                       </tr>
@@ -775,7 +775,7 @@ export default function AdminApp() {
                         <td><p>{b.email}</p><p style={{ fontSize:11, color:"rgba(255,255,255,.4)" }}>{b.phone}</p></td>
                         <td style={{ color:"rgba(255,255,255,.6)" }}>{b.city}</td>
                         <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#25f4ee" }}>{b.total_orders||0}</td>
-                        <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>Rs {(b.total_spent||0).toLocaleString()}</td>
+                        <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>${(b.total_spent||0).toLocaleString()}</td>
                         <td><Badge status={b.status} /></td>
                         <td>
                           <div style={{ display:"flex", gap:6 }}>
@@ -822,7 +822,7 @@ export default function AdminApp() {
                       <p style={{ fontSize:11, color:"rgba(255,255,255,.3)", marginTop:2 }}>CNIC: {s.cnic||"—"} · {s.city} · Joined {new Date(s.created_at).toLocaleDateString()}</p>
                     </div>
                     <div style={{ display:"flex", gap:20 }}>
-                      {[["Products",s.product_count||s.total_products,"#25f4ee"],["Orders",s.order_count||s.total_orders,"#a78bfa"],["Revenue",`Rs ${((s.revenue||s.total_revenue||0)/1000).toFixed(0)}K`,"#fe2c55"]].map(([l,v,c])=>(
+                      {[["Products",s.product_count||s.total_products,"#25f4ee"],["Orders",s.order_count||s.total_orders,"#a78bfa"],["Revenue",`$${((s.revenue||s.total_revenue||0)/1000).toFixed(0)}K`,"#fe2c55"]].map(([l,v,c])=>(
                         <div key={l} style={{ textAlign:"center" }}>
                           <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:16, color:c }}>{v}</p>
                           <p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>{l}</p>
@@ -868,7 +868,7 @@ export default function AdminApp() {
                         </td>
                         <td style={{ color:"rgba(255,255,255,.55)" }}>{p.seller_name}</td>
                         <td><span style={{ background:"rgba(255,255,255,.06)", borderRadius:100, padding:"3px 9px", fontSize:11, color:"rgba(255,255,255,.5)" }}>{p.category}</span></td>
-                        <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>Rs {p.price?.toLocaleString()}</td>
+                        <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>${p.price?.toLocaleString()}</td>
                         <td style={{ color: p.stock<20?"#fbbf24":"rgba(255,255,255,.6)" }}>{p.stock}</td>
                         <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:600, color:"#25f4ee" }}>{(p.sold||0).toLocaleString()}</td>
                         <td><Badge status={p.status} /></td>
@@ -903,7 +903,7 @@ export default function AdminApp() {
               <div style={{ marginBottom:12, display:"flex", gap:10, flexWrap:"wrap" }}>
                 {[
                   ["Total",orders.length,"#25f4ee"],
-                  ["Revenue","Rs "+(orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+(o.total_amount||0),0)/1000).toFixed(0)+"K","#34d399"],
+                  ["Revenue","$"+(orders.filter(o=>o.status==="delivered").reduce((s,o)=>s+(o.total_amount||0),0)/1000).toFixed(0)+"K","#34d399"],
                   ["Pending",orders.filter(o=>o.status==="pending").length,"#fbbf24"],
                   ["Delivered",orders.filter(o=>o.status==="delivered").length,"#34d399"],
                   ["Cancelled",orders.filter(o=>o.status==="cancelled").length,"#fe2c55"],
@@ -933,8 +933,8 @@ export default function AdminApp() {
                           <p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>🏪 {o.seller_name}</p>
                         </td>
                         <td>
-                          <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>Rs {o.total_amount?.toLocaleString()}</p>
-                          <p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>Ship: {o.shipping_fee===0||o.shipping_fee==="0"?"Free":"Rs "+o.shipping_fee}</p>
+                          <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>${o.total_amount?.toLocaleString()}</p>
+                          <p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>Ship: {o.shipping_fee===0||o.shipping_fee==="0"?"Free":"$"+o.shipping_fee}</p>
                         </td>
                         <td><span style={{ background:"rgba(255,255,255,.06)", borderRadius:100, padding:"3px 9px", fontSize:11, textTransform:"uppercase" }}>{o.payment_method}</span></td>
                         <td><Badge status={o.status} /></td>
@@ -1050,7 +1050,7 @@ export default function AdminApp() {
 
                 {/* Summary stats */}
                 <div className="g-stats" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:24 }}>
-                  <Stat icon="💰" label="Revenue" value={`Rs ${(periodRev/1000).toFixed(0)}K`} sub="delivered orders" color="#fe2c55"/>
+                  <Stat icon="💰" label="Revenue" value={`$${(periodRev/1000).toFixed(0)}K`} sub="delivered orders" color="#fe2c55"/>
                   <Stat icon="🛒" label="Orders"  value={periodOrdsN} sub="all statuses" color="#25f4ee"/>
                   <Stat icon="✅" label="Delivered" value={deliveredP.length} sub="completed" color="#34d399"/>
                   <Stat icon="❌" label="Cancelled" value={periodOrders.filter(o=>o.status==="cancelled").length} sub="cancelled" color="#ef4444"/>
@@ -1078,7 +1078,7 @@ export default function AdminApp() {
                           </div>
                           <div style={{ textAlign:"right", flexShrink:0 }}>
                             <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, color:"#25f4ee" }}>{b.orders}</p>
-                            <p style={{ fontSize:10, color:"rgba(255,255,255,.3)" }}>Rs {(b.spent/1000).toFixed(0)}K</p>
+                            <p style={{ fontSize:10, color:"rgba(255,255,255,.3)" }}>${(b.spent/1000).toFixed(0)}K</p>
                           </div>
                         </div>
                       ))
@@ -1103,7 +1103,7 @@ export default function AdminApp() {
                             <p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>{s.orders} orders</p>
                           </div>
                           <div style={{ textAlign:"right", flexShrink:0 }}>
-                            <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, color:"#fe2c55" }}>Rs {(s.revenue/1000).toFixed(0)}K</p>
+                            <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:13, color:"#fe2c55" }}>${(s.revenue/1000).toFixed(0)}K</p>
                             <p style={{ fontSize:10, color:"rgba(255,255,255,.3)" }}>revenue</p>
                           </div>
                         </div>
@@ -1128,7 +1128,7 @@ export default function AdminApp() {
                                     background:i===analytics.monthly.length-1?"linear-gradient(to right,#fe2c55,#ff6b35)":"rgba(255,255,255,.18)" }} />
                                 </div>
                                 <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:12, color:"#fe2c55", minWidth:56, textAlign:"right" }}>
-                                  Rs {(d.revenue/1000).toFixed(0)}K
+                                  ${(d.revenue/1000).toFixed(0)}K
                                 </span>
                               </div>
                             ))}
@@ -1154,7 +1154,7 @@ export default function AdminApp() {
                               <div style={{ height:"100%", width:`${(c.revenue/maxRev)*100}%`, background:col, borderRadius:100 }}/>
                             </div>
                             <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:12, color:col, minWidth:52, textAlign:"right" }}>
-                              Rs {(c.revenue/1000).toFixed(0)}K
+                              ${(c.revenue/1000).toFixed(0)}K
                             </span>
                           </div>
                         );
@@ -1219,7 +1219,7 @@ export default function AdminApp() {
                 <div><h3 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:18, marginBottom:4 }}>{b.name}</h3><Badge status={b.status}/></div>
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
-                {[["Email",b.email],["Phone",b.phone||"—"],["City",b.city||"—"],["Joined",new Date(b.created_at).toLocaleDateString()],["Total Orders",b.total_orders||0],["Total Spent",`Rs ${(b.total_spent||0).toLocaleString()}`]].map(([l,v])=>(
+                {[["Email",b.email],["Phone",b.phone||"—"],["City",b.city||"—"],["Joined",new Date(b.created_at).toLocaleDateString()],["Total Orders",b.total_orders||0],["Total Spent",`$${(b.total_spent||0).toLocaleString()}`]].map(([l,v])=>(
                   <div key={l} style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"12px 14px" }}>
                     <p style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:3, textTransform:"uppercase", letterSpacing:".05em" }}>{l}</p>
                     <p style={{ fontSize:13, fontWeight:600 }}>{v}</p>
@@ -1363,7 +1363,7 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
     rows.push([]);
 
     rows.push(["=== ORDERS ==="]);
-    rows.push(["Order No","Buyer","Seller","Product","Amount (Rs)","Status","Payment","City","Date"]);
+    rows.push(["Order No","Buyer","Seller","Product","Amount ($)","Status","Payment","City","Date"]);
     orders.forEach(o => rows.push([
       o.order_number, o.buyer_name, o.seller_name, o.product_title,
       o.total_amount, o.status, o.payment_method, o.shipping_city,
@@ -1372,7 +1372,7 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
     rows.push([]);
 
     rows.push(["=== BUYERS ==="]);
-    rows.push(["Name","Email","Phone","City","Status","Total Orders","Total Spent (Rs)","Joined"]);
+    rows.push(["Name","Email","Phone","City","Status","Total Orders","Total Spent ($)","Joined"]);
     buyers.forEach(b => rows.push([
       b.name, b.email, b.phone||"—", b.city||"—", b.status,
       b.total_orders||0, b.total_spent||0,
@@ -1390,7 +1390,7 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
     rows.push([]);
 
     rows.push(["=== PRODUCTS ==="]);
-    rows.push(["Title","Seller","Category","Price (Rs)","Stock","Sold","Status"]);
+    rows.push(["Title","Seller","Category","Price ($)","Stock","Sold","Status"]);
     products.forEach(p => rows.push([
       p.title, p.seller_name, p.category, p.price, p.stock, p.sold||0, p.status
     ]));
@@ -1444,7 +1444,7 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
       <div className="card" style={{ marginBottom:16 }}>
         <h3 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, marginBottom:20 }}>💰 Commission Settings</h3>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-          {[["Platform Commission","8%","Per sale percentage"],["Payment Processing Fee","2%","Per transaction"],["Free Shipping Threshold","Rs 1,000","Minimum for free shipping"],["COD Fee","Rs 150","Cash on delivery charge"]].map(([l,v,d])=>(
+          {[["Platform Commission","8%","Per sale percentage"],["Payment Processing Fee","2%","Per transaction"],["Free Shipping Threshold","$1,000","Minimum for free shipping"],["COD Fee","$150","Cash on delivery charge"]].map(([l,v,d])=>(
             <div key={l} style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"14px 16px" }}>
               <p style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:4 }}>{l}</p>
               <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:18, color:"#fe2c55", marginBottom:2 }}>{v}</p>
