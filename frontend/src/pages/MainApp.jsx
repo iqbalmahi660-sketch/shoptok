@@ -432,10 +432,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  .mobile-nav-brand img{
    display:block;
-   height:56px;
+   height:64px;
    width:auto;
-   max-width:180px;
+   max-width:170px;
    object-fit:contain;
+   transform:scale(1.85);
+   transform-origin:left center;
  }
 
  .fixed-left-sidebar{
@@ -481,10 +483,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
    .mobile-nav-brand img{
      display:block;
-     height:50px!important;
+     height:52px!important;
      width:auto!important;
-     max-width:150px!important;
+     max-width:138px!important;
      object-fit:contain;
+     transform:scale(1.55)!important;
+     transform-origin:left center!important;
    }
 
    .top-nav-actions{
