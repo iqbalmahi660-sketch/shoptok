@@ -94,8 +94,8 @@ export const CheckoutFlow=({cart,cartTotal,onDone,onBack,user})=>{
  const [step,setStep]=useState(0); // 0=cart review, 1=shipping, 2=payment, 3=confirm
  const [loading,setLoading]=useState(false);
  const [orderId,setOrderId]=useState(`#ORD-${Date.now().toString().slice(-6)}`);
- const shipping=cartTotal>=1000?0:150;
- const total=cartTotal+shipping;
+ const shipping = 0;
+const total = cartTotal;
  const [addr,setAddr]=useState({name:user?.name||"",phone:"",address:"",country:"Pakistan",city:"",note:""});
  const [countryCityData,setCountryCityData]=useState([]);
  const [locationLoading,setLocationLoading]=useState(true);
