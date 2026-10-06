@@ -66,8 +66,8 @@ router.post('/', authUser, async (req, res) => {
 
     const p = prodRows[0];
 
-    const fee = p.price * qty >= 1000 ? 0 : 150;
-    const total = p.price * qty + fee;
+    const fee = 0;
+const total = p.price * qty;
 
     const { rows } = await query(
       `
