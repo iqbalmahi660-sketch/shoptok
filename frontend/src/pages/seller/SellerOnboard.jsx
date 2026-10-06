@@ -6,32 +6,13 @@ import { Login } from "../auth/Login.jsx";
 import { MerchantAgreement } from "../auth/MerchantAgreement.jsx";
 import { Verify } from "../auth/Verify.jsx";
 
-const UploadBox=({id,file,label,icon,onChange})=>(
- <div style={{flex:1}}><div onClick={()=>document.getElementById(id).click()}
- style={{border:"2px dashed "+(file?"#fe2c55":"#d5d5d5"),borderRadius:10,padding:"18px 8px",textAlign:"center",cursor:"pointer",background:file?"rgba(254,44,85,0.06)":"#f7f7f8",transition:"all 0.2s",minHeight:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
- {file
- ? <><div style={{fontSize:22}}></div><p style={{color:"#fe2c55",fontSize:10,fontWeight:600,wordBreak:"break-all",padding:"0 4px"}}>{file.name.slice(0,16)}...</p></>
- : <><div style={{width:36,height:36,borderRadius:8,background:"#f2f2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{icon}</div><p style={{color:"#555",fontSize:10,marginTop:2,lineHeight:1.4}}>{label}</p></>
- }
- </div><input id={id} type="file" accept="image/*" style={{display:"none"}} onChange={e=>onChange(e.target.files[0])}/></div>
- );
-
-const SField=({label,value,onChange,placeholder,type="text",req=true})=>(
- <div style={{marginBottom:16}}><label style={{display:"block",fontSize:13,color:"#888",marginBottom:7,fontWeight:500}}>
- {req&&(<span style={{color:"#fe2c55",marginRight:4}}>*</span>)}{label}
- </label><input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
- style={{width:"100%",padding:"12px 14px",background:"#ffffff",border:"1px solid #222",borderRadius:10,color:"#111",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",transition:"border-color 0.2s"}}
- onFocus={e=>e.target.style.borderColor="#fe2c55"}
- onBlur={e=>e.target.style.borderColor="#222"}/></div>
- );
-
 export const SellerOnboard=({go,setUser})=>{
  const [loading,sl]=useState(false);
  const [agree,setAgree]=useState(false);
  const [showAgreement,setSA]=useState(false);
  const [f,sf]=useState({
  shopLogo:null,shopLogoPreview:null,
- shopName:"",shopAddress:"",country:"Pakistan",
+ shopName:"",shopAddress:"",city:"",country:"Pakistan",
  idNumber:"",legalName:"",
  docFront:null,docBack:null,docSelfie:null,
  email:"",password:"",confirmPassword:"",
@@ -41,29 +22,89 @@ export const SellerOnboard=({go,setUser})=>{
  });
  const up=(k,v)=>sf(p=>({...p,[k]:v}));
 
+ const UploadBox=({id,file,label,icon,onChange})=>(
+ <div style={{flex:1}}><div onClick={()=>document.getElementById(id).click()}
+ style={{border:"2px dashed "+(file?"#fe2c55":"#d5d5d5"),borderRadius:10,padding:"18px 8px",textAlign:"center",cursor:"pointer",background:file?"rgba(254,44,85,0.06)":"#f7f7f8",transition:"all 0.2s",minHeight:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
+ {file
+ ? <><div style={{fontSize:22}}></div><p style={{color:"#fe2c55",fontSize:10,fontWeight:600,wordBreak:"break-all",padding:"0 4px"}}>{file.name.slice(0,16)}...</p></>
+ : <><div style={{width:36,height:36,borderRadius:8,background:"#f2f2f2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{icon}</div><p style={{color:"#555",fontSize:10,marginTop:2,lineHeight:1.4}}>{label}</p></>
+ }
+ </div><input id={id} type="file" accept="image/*" style={{display:"none"}} onChange={e=>onChange(e.target.files[0])}/></div>
+ );
 
+ const SField=({label,value,onChange,placeholder,type="text",req=true})=>(
+ <div style={{marginBottom:16}}><label style={{display:"block",fontSize:13,color:"#888",marginBottom:7,fontWeight:500}}>
+ {req&&(<span style={{color:"#fe2c55",marginRight:4}}>*</span>)}{label}
+ </label><input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+ style={{width:"100%",padding:"12px 14px",background:"#ffffff",border:"1px solid #222",borderRadius:10,color:"#111",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",transition:"border-color 0.2s"}}
+ onFocus={e=>e.target.style.borderColor="#fe2c55"}
+ onBlur={e=>e.target.style.borderColor="#222"}/></div>
+ );
+
+ const uploadImage=async(file,token)=>{
+ if(!file) return null;
+ const fd=new FormData();
+ fd.append("image",file);
+ const res=await fetch(`${API}/upload/image`,{
+ method:"POST",
+ headers:{"Authorization":`Bearer ${token}`},
+ body:fd
+ });
+ const data=await res.json();
+ if(!res.ok||!data.url) throw new Error(data.message||"Image upload failed");
+ return data.url;
+ };
 
  const submit=async()=>{
  if(!agree){alert("Please agree to the Occupancy Agreement to continue.");return;}
  if(!f.shopName.trim()){alert("Shop name is required.");return;}
+ if(!f.shopAddress.trim()){alert("Shop address is required.");return;}
+ if(!f.city.trim()){alert("City is required.");return;}
+ if(!f.country.trim()){alert("Country is required.");return;}
  if(!f.idNumber.trim()){alert("ID/CNIC number is required.");return;}
+ if(!f.legalName.trim()){alert("Legal name is required.");return;}
+ if(!f.phone.trim()){alert("Phone number is required.");return;}
+ if(!f.bankName.trim()||!f.accountTitle.trim()||!f.accountNumber.trim()){
+   alert("Complete bank details are required.");
+   return;
+ }
  sl(true);
  try{
  const token=localStorage.getItem("shopToken");
+ if(!token) throw new Error("Please log in again.");
+
+ const [shopLogoUrl,docFrontUrl,docBackUrl,docSelfieUrl]=await Promise.all([
+   uploadImage(f.shopLogo,token),
+   uploadImage(f.docFront,token),
+   uploadImage(f.docBack,token),
+   uploadImage(f.docSelfie,token),
+ ]);
+
  const res=await fetch(`${API}/auth/seller-onboard`,{
  method:"POST",
  headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},
  body:JSON.stringify({
- shopName:f.shopName,shopAddress:f.shopAddress,country:f.country,
- idNumber:f.idNumber,legalName:f.legalName,
- phone:f.phone,category:f.category,
- bankName:f.bankName,accountTitle:f.accountTitle,accountNumber:f.accountNumber,
+ shopName:f.shopName,
+ shopAddress:f.shopAddress,
+ city:f.city,
+ country:f.country,
+ idNumber:f.idNumber,
+ legalName:f.legalName,
+ phone:f.phone,
+ category:f.category,
+ bankName:f.bankName,
+ accountTitle:f.accountTitle,
+ accountNumber:f.accountNumber,
  inviteCode:f.inviteCode,
+ shopLogo:shopLogoUrl,
+ cnicFront:docFrontUrl,
+ cnicBack:docBackUrl,
+ cnicSelfie:docSelfieUrl
  })
  });
  const data=await res.json();
  if(!res.ok)throw new Error(data.message||"Failed");
- setUser(p=>({...p,role:"seller"}));
+ setUser(p=>({...p,role:"seller",seller:data.seller||p?.seller}));
  go(S.APP);
  }catch(err){alert(err.message);}
  sl(false);
@@ -85,7 +126,7 @@ export const SellerOnboard=({go,setUser})=>{
  ? <img src={f.shopLogoPreview} style={{width:"100%",height:"100%",objectFit:"cover"}} alt="logo"/>
  : <div style={{textAlign:"center"}}><div style={{fontSize:28,color:"#333"}}></div><p style={{fontSize:10,color:"#444",marginTop:4}}>Upload</p></div>
  }
- </div><input id="shop-logo-inp" type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(file){up("shopLogo",file);up("shopLogoPreview",URL.createObjectURL(file));}}}/></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20,marginBottom:16}}><SField label="Shop name" value={f.shopName} onChange={v=>up("shopName",v)} placeholder="Please enter the store name"/><SField label="Shop Address" value={f.shopAddress} onChange={v=>up("shopAddress",v)} placeholder="Please enter the store address"/><div style={{marginBottom:16}}><label style={{display:"block",fontSize:13,color:"#888",marginBottom:7,fontWeight:500}}><span style={{color:"#fe2c55",marginRight:4}}>*</span>Country</label><select value={f.country} onChange={e=>up("country",e.target.value)}
+ </div><input id="shop-logo-inp" type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(file){up("shopLogo",file);up("shopLogoPreview",URL.createObjectURL(file));}}}/></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20,marginBottom:16}}><SField label="Shop name" value={f.shopName} onChange={v=>up("shopName",v)} placeholder="Please enter the store name"/><SField label="Shop Address" value={f.shopAddress} onChange={v=>up("shopAddress",v)} placeholder="Please enter the store address"/><SField label="City" value={f.city} onChange={v=>up("city",v)} placeholder="Please enter your city"/><div style={{marginBottom:16}}><label style={{display:"block",fontSize:13,color:"#888",marginBottom:7,fontWeight:500}}><span style={{color:"#fe2c55",marginRight:4}}>*</span>Country</label><select value={f.country} onChange={e=>up("country",e.target.value)}
  style={{width:"100%",padding:"12px 14px",background:"#ffffff",border:"1px solid #222",borderRadius:10,color:"#111",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",appearance:"none",backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 12px center"}}><option>Pakistan</option><option>Afghanistan</option><option>India</option><option>UAE</option><option>Saudi Arabia</option><option>UK</option><option>USA</option></select></div><SField label="ID/passport number" value={f.idNumber} onChange={v=>up("idNumber",v)} placeholder="Please enter your ID or passport number"/><SField label="Legal name" value={f.legalName} onChange={v=>up("legalName",v)} placeholder="Please enter your real name"/></div>
 
  {/* ID Upload */}
