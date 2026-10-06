@@ -1256,7 +1256,23 @@ export default function AdminApp() {
 
               {/* Info Grid */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
-                {[["Owner",s.owner_name||"—"],["Email",s.email||"—"],["Phone",s.phone||"—"],["City",s.city||"—"],["CNIC / ID",s.cnic||"—"],["Bank",s.bank_name||"—"],["Account Title",s.account_title||"—"],["Account No.",s.account_number||"—"],["Joined",new Date(s.created_at).toLocaleDateString()],["Rating",s.rating||"New"]].map(([l,v])=>(
+                {[
+                  ["Owner",s.owner_name||"—"],
+                  ["Legal Name",s.legal_name||"—"],
+                  ["Email",s.email||"—"],
+                  ["Phone",s.phone||"—"],
+                  ["City",s.city||"—"],
+                  ["Country",s.country||"—"],
+                  ["Shop Address",s.shop_address||"—"],
+                  ["Category",s.category||"—"],
+                  ["CNIC / ID",s.cnic||"—"],
+                  ["Bank",s.bank_name||"—"],
+                  ["Account Title",s.account_title||"—"],
+                  ["Account No.",s.account_number||"—"],
+                  ["Invite Code",s.invite_code||"—"],
+                  ["Joined",s.created_at?new Date(s.created_at).toLocaleDateString():"—"],
+                  ["Rating",s.rating||"New"]
+                ].map(([l,v])=>(
                   <div key={l} style={{ background:"rgba(255,255,255,.04)", borderRadius:10, padding:"11px 14px" }}>
                     <p style={{ fontSize:11, color:"rgba(255,255,255,.4)", marginBottom:3, textTransform:"uppercase", letterSpacing:".05em" }}>{l}</p>
                     <p style={{ fontSize:13, fontWeight:500, wordBreak:"break-all" }}>{v}</p>
