@@ -48,11 +48,11 @@ router.post('/', authUser, async (req, res) => {
 
     const { rows: prodRows } = await query(
       `
-        SELECT *
-        FROM products
-        WHERE id = $1
-          AND status = 'live'
-          AND stock >= $2
+      SELECT *
+      FROM products
+      WHERE id = $1
+        AND status = 'live'
+        AND stock >= $2
       `,
       [product_id, qty]
     );
@@ -66,36 +66,37 @@ router.post('/', authUser, async (req, res) => {
 
     const p = prodRows[0];
 
+    // Shipping removed completely
     const fee = 0;
-const total = p.price * qty;
+    const total = p.price * qty;
 
     const { rows } = await query(
       `
-        INSERT INTO orders (
-          order_number,
-          buyer_id,
-          seller_id,
-          product_id,
-          product_title,
-          product_emoji,
-          quantity,
-          unit_price,
-          shipping_fee,
-          total_amount,
-          status,
-          payment_method,
-          shipping_name,
-          shipping_phone,
-          shipping_address,
-          shipping_city,
-          rider_note
-        )
-        VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
-          'processing',
-          $11,$12,$13,$14,$15,$16
-        )
-        RETURNING *
+      INSERT INTO orders (
+        order_number,
+        buyer_id,
+        seller_id,
+        product_id,
+        product_title,
+        product_emoji,
+        quantity,
+        unit_price,
+        shipping_fee,
+        total_amount,
+        status,
+        payment_method,
+        shipping_name,
+        shipping_phone,
+        shipping_address,
+        shipping_city,
+        rider_note
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+        'processing',
+        $11,$12,$13,$14,$15,$16
+      )
+      RETURNING *
       `,
       [
         genOrderNum(),
@@ -119,10 +120,10 @@ const total = p.price * qty;
 
     await query(
       `
-        UPDATE products
-        SET stock = stock - $1,
-            sold = sold + $2
-        WHERE id = $3
+      UPDATE products
+      SET stock = stock - $1,
+          sold = sold + $2
+      WHERE id = $3
       `,
       [qty, qty, product_id]
     );
@@ -155,10 +156,15 @@ router.get('/seller', authSeller, async (req, res) => {
   try {
     const { rows } = await query(
       `
-        SELECT o.*
-        FROM orders o
-        WHERE o.seller_id = $1
-        ORDER BY o.created_at DESC
+      SELECT
+        o.*,
+        p.images AS product_images,
+        p.emoji AS product_current_emoji
+      FROM orders o
+      LEFT JOIN products p
+        ON p.id = o.product_id
+      WHERE o.seller_id = $1
+      ORDER BY o.created_at DESC
       `,
       [req.seller.id]
     );
@@ -179,8 +185,8 @@ router.get('/seller', authSeller, async (req, res) => {
 
 
 // ─── SELLER UPDATE DELIVERY STATUS ───────────────────────────────────────────
-// New orders start as processing automatically.
-// Seller can only mark their own order as delivered.
+// New orders start as Processing.
+// Seller can only mark their own order as Delivered.
 
 router.patch('/seller/:id/status', authSeller, async (req, res) => {
   try {
@@ -197,19 +203,24 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
 
     const { rows } = await query(
       `
-        UPDATE orders
-        SET status = $1
-        WHERE id = $2
-          AND seller_id = $3
-        RETURNING *
+      UPDATE orders
+      SET status = $1
+      WHERE id = $2
+        AND seller_id = $3
+      RETURNING *
       `,
-      [status, req.params.id, req.seller.id]
+      [
+        status,
+        req.params.id,
+        req.seller.id,
+      ]
     );
 
     if (!rows[0]) {
       return res.status(404).json({
         success: false,
-        message: 'Order not found or you do not have permission to update it',
+        message:
+          'Order not found or you do not have permission to update it',
       });
     }
 
@@ -218,16 +229,22 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
         notify.orderStatus(rows[0]);
       }
     } catch (notifyErr) {
-      console.error('Order status notification failed:', notifyErr);
+      console.error(
+        'Order status notification failed:',
+        notifyErr
+      );
     }
 
     return res.json({
       success: true,
-      message: 'Order marked as delivered',
+      message: `Order marked as ${status}`,
       order: rows[0],
     });
   } catch (err) {
-    console.error('Seller order status update failed:', err);
+    console.error(
+      'Seller order status update failed:',
+      err
+    );
 
     return res.status(500).json({
       success: false,
@@ -243,17 +260,18 @@ router.get('/my', authUser, async (req, res) => {
   try {
     const { rows } = await query(
       `
-        SELECT
-          o.*,
-          p.emoji,
-          s.shop_name AS seller_name
-        FROM orders o
-        LEFT JOIN products p
-          ON p.id = o.product_id
-        LEFT JOIN sellers s
-          ON s.id = o.seller_id
-        WHERE o.buyer_id = $1
-        ORDER BY o.created_at DESC
+      SELECT
+        o.*,
+        p.images AS product_images,
+        p.emoji AS product_current_emoji,
+        s.shop_name AS seller_name
+      FROM orders o
+      LEFT JOIN products p
+        ON p.id = o.product_id
+      LEFT JOIN sellers s
+        ON s.id = o.seller_id
+      WHERE o.buyer_id = $1
+      ORDER BY o.created_at DESC
       `,
       [req.user.id]
     );
@@ -263,7 +281,10 @@ router.get('/my', authUser, async (req, res) => {
       orders: rows,
     });
   } catch (err) {
-    console.error('Buyer orders load failed:', err);
+    console.error(
+      'Buyer orders load failed:',
+      err
+    );
 
     return res.status(500).json({
       success: false,
@@ -271,6 +292,5 @@ router.get('/my', authUser, async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
