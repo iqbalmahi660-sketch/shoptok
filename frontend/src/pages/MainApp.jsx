@@ -43,6 +43,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [likedP,setLP] = useState(new Set());
  const [likedV,setLV] = useState(new Set());
  const [cat,setCat] = useState("all");
+ const [subcat,setSubcat] = useState("all");
  const [toast,setToast] = useState(null);
  const [search,setSearch] = useState("");
  const [searchMode,setSearchMode] = useState("products");
@@ -106,7 +107,24 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }).catch(()=>setDbLoading(false));
  },[]);
 
- const filtered=dbProducts.filter(p=>(cat==="all"||p.cat===cat||p.category?.toLowerCase().includes(cat))&&(!search||p.title?.toLowerCase().includes(search.toLowerCase())));
+ const filtered=dbProducts.filter(p=>{
+ const categoryMatch=
+   cat==="all"||
+   String(p.cat||"").toLowerCase()===String(cat||"").toLowerCase()||
+   String(p.category||"").toLowerCase()===String(cat||"").toLowerCase();
+
+ const subcategoryMatch=
+   subcat==="all"||
+   String(p.subcategory||"").toLowerCase()===String(subcat||"").toLowerCase();
+
+ const searchMatch=
+   !search||
+   String(p.title||"").toLowerCase().includes(search.toLowerCase())||
+   String(p.description||"").toLowerCase().includes(search.toLowerCase())||
+   String(p.subcategory||"").toLowerCase().includes(search.toLowerCase());
+
+ return categoryMatch&&subcategoryMatch&&searchMatch;
+ });
  const [stores,setStores] = useState([]);
  const [allStores,setAllStores] = useState([]);
  const [storesLoading,setStoresLoading] = useState(false);
@@ -1379,7 +1397,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <PolicyPage page={page} setPage={setPage}/>
  )}
  {page==="sitemap"&&(
- <CategorySitemap setPage={setPage} setCat={setCat}/>
+ <CategorySitemap setPage={setPage} setCat={setCat} setSubcat={setSubcat}/>
  )}
 
  {showTop&&(
