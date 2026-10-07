@@ -2,7 +2,7 @@ import AboutUs from "./AboutUs.jsx";
 import VideoFeed from "./VideoFeed.jsx";
 import { useState, useEffect, useRef } from "react";
 import  SingaporeStyleHome  from "./SingaporeStyleHome.jsx";
-import { API, CATALOGUE, CATS, S, VIDS } from "../data/catalogue.js";
+import { API, CATS, S, CATALOGUE } from "../data/catalogue.js";
 import Btn from "../components/common/Btn.jsx";
 import { AddProductModal } from "../components/modals/AddProductModal.jsx";
 import { CheckoutFlow } from "../components/checkout/CheckoutFlow.jsx";
@@ -37,6 +37,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [storeSaving,setStoreSaving] = useState(false);
  const [cart,setCart] = useState([]);
  const [loginPopup,setLoginPopup] = useState(false);
+ const [mobileMenu,setMobileMenu] = useState(false);
  const [cartOpen,setCO] = useState(false);
  const [checkout,setCheckout]= useState(false);
  const [likedP,setLP] = useState(new Set());
@@ -127,8 +128,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const logout=()=>{setUser(null);setPImg(null);localStorage.removeItem('shopToken');localStorage.removeItem('shopPage');localStorage.removeItem('shopUser');setPage('shop');goAuth(S.APP);};
 
  const onOrderDone=async()=>{
- const shipping=0;
- const o={id:`#ORD-${Date.now().toString().slice(-6)}`,items:[...cart],total:cartTotal,status:"Processing",date:new Date().toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),statusColor:"#fbbf24"};
+ const shipping=cartTotal>=1000?0:150;
+ const o={id:`#ORD-${Date.now().toString().slice(-6)}`,items:[...cart],total:cartTotal+shipping,status:"Processing",date:new Date().toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),statusColor:"#fbbf24"};
  setBO(prev=>[o,...prev]);setSO(prev=>[o,...prev]);setCart([]);
  try{
  const token=localStorage.getItem("shopToken");
@@ -138,13 +139,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(data.orders){
  const mapped=data.orders.map(ord=>({
  id:ord.order_number||`#ORD-${ord.id}`,
- items:[{
- title:ord.product_title,
- emoji:ord.product_emoji||ord.product_current_emoji||"",
- qty:ord.quantity,
- price:Number(ord.unit_price)||0,
- img:Array.isArray(ord.product_images)&&ord.product_images.length?ord.product_images[0]:null
- }],
+ items:[{title:ord.product_title,emoji:ord.product_emoji||"",qty:ord.quantity,price:ord.unit_price}],
  total:ord.total_amount,
  status:ord.status==="pending"?"Processing":ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
  date:new Date(ord.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
@@ -166,13 +161,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(data.orders&&data.orders.length>0){
  const mapped=data.orders.map(ord=>({
  id:ord.order_number||`#ORD-${ord.id}`,
- items:[{
- title:ord.product_title,
- emoji:ord.product_emoji||ord.product_current_emoji||"",
- qty:ord.quantity,
- price:Number(ord.unit_price)||0,
- img:Array.isArray(ord.product_images)&&ord.product_images.length?ord.product_images[0]:null
- }],
+ items:[{title:ord.product_title,emoji:ord.product_emoji||"",qty:ord.quantity,price:ord.unit_price}],
  total:Number(ord.total_amount)||0,
  status:ord.status==="pending"?"Processing":ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
  date:new Date(ord.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
@@ -219,13 +208,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  setSO(d.orders.map(o=>({
  ...o,
  id:o.order_number||`#ORD-${o.id}`,
- items:[{
- title:o.product_title,
- emoji:o.product_emoji||o.product_current_emoji||"",
- qty:o.quantity,
- price:Number(o.unit_price)||0,
- img:Array.isArray(o.product_images)&&o.product_images.length?o.product_images[0]:null
- }],
+ items:[{title:o.product_title,emoji:o.product_emoji||"",qty:o.quantity,price:Number(o.unit_price)||0}],
  total:Number(o.total_amount)||0,
  status:o.status==="pending"?"Processing":o.status.charAt(0).toUpperCase()+o.status.slice(1),
  date:new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
@@ -256,6 +239,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  emoji:p.emoji||"",
  rating:Number(p.rating)||0,
  sold:Number(p.sold)||0,
+ img:Array.isArray(p.images)&&p.images.length?p.images[0]:(p.image_url||p.image||p.thumbnail||p.img||null),
  })));
  }
  }catch(e){console.log("Seller products load failed",e);}
@@ -297,7 +281,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ];
 
  return(
- <div style={{fontFamily:"'Poppins',sans-serif",background:"#f7f7f8",color:"#111",minHeight:"100vh"}}><style>{`
+ <div style={{fontFamily:"'Poppins',sans-serif",background:"#f7f7f8",color:"#111",minHeight:"100vh",width:"100%",maxWidth:"100%",overflowX:"clip"}}><style>{`
  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
  *{margin:0;padding:0;box-sizing:border-box;}
  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:#d0d0d0;border-radius:4px;}
@@ -309,11 +293,14 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  .hscroll::-webkit-scrollbar{height:0px;}
  .hscroll::-webkit-scrollbar-thumb{background:transparent;}
  .hscroll{scrollbar-width:none;}
+  .page-inner{width:100%;max-width:none;min-width:0;}
+  .shop-fullwidth{width:100%;max-width:none;min-width:0;margin:0;}
+  .shop-fullwidth > *{width:100%!important;max-width:none!important;margin-left:0!important;margin-right:0!important;}
  .fixed-left-sidebar{display:flex;}
- .content-with-sidebar{margin-left:220px;}
+ .content-with-sidebar{margin-left:220px;width:calc(100% - 220px);max-width:none;min-width:0;}
  @media(max-width:860px){
  .fixed-left-sidebar{display:none!important;}
- .content-with-sidebar{margin-left:0!important;}
+ .content-with-sidebar{margin-left:0!important;width:100%!important;max-width:100%!important;}
  }
  input:focus{outline:none;} select option{background:#fff;color:#111;}
  .hero-h1{font-size:clamp(30px,9vw,48px)!important;}
@@ -366,7 +353,406 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  .page-inner{padding:0 12px!important;}
  .trending-grid{gap:8px!important;}
  }
- `}</style>
+
+ /* ===== FINAL RESPONSIVE PASS ===== */
+ html,body,#root{width:100%;max-width:100%;overflow-x:hidden;}
+ .content-with-sidebar{overflow-x:hidden;}
+ .page-inner{width:100%;max-width:100%;min-width:0;}
+ .shop-fullwidth{width:100%;max-width:100%;min-width:0;}
+ .cart-drawer{width:360px;max-width:100vw;}
+ .seller-dashboard-wrap{width:100%;min-width:0;}
+
+ @media(max-width:1200px){
+   .page-inner{padding-left:18px!important;padding-right:18px!important;}
+ }
+
+ @media(max-width:1024px){
+   .content-with-sidebar{margin-left:190px;width:calc(100% - 190px);}
+   .fixed-left-sidebar{width:190px!important;padding-left:16px!important;padding-right:16px!important;}
+ }
+
+ @media(max-width:900px){
+   .seller-dashboard-wrap{flex-direction:column!important;}
+ }
+
+ @media(max-width:860px){
+   .fixed-left-sidebar{display:none!important;}
+   .content-with-sidebar{margin-left:0!important;width:100%!important;max-width:100%!important;}
+   nav{padding-left:16px!important;padding-right:16px!important;}
+   .page-inner{padding-left:14px!important;padding-right:14px!important;}
+ }
+
+ @media(max-width:768px){
+   nav{height:54px!important;gap:10px!important;}
+   .page-inner{padding-left:12px!important;padding-right:12px!important;}
+   .seller-cta{padding:22px 16px!important;}
+ }
+
+ @media(max-width:640px){
+   .page-inner{padding-left:10px!important;padding-right:10px!important;}
+   .navbar-search{width:100%!important;max-width:100%!important;}
+   .shop-search-row{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;}
+   .related-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+ }
+
+ @media(max-width:520px){
+   .cart-drawer{width:100vw!important;}
+ }
+
+ @media(max-width:480px){
+   nav{padding-left:10px!important;padding-right:10px!important;}
+   .page-inner{padding-left:8px!important;padding-right:8px!important;}
+   .related-grid{grid-template-columns:1fr!important;}
+ }
+
+ 
+
+ /* ===== SAFE MOBILE HEADER + SHOP LAYOUT ===== */
+ .mobile-menu-btn,
+ .mobile-nav-menu{display:none;}
+
+ .mobile-nav-brand{
+   position:fixed;
+   top:0;
+   left:0;
+   width:220px;
+   height:72px;
+   padding:0 20px;
+   background:#fff;
+   border-right:none;
+   border-bottom:1px solid rgba(0,0,0,0.08);
+   display:flex;
+   align-items:center;
+   flex:0 0 auto;
+   min-width:0;
+   cursor:pointer;
+   z-index:130;
+   box-sizing:border-box;
+ }
+
+ .mobile-nav-brand img{
+   display:block;
+   height:64px;
+   width:auto;
+   max-width:170px;
+   object-fit:contain;
+   transform:scale(1.85);
+   transform-origin:left center;
+ }
+
+ .fixed-left-sidebar{
+   padding-top:92px!important;
+ }
+
+ @media(max-width:860px){
+   .content-with-sidebar{
+     margin-left:0!important;
+     width:100%!important;
+     max-width:100%!important;
+   }
+
+   nav.tz-top-nav{
+     width:100%!important;
+     max-width:100%!important;
+     height:58px!important;
+     min-height:58px!important;
+     padding:0 10px!important;
+     margin:0!important;
+     display:flex!important;
+     align-items:center!important;
+     gap:8px!important;
+     box-sizing:border-box!important;
+   }
+
+   .mobile-nav-brand{
+     position:static!important;
+     width:auto!important;
+     height:auto!important;
+     padding:0!important;
+     background:transparent!important;
+     border:0!important;
+     display:flex!important;
+     align-items:center;
+     flex:0 0 auto;
+     min-width:0;
+     max-width:160px!important;
+     overflow:visible!important;
+     cursor:pointer;
+     z-index:auto!important;
+   }
+
+   .mobile-nav-brand img{
+     display:block;
+     height:52px!important;
+     width:auto!important;
+     max-width:138px!important;
+     object-fit:contain;
+     transform:scale(1.55)!important;
+     transform-origin:left center!important;
+   }
+
+   .top-nav-actions{
+     margin-left:auto!important;
+     gap:6px!important;
+     min-width:0!important;
+   }
+
+   .top-nav-actions > button{
+     min-height:36px!important;
+   }
+
+   .top-nav-actions .get-app-btn{
+     padding:0 4px!important;
+     font-size:11px!important;
+     white-space:nowrap!important;
+   }
+
+   .top-nav-actions .login-btn{
+     padding:8px 14px!important;
+     font-size:12px!important;
+     white-space:nowrap!important;
+   }
+
+   .mobile-menu-btn{
+     display:flex!important;
+     align-items:center!important;
+     justify-content:center!important;
+     width:36px!important;
+     height:36px!important;
+     flex:0 0 36px!important;
+     border:1px solid rgba(0,0,0,.12)!important;
+     background:#fff!important;
+     color:#111!important;
+     border-radius:10px!important;
+     cursor:pointer!important;
+     font-size:20px!important;
+     line-height:1!important;
+   }
+
+   .mobile-nav-menu{
+     display:flex!important;
+     position:absolute!important;
+     left:8px!important;
+     right:8px!important;
+     top:calc(100% + 6px)!important;
+     z-index:220!important;
+     background:#fff!important;
+     border:1px solid #e9e9e9!important;
+     border-radius:14px!important;
+     padding:8px!important;
+     box-shadow:0 14px 40px rgba(0,0,0,.16)!important;
+     flex-direction:column!important;
+     gap:2px!important;
+   }
+
+   .mobile-nav-menu button{
+     width:100%!important;
+     min-height:42px!important;
+     border:none!important;
+     background:transparent!important;
+     color:#111!important;
+     text-align:left!important;
+     border-radius:9px!important;
+     padding:10px 12px!important;
+     font-family:inherit!important;
+     font-size:13px!important;
+     font-weight:600!important;
+     cursor:pointer!important;
+   }
+
+   .mobile-nav-menu button:active{
+     background:#f7f7f8!important;
+   }
+
+   .login-popover{
+     position:fixed!important;
+     top:66px!important;
+     left:12px!important;
+     right:12px!important;
+     width:auto!important;
+     max-width:none!important;
+     border-radius:14px!important;
+     padding:18px!important;
+     z-index:251!important;
+   }
+
+   .page-inner{
+     width:100%!important;
+     max-width:100%!important;
+     margin:0!important;
+     padding-left:0!important;
+     padding-right:0!important;
+   }
+
+   .shop-fullwidth{
+     width:100%!important;
+     max-width:100%!important;
+     margin:0!important;
+     padding:0!important;
+   }
+ }
+
+ @media(max-width:380px){
+   .mobile-nav-brand img{
+     height:46px!important;
+     width:auto!important;
+     max-width:132px!important;
+   }
+
+   .top-nav-actions .get-app-btn{
+     display:none!important;
+   }
+
+   .top-nav-actions .login-btn{
+     padding:7px 12px!important;
+   }
+ }
+
+
+
+ /* ===== HORIZONTAL OVERFLOW FIX — SCOPED ===== */
+ @media(max-width:860px){
+   .content-with-sidebar,
+   .page-inner,
+   .shop-fullwidth,
+   .tz-top-nav,
+   .top-nav-actions{
+     min-width:0!important;
+   }
+
+   .content-with-sidebar,
+   .page-inner,
+   .shop-fullwidth{
+     width:100%!important;
+     max-width:100%!important;
+     overflow-x:clip!important;
+   }
+
+   .shop-fullwidth > *{
+     min-width:0!important;
+     max-width:100%!important;
+   }
+
+   .tz-top-nav{
+     overflow:visible!important;
+   }
+
+   .mobile-nav-brand{
+     min-width:0!important;
+     max-width:160px!important;
+     overflow:visible!important;
+   }
+
+   .top-nav-actions{
+     flex:1 1 auto!important;
+     justify-content:flex-end!important;
+     overflow:visible!important;
+   }
+
+   .top-nav-actions > *{
+     min-width:0!important;
+   }
+
+   .login-popover{
+     box-sizing:border-box!important;
+     max-width:calc(100vw - 24px)!important;
+   }
+
+   .mobile-nav-menu{
+     box-sizing:border-box!important;
+     max-width:calc(100vw - 16px)!important;
+   }
+ }
+
+ @media(max-width:480px){
+   .page-inner,
+   .shop-fullwidth{
+     overflow-x:clip!important;
+   }
+
+   .top-nav-actions{
+     gap:5px!important;
+   }
+ }
+
+
+
+ /* ===== SELLER DASHBOARD MOBILE ===== */
+ @media(max-width:900px){
+   .seller-dashboard-wrap{
+     display:flex!important;
+     flex-direction:column!important;
+     width:100%!important;
+     max-width:100%!important;
+     min-height:calc(100vh - 58px)!important;
+     overflow-x:hidden!important;
+   }
+
+   .seller-dashboard-content{
+     width:100%!important;
+     max-width:100%!important;
+     min-width:0!important;
+     flex:1 1 auto!important;
+     padding:18px 14px 80px!important;
+     overflow-x:hidden!important;
+   }
+
+   .seller-dashboard-content > div{
+     max-width:100%!important;
+     min-width:0!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:repeat(2,1fr)"]{
+     grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:repeat(3,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(4,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"]{
+     grid-template-columns:repeat(2,minmax(0,1fr))!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:1fr 1fr"]{
+     grid-template-columns:1fr!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:140px 1fr"]{
+     grid-template-columns:1fr!important;
+     gap:6px!important;
+   }
+ }
+
+ @media(max-width:560px){
+   .seller-dashboard-content{
+     padding:14px 10px 72px!important;
+   }
+
+   .seller-dashboard-content h1{
+     font-size:19px!important;
+     line-height:1.25!important;
+   }
+
+   .seller-dashboard-content h2{
+     font-size:17px!important;
+   }
+
+   .seller-dashboard-content [style*="grid-template-columns:repeat(2,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(3,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(4,1fr)"],
+   .seller-dashboard-content [style*="grid-template-columns:repeat(5,1fr)"]{
+     grid-template-columns:1fr!important;
+   }
+
+   .seller-dashboard-content [style*="display:flex"][style*="gap:12"]{
+     flex-wrap:wrap!important;
+   }
+
+   .seller-dashboard-content button{
+     max-width:100%;
+   }
+ }
+
+`}</style>
 
  {checkout&&(
  <CheckoutFlow
@@ -435,22 +821,22 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  )}
 
  {cartOpen&&!checkout&&(
- <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:200}}/><div style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:201,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
+ <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:200}}/><div className="cart-drawer" style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:201,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
  {cart.length===0
  ?<div style={{textAlign:"center",paddingTop:60}}><div style={{fontSize:46,marginBottom:12}}></div><p style={{color:"rgba(0,0,0,0.4)"}}>Cart is empty</p><button onClick={()=>{setCO(false);setPage("shop");}} style={{marginTop:16,background:"#fe2c55",color:"#fff",border:"none",padding:"10px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :cart.map(item=>(
- <div key={item.id} style={{background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.08)",borderRadius:12,padding:12,display:"flex",gap:11}}><div style={{width:50,height:50,borderRadius:10,background:`${item.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{item.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{item.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55",fontSize:13}}>Rs {(item.price*item.qty).toLocaleString()}</span><div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>updateQty(item.id,-1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontSize:12,fontWeight:600,minWidth:14,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button><button onClick={()=>removeFromCart(item.id)} style={{color:"#fe2c55",background:"none",border:"none",cursor:"pointer",fontSize:15}}></button></div></div></div></div>
+ <div key={item.id} style={{background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.08)",borderRadius:12,padding:12,display:"flex",gap:11}}><div style={{width:50,height:50,borderRadius:10,background:`${item.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{item.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{item.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55",fontSize:13}}>${(item.price*item.qty).toLocaleString()}</span><div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>updateQty(item.id,-1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontSize:12,fontWeight:600,minWidth:14,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button><button onClick={()=>removeFromCart(item.id)} style={{color:"#fe2c55",background:"none",border:"none",cursor:"pointer",fontSize:15}}></button></div></div></div></div>
  ))
  }
  </div>
  {cart.length>0&&(
- <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>Rs {cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add Rs "+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — Rs {(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
+ <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>${cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add $"+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — ${(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
  </button></div>
  )}
  </div></>
  )}
 
- <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><div onClick={()=>setPage("shop")} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",flexShrink:0,marginBottom:26}}><img src="/logo.png" alt="TikTokShop" style={{height:28,width:"auto",display:"block"}}/></div><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
+ <div className="fixed-left-sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:220,background:"#fff",borderRight:"1px solid rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",padding:"20px 20px",zIndex:110,overflowY:"auto"}}><button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
  {!user&&(
@@ -469,7 +855,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
- <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:60,display:"flex",alignItems:"center",gap:16}}><div style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
+ <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:72,display:"flex",alignItems:"center",gap:16}}>
+ <div className="mobile-nav-brand" onClick={()=>{setPage("shop");setMobileMenu(false);}}>
+   <img src="/logo.png" alt="TokZoo"/>
+ </div>
+
+ <div className="top-nav-actions" style={{marginLeft:"auto",display:"flex",gap:14,alignItems:"center"}}>
  {(user||cartCount>0)&&(
  <button onClick={()=>setCO(o=>!o)} style={{position:"relative",background:"none",border:"none",color:"#111",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontFamily:"inherit",flexShrink:0}}>Cart{cartCount>0&&<span style={{position:"absolute",top:-8,right:-14,background:"#fe2c55",color:"#fff",fontSize:9,fontWeight:700,width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cartCount}</span>}
  </button>
@@ -479,28 +870,64 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {profileImg?<img src={profileImg} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
  :<div style={{width:"100%",height:"100%",background:"#fe2c55",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{user.avatar}</div>}
  </div>
- :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}><button style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button><button onClick={()=>setLoginPopup(o=>!o)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
+ :<div style={{display:"flex",alignItems:"center",gap:8,position:"relative"}}>
+   <button className="get-app-btn" onClick={async()=>{
+ const promptEvent=window.deferredPrompt;
+ if(promptEvent){
+   try{
+     promptEvent.prompt();
+     await promptEvent.userChoice;
+   }catch(e){
+     console.log("PWA install prompt failed",e);
+   }finally{
+     window.deferredPrompt=null;
+   }
+   return;
+ }
+ const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+ if(isIOS){
+   alert("To install TokZoo on iPhone or iPad, tap the Share button and then select Add to Home Screen.");
+ }else{
+   alert("To install TokZoo, open your browser menu and select Install TokZoo or Add to Home Screen.");
+ }
+}} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"rgba(0,0,0,0.55)",fontSize:13,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Get app</button>
+   <button className="login-btn" onClick={()=>{setLoginPopup(o=>!o);setMobileMenu(false);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 22px",borderRadius:100,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Poppins,sans-serif",flexShrink:0}}>Log in</button>
  {loginPopup&&(
- <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:150}}/><div style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:151,animation:"fadeUp 0.2s ease both"}}><p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p><p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p><div style={{display:"flex",alignItems:"center",gap:16}}><button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 26px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button><button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button></div></div></>
+ <><div onClick={()=>setLoginPopup(false)} style={{position:"fixed",inset:0,zIndex:250}}/><div className="login-popover" style={{position:"absolute",top:46,right:0,width:300,background:"#fff",color:"#111",borderRadius:14,padding:20,boxShadow:"0 20px 50px rgba(0,0,0,0.18)",border:"1px solid #eee",zIndex:251,animation:"fadeUp 0.2s ease both"}}><p style={{fontWeight:700,fontSize:15,marginBottom:6}}>Welcome! Ready for Some Savings?</p><p style={{fontSize:12.5,color:"#666",marginBottom:16,lineHeight:1.5}}>Log in to see your exclusive discounts.</p><div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}><button onClick={()=>{setLoginPopup(false);goAuth(S.LOGIN);}} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 24px",borderRadius:100,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Poppins,sans-serif"}}>Log in</button><button onClick={()=>{setLoginPopup(false);goAuth(S.REG);}} style={{background:"none",border:"none",color:"#fe2c55",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Create Account</button></div></div></>
  )}
  </div>
  }
- </div></nav>
+ </div>
+
+ <button className="mobile-menu-btn" aria-label="Open navigation" onClick={()=>{setMobileMenu(v=>!v);setLoginPopup(false);}}>
+   {mobileMenu?"×":"☰"}
+ </button>
+
+ {mobileMenu&&(
+   <div className="mobile-nav-menu">
+     {[["Shop","shop"],["Sell","seller"],["More","sitemap"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([label,target])=>(
+       <button key={label} onClick={()=>{setPage(target);setMobileMenu(false);}}>{label}</button>
+     ))}
+   </div>
+ )}
+ </nav>
 
  <div style={{width:"100%",maxWidth:"100%",margin:0,padding:page==="seller"||page==="profile"?0:"0 24px",boxSizing:"border-box",display:"block"}} className="page-inner">
 
  {page==="shop"&&(
-   <SingaporeStyleHome
-     products={dbProducts.length ? dbProducts : CATALOGUE}
-     vids={VIDS}
-     onOpen={setSP}
-     onAdd={addToCart}
-     search={search}
-     setSearch={setSearch}
-     cat={cat}
-     setCat={setCat}
-     loading={dbLoading}
-   />
+   <div className="shop-fullwidth">
+     <SingaporeStyleHome
+       products={dbProducts}
+       vids={[]}
+       onOpen={setSP}
+       onAdd={addToCart}
+       search={search}
+       setSearch={setSearch}
+       cat={cat}
+       setCat={setCat}
+       loading={dbLoading}
+     />
+   </div>
  )}
  {page==="seller"&&!user&&(
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🔒</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Log in to access your Seller Dashboard</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:340}}>Create a free account or log in to manage your store, products, and orders.</p><div style={{display:"flex",gap:12}}><button onClick={()=>goAuth(S.LOGIN)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Log in</button><button onClick={()=>goAuth(S.REG)} style={{background:"transparent",color:"#fe2c55",border:"1px solid rgba(254,44,85,0.3)",padding:"11px 26px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign up</button></div></div>
@@ -509,7 +936,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 60px)",padding:"40px 20px",textAlign:"center"}}><div style={{width:64,height:64,borderRadius:"50%",background:"rgba(37,244,238,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,marginBottom:18}}>🏪</div><h2 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:20,marginBottom:8}}>Set up your Seller Account first</h2><p style={{color:"rgba(0,0,0,0.45)",fontSize:13,marginBottom:24,maxWidth:360}}>You're currently signed in as a buyer. Create a seller account to unlock the Seller Dashboard and start listing products.</p><button onClick={()=>goAuth(S.ONBOARD)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 28px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,cursor:"pointer"}}>Create Seller Account</button></div>
  )}
  {page==="seller"&&user&&user.role==="seller"&&(
- <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
+ <div className="seller-dashboard-wrap" style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={sellerTab} setTab={setST} onAddProduct={()=>setAP(true)} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={SELLER_TABS} showAdd={true}/><div className="seller-dashboard-content" style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:22}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{
  overview:" Dashboard",
  orders:" Shop Orders",
@@ -527,7 +954,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome back, {user?.name} </p></div>
 
  {sellerTab==="overview"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:22}}>
- {[{icon:"",label:"Revenue",val:`Rs ${totalRev.toLocaleString()}`,color:"#fe2c55",goto:"revenue"},{icon:"",label:"Orders",val:sellerOrders.length.toString(),color:"#25f4ee",goto:"orders"},{icon:"",label:"Active Products",val:activePrds.toString(),color:"#a78bfa",goto:"products"},{icon:"⏳",label:"Pending",val:(pendingPrds+pendingOrd).toString(),color:"#fbbf24",goto:"pending"}].map(s=>(
+ {[{icon:"",label:"Revenue",val:`$${totalRev.toLocaleString()}`,color:"#fe2c55",goto:"revenue"},{icon:"",label:"Orders",val:sellerOrders.length.toString(),color:"#25f4ee",goto:"orders"},{icon:"",label:"Active Products",val:activePrds.toString(),color:"#a78bfa",goto:"products"},{icon:"⏳",label:"Pending",val:(pendingPrds+pendingOrd).toString(),color:"#fbbf24",goto:"pending"}].map(s=>(
  <div key={s.label} onClick={()=>setST(s.goto)} style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.07)",borderRadius:14,padding:18,cursor:"pointer",transition:"all 0.2s"}}
  onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color+"50";e.currentTarget.style.transform="translateY(-2px)";}}
  onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.07)";e.currentTarget.style.transform="translateY(0)";}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><p style={{fontSize:10,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>{s.label}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>{s.val}</p></div><div style={{width:42,height:42,borderRadius:11,background:`${s.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{s.icon}</div></div><p style={{marginTop:10,fontSize:10,color:s.color}}>View details →</p></div>
@@ -536,7 +963,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {sellerProds.length===0
  ?<div style={{textAlign:"center",padding:"24px 0"}}><p style={{fontSize:28,marginBottom:8}}></p><p style={{fontSize:12,color:"#444",marginBottom:12}}>No products yet</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 16px",borderRadius:100,fontSize:12,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600}}>+ Add First Product</button></div>
  :sellerProds.slice(0,4).map((p,i)=>(
- <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{fontSize:11,color:"#333",width:16}}>#{i+1}</span><div style={{width:34,height:34,borderRadius:8,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:500,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p><p style={{fontSize:10,color:"rgba(0,0,0,0.3)"}}>Stock: {p.stock}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:12,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</p><span style={{fontSize:9,color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24"}}>{(p.status==="active"||p.status==="live")?"● Live":"● Pending"}</span></div></div>
+ <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{fontSize:11,color:"#333",width:16}}>#{i+1}</span><div style={{width:34,height:34,borderRadius:8,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:500,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p><p style={{fontSize:10,color:"rgba(0,0,0,0.3)"}}>Stock: {p.stock}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:12,color:"#fe2c55"}}>${p.price.toLocaleString()}</p><span style={{fontSize:9,color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24"}}>{(p.status==="active"||p.status==="live")?"● Live":"● Pending"}</span></div></div>
  ))
  }
  </div>
@@ -555,7 +982,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>Add products to see best sellers</p></div>
  :<div>
  {sorted.map((p,i)=>(
- <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"12px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:24,height:24,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:11,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>Rs {(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
+ <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"12px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:24,height:24,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:11,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>${(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
  ))}
  </div>
  }
@@ -563,20 +990,30 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {[[totalOrders,"Total Orders","#334155"],[inProcess,"In Process","#334155"],[completed,"Completed","#14a37f"],[cancelled,"Cancelled","#334155"]].map(([v,l,c])=>(
  <div key={l} style={{textAlign:"center",padding:"12px 8px",background:"rgba(0,0,0,0.03)",borderRadius:10,border:`1px solid ${c}20`}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:24,color:c,marginBottom:3}}>{v}</p><p style={{fontSize:11,color:"#555"}}>{l}</p></div>
  ))}
- </div><div style={{padding:"14px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}><p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p><p style={{fontSize:11,color:"#14a37f",fontWeight:800}}>Verified</p><p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p></div></div></div></div>
+ </div>
+ {activePrds>=3&&(
+ <div style={{padding:"14px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}>
+  <div style={{width:72,height:72,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:1}}>
+   <p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p>
+   <p style={{fontSize:11,color:"#14a37f",fontWeight:800}}>Verified</p>
+   <p style={{fontSize:9,color:"#14a37f",fontWeight:700}}></p>
+  </div>
+ </div>
+ )}
+ </div></div>
  );
  })()}
  </div>}
 
  {sellerTab==="revenue"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:18}}>
  {[["Today",totalRev,"#fe2c55"],["This Week",totalRev,"#25f4ee"],["This Month",totalRev,"#34d399"]].map(([l,v,c])=>(
- <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16,textAlign:"center"}}><p style={{fontSize:11,color:"#555",marginBottom:6}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16,color:c}}>Rs {v.toLocaleString()}</p></div>
+ <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16,textAlign:"center"}}><p style={{fontSize:11,color:"#555",marginBottom:6}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16,color:c}}>${v.toLocaleString()}</p></div>
  ))}
  </div>
  {sellerOrders.length===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"#555"}}>No revenue yet</p></div>
  :<div style={{display:"flex",flexDirection:"column",gap:8}}>{sellerOrders.map((o,i)=>(
- <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#555"}}>{o.date}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,color:"#34d399"}}>+Rs {o.total.toLocaleString()}</p></div></div>
+ <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#555"}}>{o.date}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,color:"#34d399"}}>+${o.total.toLocaleString()}</p></div></div>
  ))}</div>}
  </div>}
 
@@ -587,9 +1024,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {sellerOrders.map((o,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div onClick={()=>setExpandedOrder(expandedOrder===i?null:i)} style={{padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}
  onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.03)"}
- onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:22}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>{o.id||o.order_number}</span><span style={{fontSize:11,color:"#555"}}>{o.date||new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}</span></div><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginTop:2}}>{o.items?o.items[0]?.title:o.product_title}</p></div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:o.statusColor||"#fbbf24",background:(o.statusColor||"#fbbf24")+"18",padding:"4px 10px",borderRadius:100}}>● {o.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#34d399"}}>Rs {Number(o.total||o.total_amount||0).toLocaleString()}</span><span style={{fontSize:11,color:"#555"}}>{expandedOrder===i?"▲":"▼"}</span></div></div>
+ onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:22}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>{o.id||o.order_number}</span><span style={{fontSize:11,color:"#555"}}>{o.date||new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}</span></div><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginTop:2}}>{o.items?o.items[0]?.title:o.product_title}</p></div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:o.statusColor||"#fbbf24",background:(o.statusColor||"#fbbf24")+"18",padding:"4px 10px",borderRadius:100}}>● {o.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#34d399"}}>${Number(o.total||o.total_amount||0).toLocaleString()}</span><span style={{fontSize:11,color:"#555"}}>{expandedOrder===i?"▲":"▼"}</span></div></div>
  {expandedOrder===i&&(
- <div style={{borderTop:"1px solid rgba(254,44,85,0.2)"}}><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:28}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.items?o.items[0]?.title:o.product_title}</p><p style={{fontSize:11,color:"#555"}}>Qty: {o.items?o.items[0]?.qty:o.quantity} · Rs {Number(o.items?o.items[0]?.price:o.unit_price||0).toLocaleString()} each</p></div><div style={{textAlign:"right"}}><p style={{fontSize:11,color:"#555",marginBottom:2}}>Shipping</p><p style={{fontSize:12,fontWeight:600,color:Number(o.shipping_fee)===0?"#34d399":"#fff"}}>{Number(o.shipping_fee)===0?"FREE":"Rs "+Number(o.shipping_fee||150).toLocaleString()}</p></div></div><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a"}}><p style={{fontSize:11,color:"#fe2c55",fontWeight:700,marginBottom:8}}>BUYER DETAILS</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+ <div style={{borderTop:"1px solid rgba(254,44,85,0.2)"}}><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:28}}>{o.items?o.items[0]?.emoji:o.product_emoji||""}</span><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.items?o.items[0]?.title:o.product_title}</p><p style={{fontSize:11,color:"#555"}}>Qty: {o.items?o.items[0]?.qty:o.quantity} · ${Number(o.items?o.items[0]?.price:o.unit_price||0).toLocaleString()} each</p></div><div style={{textAlign:"right"}}><p style={{fontSize:11,color:"#555",marginBottom:2}}>Shipping</p><p style={{fontSize:12,fontWeight:600,color:Number(o.shipping_fee)===0?"#34d399":"#fff"}}>{Number(o.shipping_fee)===0?"FREE":"$"+Number(o.shipping_fee||150).toLocaleString()}</p></div></div><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a"}}><p style={{fontSize:11,color:"#fe2c55",fontWeight:700,marginBottom:8}}>BUYER DETAILS</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
  {[["Name",o.shipping_name||o.buyer_name],["Phone",o.shipping_phone||o.buyer_phone],["City",o.shipping_city||o.buyer_city],["Payment",(o.payment_method||"COD").toUpperCase()]].map(([l,v])=>(
  <div key={l} style={{background:"rgba(0,0,0,0.03)",borderRadius:8,padding:"8px 12px"}}><p style={{fontSize:10,color:"#555",marginBottom:3}}>{l}</p><p style={{fontSize:13,fontWeight:600}}>{v||"—"}</p></div>
  ))}
@@ -614,12 +1051,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {sellerProds.length===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"#555",marginBottom:16}}>No products yet</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 24px",borderRadius:100,fontSize:13,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600}}>+ Add First Product</button></div>
  :<div style={{display:"flex",flexDirection:"column",gap:10}}>{sellerProds.map((p,i)=>(
- <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:11,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>{p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:600,marginBottom:3}}>{p.title}</p><div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock}</p>
+ <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:11,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,overflow:"hidden"}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:600,marginBottom:3}}>{p.title}</p><div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock}</p>
  {p.flashSale&&(<span style={{fontSize:10,background:"rgba(254,44,85,0.1)",color:"#fe2c55",padding:"2px 7px",borderRadius:100}}>Flash Sale</span>)}
  {p.freeShipping&&(<span style={{fontSize:10,background:"rgba(37,244,238,0.1)",color:"#25f4ee",padding:"2px 7px",borderRadius:100}}>Free Ship</span>)}
  {p.featured&&(<span style={{fontSize:10,background:"rgba(251,191,36,0.1)",color:"#fbbf24",padding:"2px 7px",borderRadius:100}}>Featured</span>)}
  {p.promoCode&&<span style={{fontSize:10,background:"rgba(52,211,153,0.1)",color:"#34d399",padding:"2px 7px",borderRadius:100}}> {p.promoCode}</span>}
- </div></div><div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</p><span style={{fontSize:10,padding:"3px 9px",background:(p.status==="active"||p.status==="live")?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)",color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24",border:`1px solid ${(p.status==="active"||p.status==="live")?"#34d39930":"#fbbf2430"}`,borderRadius:100}}>{(p.status==="active"||p.status==="live")?" Live":"⏳ Pending"}</span><button onClick={()=>setEditProd(p)}
+ </div></div><div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</p><span style={{fontSize:10,padding:"3px 9px",background:(p.status==="active"||p.status==="live")?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)",color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24",border:`1px solid ${(p.status==="active"||p.status==="live")?"#34d39930":"#fbbf2430"}`,borderRadius:100}}>{(p.status==="active"||p.status==="live")?" Live":"⏳ Pending"}</span><button onClick={()=>setEditProd(p)}
  style={{background:"rgba(37,244,238,0.1)",border:"1px solid rgba(37,244,238,0.2)",color:"#25f4ee",padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Edit
  </button></div></div>
  ))}</div>}
@@ -638,7 +1075,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"#555"}}>All caught up!</p></div>
  :<div style={{display:"flex",flexDirection:"column",gap:10}}>
  {sellerProds.filter(p=>p.status==="pending").map((p,i)=>(
- <div key={i} style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:26}}>{p.emoji}</span><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{p.title}</p><p style={{fontSize:11,color:"#fbbf24"}}>⏳ Awaiting admin review</p></div><span style={{fontSize:11,color:"#fbbf24",background:"rgba(251,191,36,0.1)",padding:"5px 12px",borderRadius:100,fontWeight:600}}>Pending</span></div>
+ <div key={i} style={{background:"rgba(251,191,36,0.05)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:46,height:46,borderRadius:10,background:"rgba(254,44,85,0.08)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:26}}>{p.emoji}</span>}</div><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{p.title}</p><p style={{fontSize:11,color:"#fbbf24"}}>⏳ Awaiting admin review</p></div><span style={{fontSize:11,color:"#fbbf24",background:"rgba(251,191,36,0.1)",padding:"5px 12px",borderRadius:100,fontWeight:600}}>Pending</span></div>
  ))}
  {sellerOrders.filter(o=>o.status==="Processing").map((o,i)=>(
  <div key={i} style={{background:"rgba(37,244,238,0.05)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:12,padding:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.id}</p><p style={{fontSize:11,color:"#25f4ee"}}>⏳ Processing — admin will update status</p></div><span style={{fontSize:11,color:"#25f4ee",background:"rgba(37,244,238,0.1)",padding:"5px 12px",borderRadius:100,fontWeight:600}}>Processing</span></div>
@@ -672,8 +1109,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  [""],
  ["SUMMARY"],
  ["Total Orders",filteredOrders.length],
- ["Total Revenue","Rs "+totalAmt.toLocaleString()],
- ["Average Order Value","Rs "+(filteredOrders.length?Math.round(totalAmt/filteredOrders.length):0).toLocaleString()],
+ ["Total Revenue","$"+totalAmt.toLocaleString()],
+ ["Average Order Value","$"+(filteredOrders.length?Math.round(totalAmt/filteredOrders.length):0).toLocaleString()],
  ];
  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(",")).join("\n");
  const blob=new Blob([csv],{type:"text/csv"});
@@ -684,7 +1121,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  };
  return(
  <div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
- {[["Total Revenue","Rs "+totalRev.toLocaleString(),"#34d399"],["Total Orders",sellerOrders.length.toString(),"#25f4ee"],["Pending Payout","Rs 0","#fbbf24"],["Withdrawn","Rs 0","#a78bfa"]].map(([l,v,c])=>(
+ {[["Total Revenue","$"+totalRev.toLocaleString(),"#34d399"],["Total Orders",sellerOrders.length.toString(),"#25f4ee"],["Pending Payout","$0","#fbbf24"],["Withdrawn","$0","#a78bfa"]].map(([l,v,c])=>(
  <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:18}}><p style={{fontSize:11,color:"#555",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,color:c}}>{v}</p></div>
  ))}
  </div>
@@ -700,13 +1137,13 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Monthly Summary</p>
  {["January","February","March","April","May","June"].map((m,i)=>(
- <div key={m} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span style={{fontSize:13,color:"rgba(0,0,0,0.6)"}}>{m} 2026</span><span style={{fontSize:13,fontWeight:600,color:"#34d399"}}>Rs {(i*2500).toLocaleString()}</span></div>
+ <div key={m} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span style={{fontSize:13,color:"rgba(0,0,0,0.6)"}}>{m} 2026</span><span style={{fontSize:13,fontWeight:600,color:"#34d399"}}>${(i*2500).toLocaleString()}</span></div>
  ))}
  </div></div>
  );
  })()}
 
- {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>Rs 0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>TikTokShop Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
+ {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>$0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>TikTokShop Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
 
  {sellerTab==="funds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Fund Records</p><div style={{display:"flex",gap:8,marginBottom:16}}>
  {["All","Deposit","Withdrawal","Refund"].map(f=>(
@@ -735,7 +1172,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:40,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No products in warehouse</p></div>
  :<div style={{display:"flex",flexDirection:"column",gap:8}}>
  {sellerProds.map((p,i)=>(
- <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:14,background:"rgba(0,0,0,0.02)",borderRadius:12,border:"1px solid rgba(0,0,0,0.06)"}}><div style={{width:42,height:42,borderRadius:10,background:`${p.color||"#fe2c55"}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{p.emoji||""}</div><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>{p.title}</p><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock||0} units</p></div><span style={{fontSize:12,fontWeight:700,color:p.stock>10?"#34d399":p.stock>0?"#fbbf24":"#fe2c55"}}>{p.stock>10?"In Stock":p.stock>0?"Low Stock":"Out of Stock"}</span></div>
+ <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:14,background:"rgba(0,0,0,0.02)",borderRadius:12,border:"1px solid rgba(0,0,0,0.06)"}}><div style={{width:42,height:42,borderRadius:10,background:`${p.color||"#fe2c55"}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:(p.emoji||"")}</div><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>{p.title}</p><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock||0} units</p></div><span style={{fontSize:12,fontWeight:700,color:p.stock>10?"#34d399":p.stock>0?"#fbbf24":"#fe2c55"}}>{p.stock>10?"In Stock":p.stock>0?"Low Stock":"Out of Stock"}</span></div>
  ))}
  </div>
  }
@@ -759,7 +1196,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"50px 0"}}><p style={{fontSize:40,marginBottom:10}}></p><p style={{color:"#555",fontSize:13}}>No products yet — add products to see best sellers</p></div>
  :<div>
  {sorted.map((p,i)=>(
- <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"13px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:26,height:26,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":i===2?"rgba(254,44,85,0.1)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:12,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":i===2?"#fe2c55":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>Rs {(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
+ <div key={i} style={{display:"grid",gridTemplateColumns:"44px 1fr 110px 120px",padding:"13px 20px",borderBottom:"1px solid rgba(0,0,0,0.04)",alignItems:"center",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}><div style={{width:26,height:26,borderRadius:"50%",background:i===0?"rgba(251,191,36,0.15)":i===1?"rgba(0,0,0,0.06)":i===2?"rgba(254,44,85,0.1)":"rgba(0,0,0,0.04)",display:"flex",alignItems:"center",justifyContent:"center"}}><p style={{fontSize:12,fontWeight:700,color:i===0?"#fbbf24":i===1?"#888":i===2?"#fe2c55":"#555"}}>{i+1}</p></div><p style={{fontSize:13,color:"#ddd",lineHeight:1.4,paddingRight:12}}>{p.emoji} {p.title}</p><p style={{fontSize:13,color:"#888"}}>${(p.price||0).toLocaleString()}</p><p style={{fontSize:13,color:"#34d399",fontWeight:600}}>{(p.sold||0).toLocaleString()}</p></div>
  ))}
  </div>
  }
@@ -774,7 +1211,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ].map(([val,label,color])=>(
  <div key={label} style={{textAlign:"center",padding:"14px 10px",background:"rgba(0,0,0,0.03)",borderRadius:12,border:`1px solid ${color}20`}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:28,color,marginBottom:4}}>{val}</p><p style={{fontSize:11,color:"#555"}}>{label}</p></div>
  ))}
- </div><div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:80,height:80,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:2}}><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p><p style={{fontSize:12,color:"#14a37f",fontWeight:800}}>Verified</p><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p></div></div></div></div>
+ </div>{activePrds>=3&&(<div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.06)",display:"flex",justifyContent:"center"}}><div style={{width:80,height:80,borderRadius:"50%",border:"2px solid #14a37f",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:2}}><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p><p style={{fontSize:12,color:"#14a37f",fontWeight:800}}>Verified</p><p style={{fontSize:10,color:"#14a37f",fontWeight:700}}></p></div></div>)}</div></div>
  );
  })()}
 
@@ -839,7 +1276,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div><button onClick={()=>setPE(true)} style={{background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.3)",color:"#fe2c55",padding:"6px 14px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Change</button></div></div>
 
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Name</label><div style={{display:"flex",alignItems:"center",gap:10}}><input value={storeForm.contactPerson} onChange={e=>setStoreForm({...storeForm,contactPerson:e.target.value})}
- style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><span style={{background:"rgba(52,211,153,0.1)",color:"#34d399",fontSize:11,padding:"4px 10px",borderRadius:100,whiteSpace:"nowrap"}}>Verified</span><button style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>New</button></div></div>
+ style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/>{activePrds>=3&&<span style={{background:"rgba(52,211,153,0.1)",color:"#34d399",fontSize:11,padding:"4px 10px",borderRadius:100,whiteSpace:"nowrap"}}>Verified</span>}<button style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>New</button></div></div>
 
  <div style={{display:"grid",gridTemplateColumns:"140px 1fr",alignItems:"center",gap:12,marginBottom:16}}><label style={{fontSize:12,color:"rgba(0,0,0,0.5)",textAlign:"right"}}>Phone/Password</label><div style={{display:"flex",alignItems:"center",gap:10}}><input value={storeForm.storeMobile} onChange={e=>setStoreForm({...storeForm,storeMobile:e.target.value})}
  style={{background:"rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"9px 12px",color:"#111",fontSize:13,fontFamily:"inherit",outline:"none",flex:1}}/><button onClick={()=>setPE(true)} style={{background:"transparent",border:"none",color:"#fe2c55",fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>Change</button></div></div>
@@ -875,7 +1312,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div style={{display:"flex",width:"100%",minHeight:"calc(100vh - 60px)"}}><Sidebar user={user} profileImg={profileImg} tab={profileTab} setTab={setPT} onAddProduct={()=>{}} onLogout={logout} onEditProfile={()=>setPE(true)} tabs={BUYER_TABS} showAdd={false}/><div style={{flex:1,overflowY:"auto",overflowX:"hidden",padding:"26px 28px 60px",minWidth:0}}><div style={{marginBottom:18}}><h1 style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>
  {{orders:" My Orders",wishlist:" Wishlist",reviews:"⭐ Reviews",settings:" Settings"}[profileTab]}
  </h1><p style={{color:"rgba(0,0,0,0.4)",fontSize:13}}>Welcome, {user?.name} </p></div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:22,background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:16}}>
- {[[buyerOrders.length.toString(),"Orders"],[likedP.size.toString(),"Wishlist"],["0","Reviews"],["Rs "+buyerOrders.reduce((s,o)=>s+o.total,0).toLocaleString(),"Spent"]].map(([n,l])=>(
+ {[[buyerOrders.length.toString(),"Orders"],[likedP.size.toString(),"Wishlist"],["0","Reviews"],["$"+buyerOrders.reduce((s,o)=>s+o.total,0).toLocaleString(),"Spent"]].map(([n,l])=>(
  <div key={l} style={{textAlign:"center"}}><div style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16,color:"#fe2c55"}}>{n}</div><div style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginTop:2}}>{l}</div></div>
  ))}
  </div>
@@ -884,7 +1321,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {buyerOrders.length===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"rgba(0,0,0,0.4)",marginBottom:16}}>No orders yet</p><button onClick={()=>setPage("shop")} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :<div style={{display:"flex",flexDirection:"column",gap:12}}>{buyerOrders.map((order,i)=>(
- <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,overflow:"hidden",background:p.color?`${p.color}22`:"#f3f3f3",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,border:"1px solid #eee",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}} onError={(e)=>{e.currentTarget.style.display="none";const fb=e.currentTarget.nextElementSibling;if(fb)fb.style.display="flex";}}/>:null}<div style={{width:"100%",height:"100%",display:p.img?"none":"flex",alignItems:"center",justifyContent:"center"}}>{p.emoji||"📦"}</div></div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
+ <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,background:`${p.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
  <div style={{padding:"10px 16px 14px"}}><div style={{display:"flex",alignItems:"center",gap:0}}>
  {["Placed","Confirmed","Shipped","Delivered"].map((s,si)=>{
  const done=["Placed","Confirmed"].includes(order.status)||si===0||(order.status==="Shipped"&&si<=2)||(order.status==="Delivered"&&si<=3);
@@ -905,7 +1342,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {CATALOGUE.filter(p=>likedP.has(p.id)).map(p=>(
  <div key={p.id} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{aspectRatio:"1",background:`${p.color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,position:"relative"}}>
  {p.emoji}
- <button onClick={()=>toggleLP(p.id)} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.5)",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:12}}></button></div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:7,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>Rs {p.price.toLocaleString()}</span><button onClick={()=>addToCart(p)} style={{background:"#fe2c55",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>+</button></div></div></div>
+ <button onClick={()=>toggleLP(p.id)} style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.5)",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:12}}></button></div><div style={{padding:"10px 12px"}}><p style={{fontSize:12,fontWeight:500,lineHeight:1.4,marginBottom:7,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{p.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</span><button onClick={()=>addToCart(p)} style={{background:"#fe2c55",border:"none",width:24,height:24,borderRadius:"50%",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"}}>+</button></div></div></div>
  ))}
  </div>}
  </div>}
