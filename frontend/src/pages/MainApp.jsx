@@ -110,8 +110,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const filtered=dbProducts.filter(p=>{
  const categoryMatch=
    cat==="all"||
-   String(p.cat||"").toLowerCase()===String(cat||"").toLowerCase()||
-   String(p.category||"").toLowerCase()===String(cat||"").toLowerCase();
+   String(p.category||p.cat||"").toLowerCase()===String(cat||"").toLowerCase();
 
  const subcategoryMatch=
    subcat==="all"||
@@ -939,14 +938,14 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {page==="shop"&&(
    <div className="shop-fullwidth">
      <SingaporeStyleHome
-       products={dbProducts}
+       products={filtered}
        vids={[]}
        onOpen={setSP}
        onAdd={addToCart}
        search={search}
        setSearch={setSearch}
        cat={cat}
-       setCat={setCat}
+       setCat={(nextCat)=>{setCat(nextCat);setSubcat("all");}}
        loading={dbLoading}
      />
    </div>
