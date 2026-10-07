@@ -489,7 +489,6 @@ export default function AdminApp() {
             style={{ width:"100%", background: loading?"#333":"linear-gradient(135deg,#fe2c55,#ff6b35)", border:"none", color:"#fff", padding:"13px", borderRadius:12, fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, cursor: loading?"wait":"pointer", marginTop:4 }}>
             {loading ? "Signing in…" : "Sign In →"}
           </button>
-          <p style={{ textAlign:"center", fontSize:11, color:"rgba(255,255,255,.25)", marginTop:14 }}>Default: admin@shoptok.pk / Admin@ShopTok2024!</p>
         </div>
       </div>
       {toast && <Toast {...toast} onClose={()=>setToast(null)} />}
