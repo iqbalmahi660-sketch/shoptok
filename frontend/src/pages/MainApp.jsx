@@ -100,7 +100,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  rating:Number(p.rating)||0,
  sold:Number(p.sold)||0,
  emoji:p.emoji||"",
- img:p.image_url||p.image||p.thumbnail||p.img||null,
+ img:Array.isArray(p.images)&&p.images.length?p.images[0]:(p.image_url||p.image||p.thumbnail||p.img||null),
  })));
  setDbLoading(false);
  }).catch(()=>setDbLoading(false));
