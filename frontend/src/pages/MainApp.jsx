@@ -77,6 +77,15 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [storeDetail,setStoreDetail] = useState({products:[],loading:false});
 
  const showToast=(msg)=>{setToast(msg);setTimeout(()=>setToast(null),2500);};
+ const goHome=()=>{
+  setCat("all");
+  setSubcat("all");
+  setSearch("");
+  setSearchMode("products");
+  setPage("shop");
+  setMobileMenu(false);
+  window.scrollTo(0,0);
+ };
  const addToCart=(p)=>{setCart(prev=>{const ex=prev.find(i=>i.id===p.id);return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,qty:1}];});showToast(`${p.emoji} Added to cart!`);};
  const removeFromCart=(id)=>setCart(prev=>prev.filter(i=>i.id!==id));
  const updateQty=(id,d)=>setCart(prev=>prev.map(i=>i.id===id?{...i,qty:Math.max(1,i.qty+d)}:i));
@@ -870,14 +879,14 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  )}
  <div style={{flex:1}}/><div style={{display:"flex",flexDirection:"column",gap:14,fontSize:13,paddingBottom:10}}>
  {[["Shop","shop"],["Sell","seller"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([l,p])=>(
- <span key={l} onClick={()=>p&&setPage(p)} style={{cursor:"pointer",color:"#555",transition:"color 0.15s"}}
+ <span key={l} onClick={()=>{if(p==="shop")goHome();else if(p)setPage(p);}} style={{cursor:"pointer",color:"#555",transition:"color 0.15s"}}
  onMouseEnter={e=>e.currentTarget.style.color="#111"}
  onMouseLeave={e=>e.currentTarget.style.color="#555"}>{l}</span>
  ))}
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
  <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:72,display:"flex",alignItems:"center",gap:16}}>
- <div className="mobile-nav-brand" onClick={()=>{setPage("shop");setMobileMenu(false);}}>
+ <div className="mobile-nav-brand" onClick={goHome} role="button" tabIndex={0} aria-label="Go to home">
    <img src="/logo.png" alt="TokZoo"/>
  </div>
 
@@ -927,7 +936,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {mobileMenu&&(
    <div className="mobile-nav-menu">
      {[["Shop","shop"],["Sell","seller"],["More","sitemap"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([label,target])=>(
-       <button key={label} onClick={()=>{setPage(target);setMobileMenu(false);}}>{label}</button>
+       <button key={label} onClick={()=>{if(target==="shop")goHome();else{setPage(target);setMobileMenu(false);}}}>{label}</button>
      ))}
    </div>
  )}
@@ -937,6 +946,31 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  {page==="shop"&&(
    <div className="shop-fullwidth">
+     {(cat!=="all"||subcat!=="all")&&(
+       <div style={{padding:"14px 2px 4px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+         <button
+           type="button"
+           onClick={goHome}
+           style={{
+             background:"#fff",
+             border:"1px solid #e6e6e6",
+             borderRadius:10,
+             padding:"9px 14px",
+             color:"#111",
+             fontFamily:"inherit",
+             fontSize:13,
+             fontWeight:600,
+             cursor:"pointer",
+             boxShadow:"0 2px 8px rgba(0,0,0,0.04)"
+           }}
+         >
+           ← Back to All Products
+         </button>
+         <span style={{fontSize:12.5,color:"#777"}}>
+           {subcat!=="all"?subcat:cat}
+         </span>
+       </div>
+     )}
      <SingaporeStyleHome
        products={filtered}
        vids={[]}
