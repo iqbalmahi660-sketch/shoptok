@@ -175,8 +175,8 @@ export const FullProductPage = ({
             {/* Price row */}
             <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
               {hasDiscount && <span style={{ color: "#fe2c55", fontWeight: 800, fontSize: 18 }}>-{prod.disc}%</span>}
-              <span style={{ color: "#fe2c55", fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 32 }}>Rs {Number(prod.price).toLocaleString()}</span>
-              {hasDiscount && <span style={{ fontSize: 15, color: "#aaa", textDecoration: "line-through" }}>Rs {Number(prod.orig).toLocaleString()}</span>}
+              <span style={{ color: "#fe2c55", fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 32 }}>${Number(prod.price).toLocaleString()}</span>
+              {hasDiscount && <span style={{ fontSize: 15, color: "#aaa", textDecoration: "line-through" }}>${Number(prod.orig).toLocaleString()}</span>}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 18, color: "#0aa15c", fontSize: 12.5, fontWeight: 600 }}>
@@ -250,7 +250,7 @@ export const FullProductPage = ({
             {/* Trust badges */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
               {[
-                ["🚚", "Free Delivery", "On orders above Rs 1,000"],
+                ["🚚", "Free Delivery", "On orders above $1,000"],
                 ["💵", "Cash on Delivery", "Pay when you receive"],
                 ["↩️", "7-Day Returns", "Easy return policy"],
                 ["🔒", "Secure Payment", "USDT, Bank & Crypto"],
@@ -448,7 +448,7 @@ const ProductCard = ({ p, onClose }) => (
     <div style={{ padding: 12 }}>
       <p style={{ fontSize: 12.5, fontWeight: 500, marginBottom: 6, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</p>
       {Number(p.disc) > 0 && <p style={{ fontSize: 11, fontWeight: 700, color: "#fe2c55", marginBottom: 2 }}>-{p.disc}%</p>}
-      <p style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, color: "#fe2c55", fontSize: 13.5 }}>Rs {Number(p.price).toLocaleString()}</p>
+      <p style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, color: "#fe2c55", fontSize: 13.5 }}>${Number(p.price).toLocaleString()}</p>
     </div>
   </div>
 );
