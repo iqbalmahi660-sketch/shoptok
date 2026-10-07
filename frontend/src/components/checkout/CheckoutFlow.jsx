@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { API, CITIES } from "../../data/catalogue.js";
 import Btn from "../common/Btn.jsx";
 import Field from "../common/Field.jsx";
@@ -30,6 +30,124 @@ const PAYMENT_DETAILS = {
   },
 };
 
+const getProductImage = (item) => {
+  if (!item) return "";
+
+  if (typeof item.img === "string" && item.img.trim()) {
+    return item.img.trim();
+  }
+
+  if (typeof item.image_url === "string" && item.image_url.trim()) {
+    return item.image_url.trim();
+  }
+
+  if (typeof item.image === "string" && item.image.trim()) {
+    return item.image.trim();
+  }
+
+  if (typeof item.thumbnail === "string" && item.thumbnail.trim()) {
+    return item.thumbnail.trim();
+  }
+
+  if (Array.isArray(item.images) && item.images.length) {
+    const first = item.images[0];
+
+    if (typeof first === "string" && first.trim()) {
+      return first.trim();
+    }
+
+    if (first && typeof first === "object") {
+      return first.url || first.src || first.image_url || "";
+    }
+  }
+
+  return "";
+};
+
+const ProductThumb = ({ item, size = 56, radius = 12 }) => {
+  const src = getProductImage(item);
+
+  if (src) {
+    return (
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: radius,
+          overflow: "hidden",
+          background: "#f3f3f3",
+          flexShrink: 0,
+          border: "1px solid #eeeeee",
+        }}
+      >
+        <img
+          src={src}
+          alt={item?.title || "Product"}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+
+            const fallback =
+              e.currentTarget.nextElementSibling;
+
+            if (fallback) {
+              fallback.style.display = "flex";
+            }
+          }}
+        />
+
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "none",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: Math.max(
+              20,
+              Math.round(size * 0.5)
+            ),
+            background: item?.color
+              ? `${item.color}22`
+              : "#f7f7f7",
+          }}
+        >
+          {item?.emoji || "📦"}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        background: item?.color
+          ? `${item.color}22`
+          : "#f7f7f7",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: Math.max(
+          20,
+          Math.round(size * 0.5)
+        ),
+        flexShrink: 0,
+        border: "1px solid #eeeeee",
+      }}
+    >
+      {item?.emoji || "📦"}
+    </div>
+  );
+};
+
 const DemoWarning = () => (
   <div
     style={{
@@ -58,8 +176,8 @@ const DemoWarning = () => (
         lineHeight: 1.5,
       }}
     >
-      These are sample wallet addresses. Do not send real payment to these
-      addresses.
+      These are sample wallet addresses.
+      Do not send real payment to these addresses.
     </p>
   </div>
 );
@@ -80,14 +198,7 @@ const WalletCard = ({
       marginBottom: 14,
     }}
   >
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "140px 1fr",
-        gap: 18,
-        alignItems: "center",
-      }}
-    >
+    <div className="wallet-card-grid">
       <div
         style={{
           background: "#ffffff",
@@ -181,7 +292,9 @@ export const CheckoutFlow = ({
   const [loading, setLoading] = useState(false);
 
   const [orderId, setOrderId] = useState(
-    `#ORD-${Date.now().toString().slice(-6)}`
+    `#ORD-${Date.now()
+      .toString()
+      .slice(-6)}`
   );
 
   // Shipping completely removed
@@ -192,17 +305,123 @@ export const CheckoutFlow = ({
     name: user?.name || "",
     phone: "",
     address: "",
+    country: "Pakistan",
     city: "",
     note: "",
   });
 
+  const [
+    countryCityData,
+    setCountryCityData,
+  ] = useState([]);
+
+  const [
+    locationLoading,
+    setLocationLoading,
+  ] = useState(true);
+
+  const [
+    locationError,
+    setLocationError,
+  ] = useState(false);
+
   const [pay, setPay] = useState({
-    method: "Bank Transfer",
+    method: "USDT",
     txRef: "",
     cryptoType: "BTC",
   });
 
-  const STEPS = ["Review", "Shipping", "Payment", "Confirm"];
+  const STEPS = [
+    "Review",
+    "Shipping",
+    "Payment",
+    "Confirm",
+  ];
+
+  useEffect(() => {
+    let active = true;
+
+    const loadLocations = async () => {
+      setLocationLoading(true);
+      setLocationError(false);
+
+      try {
+        const res = await fetch(
+          "https://countriesnow.space/api/v0.1/countries"
+        );
+
+        const data = await res.json();
+
+        if (
+          !res.ok ||
+          data?.error ||
+          !Array.isArray(data?.data)
+        ) {
+          throw new Error(
+            "Location data unavailable"
+          );
+        }
+
+        if (active) {
+          const formatted = data.data
+            .filter((x) => x?.country)
+            .map((x) => ({
+              country: x.country,
+              cities: Array.isArray(x.cities)
+                ? x.cities
+                : [],
+            }))
+            .sort((a, b) =>
+              a.country.localeCompare(
+                b.country
+              )
+            );
+
+          setCountryCityData(formatted);
+        }
+      } catch (err) {
+        if (active) {
+          setLocationError(true);
+
+          setCountryCityData([
+            {
+              country: "Pakistan",
+              cities: CITIES || [],
+            },
+          ]);
+        }
+      } finally {
+        if (active) {
+          setLocationLoading(false);
+        }
+      }
+    };
+
+    loadLocations();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const countries =
+    countryCityData.map(
+      (x) => x.country
+    );
+
+  const selectedCountry =
+    countryCityData.find(
+      (x) =>
+        x.country === addr.country
+    );
+
+  const availableCities = (
+    selectedCountry?.cities || []
+  )
+    .filter(Boolean)
+    .sort((a, b) =>
+      a.localeCompare(b)
+    );
 
   if (step === 3) {
     return (
@@ -230,15 +449,17 @@ export const CheckoutFlow = ({
             style={{
               width: 90,
               height: 90,
-              background: "linear-gradient(135deg,#34d399,#059669)",
+              background:
+                "linear-gradient(135deg,#34d399,#059669)",
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 42,
               margin: "0 auto 24px",
-              boxShadow: "0 20px 60px #34d39940",
-              color: "#ffffff",
+              boxShadow:
+                "0 20px 60px #34d39940",
+              color: "#fff",
             }}
           >
             ✓
@@ -279,13 +500,15 @@ export const CheckoutFlow = ({
               marginBottom: 28,
             }}
           >
-            Estimated delivery: 3–5 business days
+            Estimated delivery:
+            3–5 business days
           </p>
 
           <div
             style={{
               background: "#ffffff",
-              border: "1px solid #dddddd",
+              border:
+                "1px solid #dddddd",
               borderRadius: 16,
               padding: 20,
               marginBottom: 24,
@@ -297,73 +520,76 @@ export const CheckoutFlow = ({
                 fontSize: 12,
                 color: "#555",
                 marginBottom: 12,
-                textTransform: "uppercase",
+                textTransform:
+                  "uppercase",
               }}
             >
               Order Summary
             </p>
 
-            {cart.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  alignItems: "center",
-                  marginBottom: 10,
-                }}
-              >
+            {cart.map(
+              (item, i) => (
                 <div
+                  key={i}
                   style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 8,
-                    background: `${item.color || "#eeeeee"}22`,
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 20,
-                    flexShrink: 0,
+                    gap: 10,
+                    alignItems:
+                      "center",
+                    marginBottom: 10,
                   }}
                 >
-                  {item.emoji}
-                </div>
+                  <ProductThumb
+                    item={item}
+                    size={48}
+                    radius={9}
+                  />
 
-                <div style={{ flex: 1 }}>
-                  <p
+                  <div
                     style={{
-                      fontSize: 12,
-                      fontWeight: 500,
+                      flex: 1,
                     }}
                   >
-                    {item.title}
-                  </p>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {item.title}
+                    </p>
 
-                  <p
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: "#555",
+                      }}
+                    >
+                      Qty: {item.qty}
+                    </p>
+                  </div>
+
+                  <span
                     style={{
-                      fontSize: 11,
-                      color: "#555",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#fe2c55",
                     }}
                   >
-                    Qty: {item.qty}
-                  </p>
+                    $
+                    {Number(
+                      item.price *
+                        item.qty
+                    ).toLocaleString()}
+                  </span>
                 </div>
-
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#fe2c55",
-                  }}
-                >
-                  ${Number(item.price * item.qty).toLocaleString()}
-                </span>
-              </div>
-            ))}
+              )
+            )}
 
             <div
               style={{
-                borderTop: "1px solid #eeeeee",
+                borderTop:
+                  "1px solid #eeeeee",
                 paddingTop: 12,
                 marginTop: 4,
               }}
@@ -371,7 +597,8 @@ export const CheckoutFlow = ({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   marginBottom: 4,
                 }}
               >
@@ -384,15 +611,23 @@ export const CheckoutFlow = ({
                   Subtotal
                 </span>
 
-                <span style={{ fontSize: 12 }}>
-                  ${Number(cartTotal).toLocaleString()}
+                <span
+                  style={{
+                    fontSize: 12,
+                  }}
+                >
+                  $
+                  {Number(
+                    cartTotal
+                  ).toLocaleString()}
                 </span>
               </div>
 
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   marginBottom: 8,
                 }}
               >
@@ -418,10 +653,17 @@ export const CheckoutFlow = ({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                 }}
               >
-                <span style={{ fontWeight: 700 }}>Total</span>
+                <span
+                  style={{
+                    fontWeight: 700,
+                  }}
+                >
+                  Total
+                </span>
 
                 <span
                   style={{
@@ -430,7 +672,10 @@ export const CheckoutFlow = ({
                     color: "#fe2c55",
                   }}
                 >
-                  ${Number(total).toLocaleString()}
+                  $
+                  {Number(
+                    total
+                  ).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -438,8 +683,9 @@ export const CheckoutFlow = ({
 
           <div
             style={{
-              background: "#ffffff",
-              border: "1px solid #dddddd",
+              background: "#fff",
+              border:
+                "1px solid #ddd",
               borderRadius: 12,
               padding: 16,
               marginBottom: 24,
@@ -451,7 +697,8 @@ export const CheckoutFlow = ({
                 fontSize: 12,
                 color: "#555",
                 marginBottom: 8,
-                textTransform: "uppercase",
+                textTransform:
+                  "uppercase",
               }}
             >
               Delivery To
@@ -473,7 +720,11 @@ export const CheckoutFlow = ({
                 color: "#888",
               }}
             >
-              {addr.address}, {addr.city}
+              {addr.address},{" "}
+              {addr.city}
+              {addr.country
+                ? `, ${addr.country}`
+                : ""}
             </p>
 
             <p
@@ -486,7 +737,11 @@ export const CheckoutFlow = ({
             </p>
           </div>
 
-          <Btn full variant="success" onClick={onDone}>
+          <Btn
+            full
+            variant="success"
+            onClick={onDone}
+          >
             Continue Shopping
           </Btn>
         </div>
@@ -505,13 +760,17 @@ export const CheckoutFlow = ({
       }}
     >
       {/* HEADER */}
+
       <div
         style={{
           position: "sticky",
           top: 0,
-          background: "rgba(255,255,255,0.96)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(0,0,0,0.07)",
+          background:
+            "rgba(255,255,255,0.96)",
+          backdropFilter:
+            "blur(20px)",
+          borderBottom:
+            "1px solid rgba(0,0,0,0.07)",
           padding: "14px 24px",
           display: "flex",
           alignItems: "center",
@@ -538,62 +797,81 @@ export const CheckoutFlow = ({
             display: "flex",
             gap: 4,
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent:
+              "center",
           }}
         >
-          {STEPS.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
+          {STEPS.map(
+            (s, i) => (
               <div
+                key={i}
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  background:
-                    i < step
-                      ? "#34d399"
-                      : i === step
-                      ? "#fe2c55"
-                      : "#d5d5d5",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "#ffffff",
+                  alignItems:
+                    "center",
+                  gap: 4,
                 }}
               >
-                {i < step ? "✓" : i + 1}
-              </div>
-
-              <span
-                style={{
-                  fontSize: 11,
-                  color: i === step ? "#111" : "#888",
-                  fontWeight: i === step ? 600 : 400,
-                }}
-              >
-                {s}
-              </span>
-
-              {i < STEPS.length - 1 && (
                 <div
                   style={{
-                    width: 20,
-                    height: 1,
-                    background: "#e5e5e5",
-                    margin: "0 2px",
+                    width: 24,
+                    height: 24,
+                    borderRadius:
+                      "50%",
+                    background:
+                      i < step
+                        ? "#34d399"
+                        : i === step
+                        ? "#fe2c55"
+                        : "#d5d5d5",
+                    display: "flex",
+                    alignItems:
+                      "center",
+                    justifyContent:
+                      "center",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#fff",
                   }}
-                />
-              )}
-            </div>
-          ))}
+                >
+                  {i < step
+                    ? "✓"
+                    : i + 1}
+                </div>
+
+                <span
+                  style={{
+                    fontSize: 11,
+                    color:
+                      i === step
+                        ? "#111"
+                        : "#888",
+                    fontWeight:
+                      i === step
+                        ? 600
+                        : 400,
+                  }}
+                >
+                  {s}
+                </span>
+
+                {i <
+                  STEPS.length -
+                    1 && (
+                  <div
+                    style={{
+                      width: 20,
+                      height: 1,
+                      background:
+                        "#e5e5e5",
+                      margin:
+                        "0 2px",
+                    }}
+                  />
+                )}
+              </div>
+            )
+          )}
         </div>
       </div>
 
@@ -601,10 +879,12 @@ export const CheckoutFlow = ({
         style={{
           maxWidth: 600,
           margin: "0 auto",
-          padding: "24px 24px 60px",
+          padding:
+            "24px 24px 60px",
         }}
       >
         {/* STEP 0 */}
+
         {step === 0 && (
           <div>
             <h2
@@ -620,79 +900,88 @@ export const CheckoutFlow = ({
             <div
               style={{
                 display: "flex",
-                flexDirection: "column",
+                flexDirection:
+                  "column",
                 gap: 10,
                 marginBottom: 20,
               }}
             >
-              {cart.map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "#ffffff",
-                    border: "1px solid #dddddd",
-                    borderRadius: 14,
-                    padding: 14,
-                    display: "flex",
-                    gap: 14,
-                    alignItems: "center",
-                  }}
-                >
+              {cart.map(
+                (item, i) => (
                   <div
+                    key={i}
                     style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 12,
-                      background: `${item.color || "#eeeeee"}22`,
+                      background:
+                        "#ffffff",
+                      border:
+                        "1px solid #dddddd",
+                      borderRadius: 14,
+                      padding: 14,
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 28,
-                      flexShrink: 0,
+                      gap: 14,
+                      alignItems:
+                        "center",
                     }}
                   >
-                    {item.emoji}
-                  </div>
+                    <ProductThumb
+                      item={item}
+                      size={56}
+                      radius={12}
+                    />
 
-                  <div style={{ flex: 1 }}>
-                    <p
+                    <div
                       style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        marginBottom: 3,
+                        flex: 1,
                       }}
                     >
-                      {item.title}
-                    </p>
+                      <p
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          marginBottom: 3,
+                        }}
+                      >
+                        {item.title}
+                      </p>
 
-                    <p
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "#666",
+                        }}
+                      >
+                        Qty:{" "}
+                        {item.qty} × $
+                        {Number(
+                          item.price
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <span
                       style={{
-                        fontSize: 12,
-                        color: "#666",
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color:
+                          "#fe2c55",
                       }}
                     >
-                      Qty: {item.qty} × $
-                      {Number(item.price).toLocaleString()}
-                    </p>
+                      $
+                      {Number(
+                        item.price *
+                          item.qty
+                      ).toLocaleString()}
+                    </span>
                   </div>
-
-                  <span
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 14,
-                      color: "#fe2c55",
-                    }}
-                  >
-                    ${Number(item.price * item.qty).toLocaleString()}
-                  </span>
-                </div>
-              ))}
+                )
+              )}
             </div>
 
             <div
               style={{
-                background: "#ffffff",
-                border: "1px solid #dddddd",
+                background: "#fff",
+                border:
+                  "1px solid #ddd",
                 borderRadius: 14,
                 padding: 18,
                 marginBottom: 20,
@@ -701,30 +990,59 @@ export const CheckoutFlow = ({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   marginBottom: 8,
                 }}
               >
-                <span style={{ color: "#666" }}>Subtotal</span>
-                <span>${Number(cartTotal).toLocaleString()}</span>
+                <span
+                  style={{
+                    color: "#666",
+                  }}
+                >
+                  Subtotal
+                </span>
+
+                <span>
+                  $
+                  {Number(
+                    cartTotal
+                  ).toLocaleString()}
+                </span>
               </div>
 
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   marginBottom: 12,
                 }}
               >
-                <span style={{ color: "#666" }}>Shipping</span>
-                <span style={{ color: "#34d399" }}>Free</span>
+                <span
+                  style={{
+                    color: "#666",
+                  }}
+                >
+                  Shipping
+                </span>
+
+                <span
+                  style={{
+                    color: "#34d399",
+                  }}
+                >
+                  Free
+                </span>
               </div>
 
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  borderTop: "1px solid #eeeeee",
+                  justifyContent:
+                    "space-between",
+                  borderTop:
+                    "1px solid #eee",
                   paddingTop: 12,
                 }}
               >
@@ -744,18 +1062,27 @@ export const CheckoutFlow = ({
                     color: "#fe2c55",
                   }}
                 >
-                  ${Number(total).toLocaleString()}
+                  $
+                  {Number(
+                    total
+                  ).toLocaleString()}
                 </span>
               </div>
             </div>
 
-            <Btn full onClick={() => setStep(1)}>
+            <Btn
+              full
+              onClick={() =>
+                setStep(1)
+              }
+            >
               Continue to Shipping →
             </Btn>
           </div>
         )}
 
         {/* STEP 1 */}
+
         {step === 1 && (
           <div>
             <h2
@@ -770,17 +1097,20 @@ export const CheckoutFlow = ({
 
             <div
               style={{
-                background: "#ffffff",
-                border: "1px solid #dddddd",
+                background: "#fff",
+                border:
+                  "1px solid #ddd",
                 borderRadius: 14,
                 padding: 20,
                 marginBottom: 20,
               }}
             >
               <div
+                className="shipping-name-phone"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns:
+                    "1fr 1fr",
                   gap: 10,
                 }}
               >
@@ -805,7 +1135,7 @@ export const CheckoutFlow = ({
                       phone: v,
                     })
                   }
-                  placeholder="+1 234 567 890"
+                  placeholder="+1 555 123 4567"
                 />
               </div>
 
@@ -821,50 +1151,226 @@ export const CheckoutFlow = ({
                 placeholder="House / Street / Area"
               />
 
-              <div>
-                <label
-                  style={{
-                    fontSize: 10,
-                    color: "#666",
-                    display: "block",
-                    marginBottom: 5,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  City *
-                </label>
+              <div
+                className="shipping-location-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "1fr 1fr",
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      fontSize: 10,
+                      color: "#666",
+                      display: "block",
+                      marginBottom: 5,
+                      textTransform:
+                        "uppercase",
+                    }}
+                  >
+                    Country *
+                  </label>
 
-                <select
-                  value={addr.city}
-                  onChange={(e) =>
-                    setAddr({
-                      ...addr,
-                      city: e.target.value,
-                    })
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "11px 12px",
-                    background: "#ffffff",
-                    border: "1px solid #e5e5e5",
-                    borderRadius: 8,
-                    color: addr.city ? "#111" : "#888",
-                    fontSize: 13,
-                    fontFamily: "inherit",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    marginBottom: 14,
-                  }}
-                >
-                  <option value="">Select city</option>
-
-                  {CITIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
+                  <select
+                    value={
+                      addr.country
+                    }
+                    disabled={
+                      locationLoading
+                    }
+                    onChange={(e) =>
+                      setAddr({
+                        ...addr,
+                        country:
+                          e.target
+                            .value,
+                        city: "",
+                      })
+                    }
+                    style={{
+                      width: "100%",
+                      padding:
+                        "11px 12px",
+                      background:
+                        "#ffffff",
+                      border:
+                        "1px solid #e5e5e5",
+                      borderRadius: 8,
+                      color:
+                        addr.country
+                          ? "#111"
+                          : "#888",
+                      fontSize: 13,
+                      fontFamily:
+                        "inherit",
+                      outline: "none",
+                      boxSizing:
+                        "border-box",
+                      marginBottom: 14,
+                    }}
+                  >
+                    <option value="">
+                      {locationLoading
+                        ? "Loading countries..."
+                        : "Select country"}
                     </option>
-                  ))}
-                </select>
+
+                    {countries.map(
+                      (c) => (
+                        <option
+                          key={c}
+                          value={c}
+                        >
+                          {c}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      fontSize: 10,
+                      color: "#666",
+                      display: "block",
+                      marginBottom: 5,
+                      textTransform:
+                        "uppercase",
+                    }}
+                  >
+                    City *
+                  </label>
+
+                  {availableCities.length >
+                  0 ? (
+                    <select
+                      value={
+                        addr.city
+                      }
+                      disabled={
+                        !addr.country ||
+                        locationLoading
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        setAddr({
+                          ...addr,
+                          city: e
+                            .target
+                            .value,
+                        })
+                      }
+                      style={{
+                        width:
+                          "100%",
+                        padding:
+                          "11px 12px",
+                        background:
+                          "#ffffff",
+                        border:
+                          "1px solid #e5e5e5",
+                        borderRadius: 8,
+                        color:
+                          addr.city
+                            ? "#111"
+                            : "#888",
+                        fontSize: 13,
+                        fontFamily:
+                          "inherit",
+                        outline:
+                          "none",
+                        boxSizing:
+                          "border-box",
+                        marginBottom: 14,
+                      }}
+                    >
+                      <option value="">
+                        {!addr.country
+                          ? "Select country first"
+                          : "Select city"}
+                      </option>
+
+                      {availableCities.map(
+                        (c) => (
+                          <option
+                            key={c}
+                            value={c}
+                          >
+                            {c}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  ) : (
+                    <input
+                      value={
+                        addr.city
+                      }
+                      onChange={(
+                        e
+                      ) =>
+                        setAddr({
+                          ...addr,
+                          city: e
+                            .target
+                            .value,
+                        })
+                      }
+                      placeholder={
+                        !addr.country
+                          ? "Select country first"
+                          : "Enter city"
+                      }
+                      disabled={
+                        !addr.country
+                      }
+                      style={{
+                        width:
+                          "100%",
+                        padding:
+                          "11px 12px",
+                        background:
+                          "#ffffff",
+                        border:
+                          "1px solid #e5e5e5",
+                        borderRadius: 8,
+                        color:
+                          "#111",
+                        fontSize: 13,
+                        fontFamily:
+                          "inherit",
+                        outline:
+                          "none",
+                        boxSizing:
+                          "border-box",
+                        marginBottom: 14,
+                      }}
+                    />
+                  )}
+                </div>
               </div>
+
+              {locationError && (
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "#b45309",
+                    marginTop: -6,
+                    marginBottom: 12,
+                  }}
+                >
+                  Worldwide city service
+                  is temporarily
+                  unavailable. You can
+                  still enter your city
+                  manually.
+                </p>
+              )}
 
               <Field
                 label="Note for rider (optional)"
@@ -881,8 +1387,10 @@ export const CheckoutFlow = ({
 
             <div
               style={{
-                background: "rgba(254,44,85,0.05)",
-                border: "1px solid rgba(254,44,85,0.15)",
+                background:
+                  "rgba(254,44,85,0.05)",
+                border:
+                  "1px solid rgba(254,44,85,0.15)",
                 borderRadius: 12,
                 padding: 14,
                 marginBottom: 20,
@@ -904,7 +1412,8 @@ export const CheckoutFlow = ({
                   color: "#888",
                 }}
               >
-                3–5 business days · Free Shipping
+                3–5 business days ·
+                Free Shipping
               </p>
             </div>
 
@@ -914,9 +1423,12 @@ export const CheckoutFlow = ({
                 !addr.name ||
                 !addr.phone ||
                 !addr.address ||
+                !addr.country ||
                 !addr.city
               }
-              onClick={() => setStep(2)}
+              onClick={() =>
+                setStep(2)
+              }
             >
               Continue to Payment →
             </Btn>
@@ -924,6 +1436,7 @@ export const CheckoutFlow = ({
         )}
 
         {/* STEP 2 */}
+
         {step === 2 && (
           <div>
             <h2
@@ -936,6 +1449,8 @@ export const CheckoutFlow = ({
               Payment Method
             </h2>
 
+            {/* BANK TRANSFER REMOVED */}
+
             <div
               style={{
                 display: "flex",
@@ -944,9 +1459,14 @@ export const CheckoutFlow = ({
               }}
             >
               {[
-                ["Bank Transfer", "Bank Transfer"],
-                ["USDT", "USDT"],
-                ["Crypto", "₿ Crypto"],
+                [
+                  "USDT",
+                  "USDT",
+                ],
+                [
+                  "Crypto",
+                  "₿ Crypto",
+                ],
               ].map(([m, l]) => (
                 <button
                   key={m}
@@ -959,26 +1479,34 @@ export const CheckoutFlow = ({
                   }
                   style={{
                     flex: 1,
-                    padding: "10px 6px",
+                    padding:
+                      "11px 8px",
                     borderRadius: 10,
                     border: `2px solid ${
-                      pay.method === m
+                      pay.method ===
+                      m
                         ? "#fe2c55"
                         : "#e5e5e5"
                     }`,
                     background:
-                      pay.method === m
+                      pay.method ===
+                      m
                         ? "rgba(254,44,85,0.08)"
-                        : "#ffffff",
+                        : "#fff",
                     color:
-                      pay.method === m
+                      pay.method ===
+                      m
                         ? "#fe2c55"
                         : "#666",
-                    fontSize: 11,
+                    fontSize: 12,
                     cursor: "pointer",
-                    fontFamily: "inherit",
+                    fontFamily:
+                      "inherit",
                     fontWeight:
-                      pay.method === m ? 700 : 400,
+                      pay.method ===
+                      m
+                        ? 700
+                        : 500,
                   }}
                 >
                   {l}
@@ -986,113 +1514,13 @@ export const CheckoutFlow = ({
               ))}
             </div>
 
-            {/* BANK */}
-            {pay.method === "Bank Transfer" && (
+            {pay.method ===
+              "USDT" && (
               <div
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5e5",
-                  borderRadius: 14,
-                  padding: 20,
-                  marginBottom: 16,
-                }}
-              >
-                <DemoWarning />
-
-                <div
-                  style={{
-                    background:
-                      "linear-gradient(135deg,#1a3a5c,#0d2137)",
-                    borderRadius: 12,
-                    padding: 20,
-                    marginBottom: 16,
-                    textAlign: "center",
-                  }}
-                >
-                  <p
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 16,
-                      marginBottom: 4,
-                      color: "#ffffff",
-                    }}
-                  >
-                    Bank Transfer
-                  </p>
-
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color:
-                        "rgba(255,255,255,0.65)",
-                    }}
-                  >
-                    Demo bank account
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    background: "#f7fbff",
-                    border: "1px solid #dbeafe",
-                    borderRadius: 10,
-                    padding: 14,
-                    marginBottom: 12,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: "#2563eb",
-                      marginBottom: 6,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Demo Bank Details
-                  </p>
-
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: "#333",
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    Bank: <strong>Demo Commercial Bank</strong>
-                    <br />
-                    Account Title:{" "}
-                    <strong>TokZoo Demo Payments</strong>
-                    <br />
-                    Account No:{" "}
-                    <strong>0000-1111-2222</strong>
-                    <br />
-                    IBAN:{" "}
-                    <strong>
-                      PK00DEMO0000000000000000
-                    </strong>
-                  </p>
-                </div>
-
-                <Field
-                  label="Transaction Reference / Receipt No."
-                  value={pay.txRef || ""}
-                  onChange={(v) =>
-                    setPay({
-                      ...pay,
-                      txRef: v,
-                    })
-                  }
-                  placeholder="e.g. DEMO-TXN-123456"
-                />
-              </div>
-            )}
-
-            {/* USDT */}
-            {pay.method === "USDT" && (
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5e5",
+                  background: "#fff",
+                  border:
+                    "1px solid #e5e5e5",
                   borderRadius: 14,
                   padding: 20,
                   marginBottom: 16,
@@ -1101,20 +1529,30 @@ export const CheckoutFlow = ({
                 <DemoWarning />
 
                 <WalletCard
-                  title={PAYMENT_DETAILS.USDT.label}
+                  title={
+                    PAYMENT_DETAILS
+                      .USDT.label
+                  }
                   network={
-                    PAYMENT_DETAILS.USDT.network
+                    PAYMENT_DETAILS
+                      .USDT.network
                   }
                   address={
-                    PAYMENT_DETAILS.USDT.address
+                    PAYMENT_DETAILS
+                      .USDT.address
                   }
-                  qr={PAYMENT_DETAILS.USDT.qr}
+                  qr={
+                    PAYMENT_DETAILS
+                      .USDT.qr
+                  }
                   accent="#16a34a"
                 />
 
                 <Field
                   label="Your TxHash / Transaction ID"
-                  value={pay.txRef || ""}
+                  value={
+                    pay.txRef || ""
+                  }
                   onChange={(v) =>
                     setPay({
                       ...pay,
@@ -1126,12 +1564,13 @@ export const CheckoutFlow = ({
               </div>
             )}
 
-            {/* CRYPTO */}
-            {pay.method === "Crypto" && (
+            {pay.method ===
+              "Crypto" && (
               <div
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5e5",
+                  background: "#fff",
+                  border:
+                    "1px solid #e5e5e5",
                   borderRadius: 14,
                   padding: 20,
                   marginBottom: 16,
@@ -1163,69 +1602,88 @@ export const CheckoutFlow = ({
                       "⬡ BNB",
                       "#f3ba2f",
                     ],
-                  ].map(([c, l, col]) => (
-                    <button
-                      key={c}
-                      onClick={() =>
-                        setPay({
-                          ...pay,
-                          cryptoType: c,
-                          txRef: "",
-                        })
-                      }
-                      style={{
-                        flex: 1,
-                        padding: "8px",
-                        borderRadius: 8,
-                        border: `2px solid ${
-                          pay.cryptoType === c
-                            ? col
-                            : "#e5e5e5"
-                        }`,
-                        background:
-                          pay.cryptoType === c
-                            ? `${col}15`
-                            : "transparent",
-                        color:
-                          pay.cryptoType === c
-                            ? col
-                            : "#555",
-                        fontSize: 11,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {l}
-                    </button>
-                  ))}
+                  ].map(
+                    ([
+                      c,
+                      l,
+                      col,
+                    ]) => (
+                      <button
+                        key={c}
+                        onClick={() =>
+                          setPay({
+                            ...pay,
+                            cryptoType:
+                              c,
+                            txRef: "",
+                          })
+                        }
+                        style={{
+                          flex: 1,
+                          padding:
+                            "8px",
+                          borderRadius: 8,
+                          border: `2px solid ${
+                            pay.cryptoType ===
+                            c
+                              ? col
+                              : "#e5e5e5"
+                          }`,
+                          background:
+                            pay.cryptoType ===
+                            c
+                              ? `${col}15`
+                              : "transparent",
+                          color:
+                            pay.cryptoType ===
+                            c
+                              ? col
+                              : "#555",
+                          fontSize: 11,
+                          cursor:
+                            "pointer",
+                          fontFamily:
+                            "inherit",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {l}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <WalletCard
                   title={
                     PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
+                      pay.cryptoType ||
+                        "BTC"
                     ].label
                   }
                   network={
                     PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
+                      pay.cryptoType ||
+                        "BTC"
                     ].network
                   }
                   address={
                     PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
+                      pay.cryptoType ||
+                        "BTC"
                     ].address
                   }
                   qr={
                     PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
+                      pay.cryptoType ||
+                        "BTC"
                     ].qr
                   }
                   accent={
-                    pay.cryptoType === "ETH"
+                    pay.cryptoType ===
+                    "ETH"
                       ? "#627eea"
-                      : pay.cryptoType === "BNB"
+                      : pay.cryptoType ===
+                        "BNB"
                       ? "#b88700"
                       : "#f7931a"
                   }
@@ -1233,7 +1691,9 @@ export const CheckoutFlow = ({
 
                 <Field
                   label="Transaction Hash / TxID"
-                  value={pay.txRef || ""}
+                  value={
+                    pay.txRef || ""
+                  }
                   onChange={(v) =>
                     setPay({
                       ...pay,
@@ -1245,11 +1705,11 @@ export const CheckoutFlow = ({
               </div>
             )}
 
-            {/* TOTAL */}
             <div
               style={{
-                background: "#ffffff",
-                border: "1px solid #dddddd",
+                background: "#fff",
+                border:
+                  "1px solid #ddd",
                 borderRadius: 12,
                 padding: 14,
                 marginBottom: 20,
@@ -1258,7 +1718,8 @@ export const CheckoutFlow = ({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   marginBottom: 4,
                 }}
               >
@@ -1271,21 +1732,30 @@ export const CheckoutFlow = ({
                   Items (
                   {cart.reduce(
                     (sum, item) =>
-                      sum + item.qty,
+                      sum +
+                      item.qty,
                     0
                   )}
                   )
                 </span>
 
-                <span style={{ fontSize: 13 }}>
-                  ${Number(cartTotal).toLocaleString()}
+                <span
+                  style={{
+                    fontSize: 13,
+                  }}
+                >
+                  $
+                  {Number(
+                    cartTotal
+                  ).toLocaleString()}
                 </span>
               </div>
 
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    "space-between",
                   marginBottom: 8,
                 }}
               >
@@ -1311,12 +1781,18 @@ export const CheckoutFlow = ({
               <div
                 style={{
                   display: "flex",
-                  justifyContent: "space-between",
-                  borderTop: "1px solid #eeeeee",
+                  justifyContent:
+                    "space-between",
+                  borderTop:
+                    "1px solid #eee",
                   paddingTop: 10,
                 }}
               >
-                <span style={{ fontWeight: 700 }}>
+                <span
+                  style={{
+                    fontWeight: 700,
+                  }}
+                >
                   Total
                 </span>
 
@@ -1327,7 +1803,10 @@ export const CheckoutFlow = ({
                     color: "#fe2c55",
                   }}
                 >
-                  ${Number(total).toLocaleString()}
+                  $
+                  {Number(
+                    total
+                  ).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -1335,7 +1814,9 @@ export const CheckoutFlow = ({
             <Btn
               full
               loading={loading}
-              disabled={!pay.txRef?.trim()}
+              disabled={
+                !pay.txRef?.trim()
+              }
               onClick={async () => {
                 setLoading(true);
 
@@ -1351,58 +1832,177 @@ export const CheckoutFlow = ({
                     );
                   }
 
-                  let lastOrder = null;
+                  const uuidRe =
+                    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-                  for (const item of cart) {
-                    const res = await fetch(
-                      `${API}/orders`,
-                      {
-                        method: "POST",
-                        headers: {
-                          "Content-Type":
-                            "application/json",
-                          Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({
-                          product_id:
-                            item.id ||
-                            item.product_id,
-                          quantity: item.qty,
-                          total_amount:
-                            Math.round(
-                              item.price *
-                                item.qty
-                            ),
-                          shipping_fee: 0,
+                  let liveProducts =
+                    null;
 
-                          payment_method:
-                            pay.method,
+                  const resolveProductId =
+                    async (item) => {
+                      const rawId =
+                        String(
+                          item?.id ||
+                            item?.product_id ||
+                            ""
+                        );
 
-                          shipping_name:
-                            addr.name,
-                          shipping_phone:
-                            addr.phone,
-                          shipping_address:
-                            addr.address,
-                          shipping_city:
-                            addr.city,
-                          rider_note:
-                            addr.note || "",
-
-                          transaction_reference:
-                            pay.txRef,
-
-                          crypto_type:
-                            pay.method ===
-                            "Crypto"
-                              ? pay.cryptoType
-                              : pay.method ===
-                                "USDT"
-                              ? "USDT"
-                              : null,
-                        }),
+                      if (
+                        uuidRe.test(
+                          rawId
+                        )
+                      ) {
+                        return rawId;
                       }
-                    );
+
+                      if (
+                        !liveProducts
+                      ) {
+                        const
+                          productsRes =
+                            await fetch(
+                              `${API}/products?limit=100`
+                            );
+
+                        const
+                          productsData =
+                            await productsRes
+                              .json()
+                              .catch(
+                                () =>
+                                  ({})
+                              );
+
+                        if (
+                          !productsRes.ok
+                        ) {
+                          throw new Error(
+                            productsData.message ||
+                              "Could not verify product before checkout."
+                          );
+                        }
+
+                        liveProducts =
+                          Array.isArray(
+                            productsData.products
+                          )
+                            ? productsData.products
+                            : [];
+                      }
+
+                      const
+                        wantedTitle =
+                          String(
+                            item?.title ||
+                              ""
+                          )
+                            .trim()
+                            .toLowerCase();
+
+                      const match =
+                        liveProducts.find(
+                          (p) =>
+                            uuidRe.test(
+                              String(
+                                p?.id ||
+                                  ""
+                              )
+                            ) &&
+                            String(
+                              p?.title ||
+                                ""
+                            )
+                              .trim()
+                              .toLowerCase() ===
+                              wantedTitle
+                        );
+
+                      if (!match?.id) {
+                        throw new Error(
+                          `Product "${
+                            item?.title ||
+                            "Unknown product"
+                          }" is not linked to a live database product.`
+                        );
+                      }
+
+                      return match.id;
+                    };
+
+                  let lastOrder =
+                    null;
+
+                  for (
+                    const item of
+                    cart
+                  ) {
+                    const productId =
+                      await resolveProductId(
+                        item
+                      );
+
+                    const res =
+                      await fetch(
+                        `${API}/orders`,
+                        {
+                          method:
+                            "POST",
+                          headers: {
+                            "Content-Type":
+                              "application/json",
+                            Authorization: `Bearer ${token}`,
+                          },
+                          body: JSON.stringify(
+                            {
+                              product_id:
+                                productId,
+
+                              quantity:
+                                item.qty,
+
+                              total_amount:
+                                Math.round(
+                                  item.price *
+                                    item.qty
+                                ),
+
+                              shipping_fee:
+                                0,
+
+                              payment_method:
+                                pay.method,
+
+                              shipping_name:
+                                addr.name,
+
+                              shipping_phone:
+                                addr.phone,
+
+                              shipping_address:
+                                addr.address,
+
+                              shipping_city:
+                                addr.city,
+
+                              shipping_country:
+                                addr.country,
+
+                              rider_note:
+                                addr.note ||
+                                "",
+
+                              transaction_reference:
+                                pay.txRef,
+
+                              crypto_type:
+                                pay.method ===
+                                "Crypto"
+                                  ? pay.cryptoType
+                                  : "USDT",
+                            }
+                          ),
+                        }
+                      );
 
                     const data =
                       await res.json();
@@ -1414,7 +2014,8 @@ export const CheckoutFlow = ({
                       );
                     }
 
-                    lastOrder = data.order;
+                    lastOrder =
+                      data.order;
                   }
 
                   if (
@@ -1436,11 +2037,34 @@ export const CheckoutFlow = ({
               }}
             >
               Confirm & Pay $
-              {Number(total).toLocaleString()}
+              {Number(
+                total
+              ).toLocaleString()}
             </Btn>
           </div>
         )}
       </div>
+
+      <style>{`
+        .wallet-card-grid {
+          display: grid;
+          grid-template-columns: 140px 1fr;
+          gap: 18px;
+          align-items: center;
+        }
+
+        @media (max-width: 600px) {
+          .shipping-name-phone,
+          .shipping-location-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0 !important;
+          }
+
+          .wallet-card-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
     </div>
   );
 };
