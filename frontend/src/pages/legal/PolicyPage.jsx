@@ -46,12 +46,12 @@ const SUPPORT_CATEGORIES = [
 // ─── LEGAL HUB CARDS ────────────────────────────────────────────────────────
 const LEGAL_DOCS = [
   { key: "privacy-policy", title: "Privacy Policy", desc: "How we collect, use, and protect your personal information." },
-  { key: "terms-of-service", title: "Terms of Service", desc: "The rules for buying, selling, and using the TikTok Shop platform." },
+  { key: "terms-of-service", title: "Terms of Service", desc: "The rules for buying, selling, and using the ShopTok platform." },
 ];
 
-// ─── ABOUT US CONTENT (original — TikTok Shop) ─────────────────────────────────────
+// ─── ABOUT US CONTENT (original — ShopTok) ─────────────────────────────────────
 const ABOUT = {
-  title: "About TikTok Shop",
+  title: "About ShopTok",
   tagline: "Pakistan's shoppable video marketplace — where discovery meets delivery.",
   stats: [
     { v: "10,000+", l: "Active Sellers" },
@@ -59,7 +59,7 @@ const ABOUT = {
     { v: "60+", l: "Cities Served" },
     { v: "4.7★", l: "Average Rating" },
   ],
-  story: "TikTok Shop started with a simple idea: shopping should feel as effortless and entertaining as scrolling through your favourite videos. We connect local sellers across Pakistan directly with buyers through short-form video, live selling, and a fast, reliable checkout — all in one app. From home-based boutiques in Lahore to electronics resellers in Karachi, TikTok Shop gives every seller the tools to reach buyers nationwide, and gives every buyer a shopping experience built on trust, speed, and genuine product discovery.",
+  story: "ShopTok started with a simple idea: shopping should feel as effortless and entertaining as scrolling through your favourite videos. We connect local sellers across Pakistan directly with buyers through short-form video, live selling, and a fast, reliable checkout — all in one app. From home-based boutiques in Lahore to electronics resellers in Karachi, ShopTok gives every seller the tools to reach buyers nationwide, and gives every buyer a shopping experience built on trust, speed, and genuine product discovery.",
   values: [
     { h: "Trust & Safety", d: "Every seller is verified before they can list. Every order is protected by our buyer guarantee." },
     { h: "Fast, Local Delivery", d: "Nationwide courier network with Cash on Delivery, so getting your order is always simple." },
@@ -77,7 +77,7 @@ export const PolicyPage = ({ page, setPage }) => {
         { h: "How to Track", body: "1. Go to 'My Account' → 'My Orders'\n2. Click on your order\n3. View real-time delivery status\n4. You'll receive SMS/email updates at each stage" },
         { h: "Order Statuses", body: "• Pending — Order placed, waiting confirmation\n• Confirmed — Seller has accepted your order\n• Processing — Order is being prepared\n• Shipped — On its way to you\n• Delivered — Successfully received\n• Cancelled — Order was cancelled" },
         { h: "Delivery Timeline", body: "Standard: 2-5 business days\nExpress: 1-2 business days (selected cities)\nRemote areas: 5-7 business days" },
-        { h: "Need Help?", body: "Contact us: support@tiktokshop.pk\nWhatsApp: 0311-TIKTOKSHOP\nHours: Mon-Sat 9am-9pm" },
+        { h: "Need Help?", body: "Contact us: support@shoptok.pk\nWhatsApp: 0311-SHOPTOK\nHours: Mon-Sat 9am-9pm" },
       ],
     },
     "return-refund": {
@@ -88,7 +88,7 @@ export const PolicyPage = ({ page, setPage }) => {
         { h: "Non-Returnable Items", body: "• Perishable goods (food, flowers)\n• Intimate or sanitary goods\n• Digital products or downloads\n• Customized/personalized items" },
         { h: "Refund Process", body: "1. Request return within 7 days\n2. We'll arrange pickup within 2 business days\n3. Quality check upon receipt (1-2 days)\n4. Refund processed within 5-7 business days\n5. Amount credited to original payment method" },
         { h: "Partial Refunds", body: "Partial refunds may be granted for:\n• Items not in original condition\n• Missing parts for reasons not due to our error\n• Items returned more than 7 days after delivery" },
-        { h: "Contact Us", body: "Email: returns@tiktokshop.pk\nWhatsApp: 0311-TIKTOKSHOP\nInclude order number and reason for return" },
+        { h: "Contact Us", body: "Email: returns@shoptok.pk\nWhatsApp: 0311-SHOPTOK\nInclude order number and reason for return" },
       ],
     },
     "delivery-info": {
@@ -107,7 +107,7 @@ export const PolicyPage = ({ page, setPage }) => {
       title: " Seller Guide",
       icon: "",
       sections: [
-        { h: "Getting Started", body: "1. Register for a TikTok Shop account\n2. Go to 'Sell on TikTok Shop' in menu\n3. Complete seller verification (CNIC + bank details)\n4. Set up your store profile\n5. Start listing products!" },
+        { h: "Getting Started", body: "1. Register for a ShopTok account\n2. Go to 'Sell on ShopTok' in menu\n3. Complete seller verification (CNIC + bank details)\n4. Set up your store profile\n5. Start listing products!" },
         { h: "Seller Requirements", body: "• Valid CNIC (Pakistani ID)\n• Active bank account\n• Pakistani phone number\n• Valid business address\n• Agreement to Seller Terms of Service" },
         { h: "Listing Products", body: "• Add clear product photos (min 3 photos)\n• Write detailed product descriptions\n• Set competitive prices\n• Keep stock levels updated\n• Add relevant categories and tags" },
         { h: "Commission & Fees", body: "• Platform commission: 8% per sale\n• Payment processing: 2%\n• No listing fees\n• No monthly charges\n• Payouts every Monday via bank transfer" },
@@ -120,28 +120,28 @@ export const PolicyPage = ({ page, setPage }) => {
       title: " Privacy Policy",
       icon: "",
       sections: [
-        { h: "Information We Collect", body: "• Personal information (name, email, phone, address)\n• Payment information (encrypted, never stored in full)\n• Device information and IP address\n• Browsing and purchase history on TikTok Shop\n• Communications with our support team" },
+        { h: "Information We Collect", body: "• Personal information (name, email, phone, address)\n• Payment information (encrypted, never stored in full)\n• Device information and IP address\n• Browsing and purchase history on ShopTok\n• Communications with our support team" },
         { h: "How We Use Your Information", body: "• To process and fulfill your orders\n• To send order updates and notifications\n• To improve our platform and services\n• To prevent fraud and ensure security\n• To personalize your shopping experience\n• To comply with legal obligations" },
         { h: "Data Sharing", body: "We NEVER sell your personal data. We may share with:\n• Delivery partners (for order fulfillment only)\n• Payment processors (encrypted data only)\n• Legal authorities (when required by law)\n• All third parties are bound by strict NDAs" },
         { h: "Data Security", body: "• 256-bit SSL encryption for all transactions\n• Regular security audits and penetration testing\n• Two-factor authentication available\n• PCI-DSS compliant payment processing\n• Data stored in secure, certified data centers" },
-        { h: "Your Rights", body: "You have the right to:\n• Access your personal data\n• Correct inaccurate information\n• Delete your account and data\n• Opt-out of marketing communications\n• Data portability\n\nContact: privacy@tiktokshop.pk" },
+        { h: "Your Rights", body: "You have the right to:\n• Access your personal data\n• Correct inaccurate information\n• Delete your account and data\n• Opt-out of marketing communications\n• Data portability\n\nContact: privacy@shoptok.pk" },
         { h: "Cookies", body: "We use cookies to:\n• Keep you logged in\n• Remember your preferences\n• Analyze site traffic\n• Improve user experience\nYou can control cookies in your browser settings." },
-        { h: "Updates to This Policy", body: "We may update this policy periodically. We'll notify you via email or app notification. Continued use of TikTok Shop after changes means you accept the updated policy." },
+        { h: "Updates to This Policy", body: "We may update this policy periodically. We'll notify you via email or app notification. Continued use of ShopTok after changes means you accept the updated policy." },
       ],
     },
     "terms-of-service": {
       title: " Terms of Service",
       icon: "",
       sections: [
-        { h: "Acceptance of Terms", body: "By accessing or using TikTok Shop, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform." },
+        { h: "Acceptance of Terms", body: "By accessing or using ShopTok, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform." },
         { h: "User Accounts", body: "• You must be 18+ to create an account\n• Provide accurate and complete information\n• Keep your account credentials secure\n• You are responsible for all activity under your account\n• One person may not maintain multiple accounts" },
         { h: "Buyer Rules", body: "• Only purchase items for legitimate personal use\n• Provide accurate shipping information\n• Pay for orders on time (COD orders must be paid on delivery)\n• Do not abuse return/refund policies\n• Do not post fake reviews" },
         { h: "Seller Rules", body: "• List only genuine, legal products\n• Accurate product descriptions and photos\n• Fulfill orders within stated timeframes\n• Maintain adequate stock levels\n• No counterfeit or prohibited items\n• Sellers violating rules face permanent suspension" },
-        { h: "Prohibited Items", body: "The following are NOT allowed on TikTok Shop:\n• Counterfeit or fake goods\n• Illegal drugs or substances\n• Weapons or dangerous items\n• Adult content\n• Stolen goods\n• Items that violate intellectual property rights" },
-        { h: "Intellectual Property", body: "TikTok Shop and its logo are trademarks of TikTok Shop Pakistan. All content on this platform is protected by copyright. Sellers retain rights to their product content but grant TikTok Shop a license to display it." },
-        { h: "Limitation of Liability", body: "TikTok Shop is a marketplace platform. We are not responsible for:\n• Product quality or authenticity claims\n• Seller fulfillment issues\n• Third-party delivery delays\n• Unauthorized use of your account\nOur liability is limited to the purchase price of the item." },
+        { h: "Prohibited Items", body: "The following are NOT allowed on ShopTok:\n• Counterfeit or fake goods\n• Illegal drugs or substances\n• Weapons or dangerous items\n• Adult content\n• Stolen goods\n• Items that violate intellectual property rights" },
+        { h: "Intellectual Property", body: "ShopTok and its logo are trademarks of ShopTok Pakistan. All content on this platform is protected by copyright. Sellers retain rights to their product content but grant ShopTok a license to display it." },
+        { h: "Limitation of Liability", body: "ShopTok is a marketplace platform. We are not responsible for:\n• Product quality or authenticity claims\n• Seller fulfillment issues\n• Third-party delivery delays\n• Unauthorized use of your account\nOur liability is limited to the purchase price of the item." },
         { h: "Governing Law", body: "These terms are governed by the laws of Pakistan. Any disputes shall be resolved in the courts of Karachi, Pakistan. We encourage resolution through our support team first." },
-        { h: "Contact", body: "For questions about these terms:\nEmail: legal@tiktokshop.pk\nAddress: TikTok Shop Pakistan, Main Boulevard, Gulshan-e-Iqbal, Karachi" },
+        { h: "Contact", body: "For questions about these terms:\nEmail: legal@shoptok.pk\nAddress: ShopTok Pakistan, Main Boulevard, Gulshan-e-Iqbal, Karachi" },
       ],
     },
   };
@@ -234,7 +234,7 @@ export const PolicyPage = ({ page, setPage }) => {
             <>
               <div style={{ background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 20, padding: "36px 32px", marginBottom: 20 }}>
                 <h1 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 26, marginBottom: 8, color: "#111" }}>Legal</h1>
-                <p style={{ fontSize: 14, color: "rgba(0,0,0,0.5)", maxWidth: 520, lineHeight: 1.6 }}>Policies and terms that govern how TikTok Shop, our sellers, and our buyers work together.</p>
+                <p style={{ fontSize: 14, color: "rgba(0,0,0,0.5)", maxWidth: 520, lineHeight: 1.6 }}>Policies and terms that govern how ShopTok, our sellers, and our buyers work together.</p>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }} className="about-values">
                 {LEGAL_DOCS.map((d) => (
@@ -301,7 +301,7 @@ export const PolicyPage = ({ page, setPage }) => {
           ) : (
             <>
               <h1 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 24, marginBottom: 4 }}>{p.title}</h1>
-              <p style={{ fontSize: 12, color: "rgba(0,0,0,0.4)", marginBottom: 24 }}>Last updated: April 2026 · TikTok Shop Pakistan</p>
+              <p style={{ fontSize: 12, color: "rgba(0,0,0,0.4)", marginBottom: 24 }}>Last updated: April 2026 · ShopTok Pakistan</p>
               {p.sections.map((s, i) => (
                 <div key={i} style={{ marginBottom: 16, background: "#fff", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 16, padding: "22px 26px" }}>
                   <h2 style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, fontSize: 16, marginBottom: 12, color: "#fe2c55" }}>{s.h}</h2>

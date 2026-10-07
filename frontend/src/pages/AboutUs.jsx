@@ -1,4 +1,4 @@
-// Theme colors (matching the rest of TikTok Shop — replaces the undefined CSS vars
+// Theme colors (matching the rest of tiktokshop — replaces the undefined CSS vars
 // var(--ink)/var(--pink)/var(--cyan)/var(--grey)/var(--paper)/var(--line))
 const C = {
   ink: "#111111",
@@ -14,104 +14,10 @@ export default function AboutUs({ setPage }) {
 
   return (
     <div style={{ background: "#fff" }}>
-      <style>{`
-        .about-hero-actions,
-        .about-cta-actions {
-          flex-wrap: wrap;
-        }
-
-        @media (max-width: 900px) {
-          .hero {
-            padding: 72px 0 56px !important;
-          }
-          .about-stats-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            padding: 28px 20px !important;
-          }
-          .about-stat-card {
-            padding: 18px 20px !important;
-            border-left: none !important;
-            border-top: 1px solid rgba(255,255,255,0.14) !important;
-          }
-          .about-stat-card:nth-child(-n+2) {
-            border-top: none !important;
-          }
-          .about-story-grid,
-          .about-creators-grid {
-            grid-template-columns: 1fr !important;
-            gap: 36px !important;
-          }
-          .about-pillars-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .about-trust-grid {
-            grid-template-columns: 1fr !important;
-            gap: 0 !important;
-          }
-        }
-
-        @media (max-width: 600px) {
-          .wrap {
-            padding-left: 18px !important;
-            padding-right: 18px !important;
-          }
-          .hero {
-            padding: 52px 0 42px !important;
-          }
-          .hero h1 {
-            font-size: clamp(38px, 12vw, 54px) !important;
-            line-height: 1.02 !important;
-          }
-          .hero p {
-            font-size: 16px !important;
-            margin-top: 22px !important;
-          }
-          .about-hero-actions,
-          .about-cta-actions {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 10px !important;
-          }
-          .about-hero-actions {
-            margin-top: 28px !important;
-          }
-          .about-cta-actions {
-            margin-top: 28px !important;
-          }
-          .about-hero-actions button,
-          .about-cta-actions button {
-            width: 100% !important;
-          }
-          .about-stats-grid {
-            grid-template-columns: 1fr !important;
-            padding: 18px !important;
-          }
-          .about-stat-card,
-          .about-stat-card:nth-child(-n+2) {
-            padding: 18px 4px !important;
-            border-left: none !important;
-            border-top: 1px solid rgba(255,255,255,0.14) !important;
-          }
-          .about-stat-card:first-child {
-            border-top: none !important;
-          }
-          .about-story-grid,
-          .about-creators-grid {
-            gap: 28px !important;
-          }
-          .about-pillars-grid {
-            border-radius: 16px;
-            overflow: hidden;
-          }
-          .about-pillar-card {
-            padding: 30px 24px !important;
-          }
-        }
-      `}</style>
       <header className="hero" style={{ padding: "96px 0 72px" }}>
         <div className="wrap" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.pink, fontWeight: 600, marginBottom: 20 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.pink, display: "inline-block" }}></span> About TikTok Shop
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.pink, display: "inline-block" }}></span> About ShopTok
           </div>
           <h1 style={{ fontSize: "clamp(40px, 6vw, 76px)", lineHeight: 0.98, maxWidth: 900, fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, color: C.ink }}>
             Where entertainment<br />meets commerce.
@@ -119,7 +25,7 @@ export default function AboutUs({ setPage }) {
           <p style={{ fontSize: 19, color: C.grey, maxWidth: 560, marginTop: 28, lineHeight: 1.6 }}>
             We built a marketplace inside the feed — so discovering a product feels as natural as discovering your next favourite video.
           </p>
-          <div className="about-hero-actions" style={{ display: "flex", gap: 14, marginTop: 36 }}>
+          <div style={{ display: "flex", gap: 14, marginTop: 36 }}>
             <button onClick={() => go("shop")} style={{ background: C.pink, color: "#fff", border: "none", padding: "14px 26px", borderRadius: 999, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", fontSize: 14 }}>Explore the Shop</button>
             <button onClick={() => go("seller")} style={{ background: "transparent", border: `1.5px solid ${C.ink}`, padding: "14px 26px", borderRadius: 999, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", fontSize: 14 }}>
               Become a Seller
@@ -129,14 +35,14 @@ export default function AboutUs({ setPage }) {
       </header>
 
       <section style={{ background: C.ink, color: "#fff", borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}` }}>
-        <div className="wrap about-stats-grid" style={{ maxWidth: 1120, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", padding: "40px 32px" }}>
+        <div className="wrap" style={{ maxWidth: 1120, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", padding: "40px 32px" }}>
           {[
             { num: "2024", label: "Launched in Your Country", color: C.cyan },
             { num: "0", label: "Local sellers onboarded", color: "#fff" },
             { num: "0", label: "Shoppable videos & LIVEs", color: C.pink },
             { num: "24/7", label: "Buyer protection coverage", color: "#fff" },
           ].map((s, i) => (
-            <div key={s.label} className="about-stat-card" style={{ padding: "0 20px", borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.14)" }}>
+            <div key={s.label} style={{ padding: "0 20px", borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.14)" }}>
               <div style={{ fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, fontSize: 34, color: s.color }}>{s.num}</div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>{s.label}</div>
             </div>
@@ -145,7 +51,7 @@ export default function AboutUs({ setPage }) {
       </section>
 
       <section style={{ padding: "112px 0" }}>
-        <div className="wrap about-story-grid" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: 64 }}>
+        <div className="wrap" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: 64 }}>
           <div>
             <div style={{ fontSize: 14, color: C.pink, fontWeight: 600, marginBottom: 18 }}>Our Story</div>
             <h2 style={{ fontSize: "clamp(30px,4vw,44px)", lineHeight: 1.08, fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, color: C.ink }}>
@@ -154,7 +60,7 @@ export default function AboutUs({ setPage }) {
           </div>
           <div>
             <p style={{ fontSize: 17, lineHeight: 1.75, color: "#2A2A2A", maxWidth: "52ch", marginBottom: 20 }}>
-              TikTok Shop started with a simple observation: people were already discovering products in their feed — through a creator's honest review, a livestream demo, a video that stopped the scroll. The checkout was just missing.
+              ShopTok started with a simple observation: people were already discovering products in their feed — through a creator's honest review, a livestream demo, a video that stopped the scroll. The checkout was just missing.
             </p>
             <p style={{ fontSize: 17, lineHeight: 1.75, color: "#2A2A2A", maxWidth: "52ch", marginBottom: 20 }}>
               So we brought commerce into the same space as content. No leaving the app, no separate cart, no cold product pages. Just a shopping cart that lives inside the videos, LIVEs, and Showcase pages you already spend time in.
@@ -171,13 +77,13 @@ export default function AboutUs({ setPage }) {
           <div style={{ maxWidth: 600, marginBottom: 56 }}>
             <h2 style={{ fontSize: "clamp(28px,4vw,40px)", fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, color: C.ink }}>Three things we're building, all at once.</h2>
           </div>
-          <div className="about-pillars-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: C.line, border: `1px solid ${C.line}` }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: C.line, border: `1px solid ${C.line}` }}>
             {[
               { icon: "🔎", title: "Discovery", body: "Interest-based recommendations surface products shoppers didn't know they were looking for — no search bar required.", bg: "rgba(37,244,238,0.18)" },
               { icon: "🎥", title: "Shoppertainment", body: "Shoppable videos and LIVE sessions let sellers demo, explain, and sell in real time, with the cart just one tap away.", bg: "rgba(254,44,85,0.14)" },
               { icon: "🏪", title: "Seller growth", body: "Tools, logistics support, and creator partnerships built specifically to help Pakistan's small businesses scale.", bg: "rgba(10,10,10,0.06)" },
             ].map((p) => (
-              <div key={p.title} className="about-pillar-card" style={{ background: C.paper, padding: "44px 34px" }}>
+              <div key={p.title} style={{ background: C.paper, padding: "44px 34px" }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28, fontSize: 20, background: p.bg }}>{p.icon}</div>
                 <h3 style={{ fontSize: 21, marginBottom: 12, fontFamily: "'TikTok Sans',sans-serif", fontWeight: 700, color: C.ink }}>{p.title}</h3>
                 <p style={{ fontSize: 15, color: C.grey, lineHeight: 1.65, margin: 0 }}>{p.body}</p>
@@ -188,7 +94,7 @@ export default function AboutUs({ setPage }) {
       </section>
 
       <section style={{ background: `linear-gradient(100deg, ${C.ink} 0%, #171717 100%)`, color: "#fff", padding: "96px 0" }}>
-        <div className="wrap about-creators-grid" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 60, alignItems: "center" }}>
+        <div className="wrap" style={{ maxWidth: 1120, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 60, alignItems: "center" }}>
           <div>
             <span style={{ display: "inline-block", fontSize: 13, fontWeight: 600, padding: "6px 14px", borderRadius: 999, background: "rgba(37,244,238,0.14)", color: C.cyan, marginBottom: 20 }}>
               For Creators & Sellers
@@ -221,7 +127,7 @@ export default function AboutUs({ setPage }) {
           <div style={{ maxWidth: 640, marginBottom: 48 }}>
             <h2 style={{ fontSize: "clamp(28px,4vw,40px)", fontFamily: "'TikTok Sans',sans-serif", fontWeight: 800, color: C.ink }}>Built on trust, not just transactions.</h2>
           </div>
-          <div className="about-trust-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "1px 48px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "1px 48px" }}>
             {[
               ["01", "Verified sellers", "Every merchant goes through identity and business verification before listing a single product."],
               ["02", "Buyer protection", "Guaranteed refunds on items that arrive damaged, wrong, or not as described."],
@@ -246,7 +152,7 @@ export default function AboutUs({ setPage }) {
           <p style={{ color: "rgba(255,255,255,0.6)", marginTop: 18, fontSize: 16 }}>
             Whether you're browsing, creating, or building a brand — there's a place for you here.
           </p>
-          <div className="about-cta-actions" style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 36 }}>
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 36 }}>
             <button onClick={() => go("shop")} style={{ background: C.cyan, color: C.ink, border: "none", padding: "14px 26px", borderRadius: 999, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", fontSize: 14 }}>Shop Now</button>
             <button onClick={() => go("seller")} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.4)", color: "#fff", padding: "14px 26px", borderRadius: 999, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", fontSize: 14 }}>Sign Up to Sell</button>
           </div>

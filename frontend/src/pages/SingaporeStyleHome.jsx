@@ -2,13 +2,18 @@ import { useMemo, useState } from "react";
 import { CATS, CATEGORY_ICONS, CATEGORY_SHORT_LABELS as CATEGORY_LABELS } from "../data/catalogue.js";
 import { ProductMiniCard } from "../components/products/ProductMiniCard.jsx";
 import { VideoProductCard } from "../components/products/VideoProductCard.jsx";
-import { ScrollRow } from "../components/shop/ScrollRow.jsx";
 
 const HomeSection = ({ title, children }) => (
   <section className="sg-section">
     <h2 className="sg-section-title">{title}</h2>
     {children}
   </section>
+);
+
+const FullWidthRow = ({ children }) => (
+  <div className="sg-full-row">
+    {children}
+  </div>
 );
 
 export default function SingaporeStyleHome({
@@ -49,91 +54,359 @@ export default function SingaporeStyleHome({
   }));
 
   return (
-    <main className="sg-home" style={{ maxWidth: 2400, width: "100%", margin: "0 auto" }}>
+    <main className="sg-home" style={{ width: "100%", maxWidth: "none", margin: 0, minWidth: 0 }}>
+      <style>{`
+        .sg-home{
+          width:100%;
+          max-width:none;
+          min-width:0;
+        }
+
+        .sg-home .sg-section{
+          width:100%;
+          max-width:none;
+        }
+
+        .sg-full-row{
+          width:100%;
+          display:grid;
+          grid-template-columns:repeat(5,minmax(0,1fr));
+          gap:12px;
+          align-items:stretch;
+        }
+
+        .sg-full-row > .hcard{
+          width:100% !important;
+          min-width:0 !important;
+          max-width:none !important;
+        }
+
+        .sg-home .sg-product-grid{
+          width:100%;
+          max-width:none;
+          grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+          gap:12px !important;
+        }
+
+        .sg-home .sg-product-grid > .hcard{
+          width:100% !important;
+          min-width:0 !important;
+          max-width:none !important;
+        }
+
+
+        .sg-home .sg-section-title{
+          line-height:1.25;
+        }
+
+        @media (min-width: 1500px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+          }
+        }
+
+        @media (max-width: 1100px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+          }
+        }
+
+        @media (max-width: 860px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+          }
+        }
+
+        @media (max-width: 640px){
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+            gap:8px !important;
+          }
+        }
+
+        @media (max-width: 1200px){
+          .sg-home{
+            padding-left:0;
+            padding-right:0;
+          }
+        }
+
+        @media (max-width: 768px){
+          .sg-home .sg-section{
+            margin-bottom:24px;
+          }
+
+          .sg-home .sg-section-title{
+            font-size:18px !important;
+          }
+
+
+          .sg-home .sg-category-icon{
+            width:48px !important;
+            height:48px !important;
+          }
+        }
+
+        @media (max-width: 480px){
+          .sg-home .sg-section{
+            margin-bottom:20px;
+          }
+
+          .sg-home .sg-section-title{
+            font-size:16px !important;
+          }
+
+
+          .sg-home .sg-category-icon{
+            width:44px !important;
+            height:44px !important;
+          }
+        }
+
+      
+
+        @media (max-width: 860px){
+          .sg-home{
+            width:100%;
+            max-width:100%;
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            background:#fff;
+          }
+
+          .sg-home .sg-categories-title{
+            padding-left:12px;
+            padding-right:12px;
+            margin-top:10px;
+          }
+
+
+          .sg-home .sg-section{
+            width:100%;
+            max-width:100%;
+            padding-left:12px;
+            padding-right:12px;
+          }
+
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            width:100%;
+            max-width:100%;
+          }
+        }
+
+        @media (max-width: 480px){
+          .sg-home .sg-section,
+          .sg-home .sg-categories-title{
+            padding-left:10px;
+            padding-right:10px;
+          }
+
+        }
+
+
+
+        /* ===== MOBILE OVERFLOW CONTAINMENT ===== */
+        .sg-home,
+        .sg-home .sg-section,
+        .sg-full-row,
+        .sg-home .sg-product-grid{
+          min-width:0;
+          box-sizing:border-box;
+        }
+
+        .sg-home{
+          max-width:100%;
+          overflow-x:clip;
+        }
+
+        .sg-home .sg-section,
+        .sg-full-row,
+        .sg-home .sg-product-grid{
+          max-width:100%;
+        }
+
+        .sg-full-row > *,
+        .sg-home .sg-product-grid > *{
+          min-width:0 !important;
+          max-width:100% !important;
+        }
+
+
+        @media(max-width:860px){
+          .sg-home{
+            width:100%!important;
+            max-width:100%!important;
+            margin:0!important;
+            overflow-x:clip!important;
+          }
+
+          .sg-home .sg-section{
+            width:100%!important;
+            max-width:100%!important;
+            min-width:0!important;
+          }
+
+          .sg-full-row,
+          .sg-home .sg-product-grid{
+            width:100%!important;
+            max-width:100%!important;
+            min-width:0!important;
+          }
+        }
+
+
+
+
+
+
+        /* ===== FINAL CATEGORY CAROUSEL: internal scroll only ===== */
+        .sg-home .sg-category-viewport{
+          width:100%;
+          max-width:100%;
+          min-width:0;
+          overflow:hidden;
+          box-sizing:border-box;
+        }
+
+        .sg-home .sg-categories{
+          width:100%;
+          max-width:100%;
+          min-width:0;
+          display:flex;
+          flex-wrap:nowrap;
+          overflow-x:auto;
+          overflow-y:hidden;
+          margin:0;
+          box-sizing:border-box;
+          scrollbar-width:none;
+          -webkit-overflow-scrolling:touch;
+          overscroll-behavior-x:contain;
+          touch-action:pan-x;
+        }
+
+        .sg-home .sg-categories::-webkit-scrollbar{
+          display:none;
+        }
+
+        @media (max-width:640px){
+          .sg-home .sg-category-viewport{
+            padding:0 10px;
+          }
+
+          .sg-home .sg-categories{
+            gap:0 !important;
+            padding:0 0 6px !important;
+            scroll-snap-type:x mandatory;
+          }
+
+          .sg-home .sg-category{
+            flex:0 0 25% !important;
+            width:25% !important;
+            min-width:0 !important;
+            max-width:25% !important;
+            padding:0 4px !important;
+            margin:0 !important;
+            box-sizing:border-box !important;
+            scroll-snap-align:start;
+          }
+
+          .sg-home .sg-category > span:last-child{
+            width:100%;
+            max-width:100%;
+            display:block;
+            white-space:normal;
+            overflow-wrap:anywhere;
+            text-align:center;
+          }
+        }
+
+`}</style>
       <h2 className="sg-section-title sg-categories-title">Categories</h2>
 
-      <div className="sg-categories" aria-label="Categories">
-        {CATS.filter((c) => c.s !== "all").map((c) => (
-          <button
-            key={c.s}
-            type="button"
-            className={`sg-category ${cat === c.s ? "active" : ""}`}
-            onClick={() => setCat(c.s)}
-          >
-            <span className="sg-category-icon">
-              <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
-            </span>
-            <span>{CATEGORY_LABELS[c.s] || c.l}</span>
-          </button>
-        ))}
+      <div className="sg-category-viewport">
+        <div className="sg-categories" aria-label="Categories">
+          {CATS.filter((c) => c.s !== "all").map((c) => (
+            <button
+              key={c.s}
+              type="button"
+              className={`sg-category ${cat === c.s ? "active" : ""}`}
+              onClick={() => setCat(c.s)}
+            >
+              <span className="sg-category-icon">
+                <img src={CATEGORY_ICONS[c.s]} alt={c.l} style={{ width: 32, height: 32, objectFit: "contain" }} />
+              </span>
+              <span>{CATEGORY_LABELS[c.s] || c.l}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
         <div className="sg-loading">Loading products…</div>
+      ) : search || cat !== "all" ? (
+        <HomeSection title={cat === "all" ? "Search results" : (CATS.find((c) => c.s === cat)?.l || "Products")}>
+          {filtered.length ? (
+            <div className="sg-product-grid">
+              {filtered.map((p) => (
+                <ProductMiniCard key={p.id} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
+              ))}
+            </div>
+          ) : (
+            <div className="sg-empty">No products found.</div>
+          )}
+        </HomeSection>
       ) : (
         <>
-          {(search || cat !== "all") && (
-            <HomeSection title={cat === "all" ? "Search results" : (CATS.find((c) => c.s === cat)?.l || "Products")}>
-              {filtered.length ? (
-                <div className="sg-product-grid">
-                  {filtered.map((p) => (
-                    <ProductMiniCard key={p.id} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
-                  ))}
-                </div>
-              ) : (
-                <div className="sg-empty">No products found.</div>
-              )}
-            </HomeSection>
-          )}
+          <HomeSection title="Savings for you">
+            <FullWidthRow>
+              {savings.map(({ v, p }, i) => p ? (
+                <VideoProductCard key={`${v.id}-${i}`} v={v} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
+              ) : null)}
+            </FullWidthRow>
+          </HomeSection>
 
-          {!search && (
-            <>
-              <HomeSection title="Savings for you">
-                <ScrollRow>
-                  {savings.map(({ v, p }, i) => p ? (
-                    <VideoProductCard key={`${v.id}-${i}`} v={v} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
-                  ) : null)}
-                </ScrollRow>
-              </HomeSection>
+          <HomeSection title="Top deals for you">
+            <FullWidthRow>
+              {topDeals.map((p, i) => (
+                <ProductMiniCard key={`${p.id}-top-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
+              ))}
+            </FullWidthRow>
+          </HomeSection>
 
-              <HomeSection title="Top deals for you">
-                <ScrollRow>
-                  {topDeals.map((p, i) => (
-                    <ProductMiniCard key={`${p.id}-top-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
-                  ))}
-                </ScrollRow>
-              </HomeSection>
+          <HomeSection title="Popular items">
+            <FullWidthRow>
+              {popular.map((p, i) => (
+                <ProductMiniCard key={`${p.id}-popular-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
+              ))}
+            </FullWidthRow>
+          </HomeSection>
 
-              <HomeSection title="Popular items">
-                <ScrollRow>
-                  {popular.map((p, i) => (
-                    <ProductMiniCard key={`${p.id}-popular-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
-                  ))}
-                </ScrollRow>
-              </HomeSection>
+          <HomeSection title="4+ star deals for you">
+            <FullWidthRow>
+              {starDeals.map((p, i) => (
+                <ProductMiniCard key={`${p.id}-star-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
+              ))}
+            </FullWidthRow>
+          </HomeSection>
 
-              <HomeSection title="4+ star deals for you">
-                <ScrollRow>
-                  {starDeals.map((p, i) => (
-                    <ProductMiniCard key={`${p.id}-star-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} wide dark={false} />
-                  ))}
-                </ScrollRow>
-              </HomeSection>
-
-              <HomeSection title="Best sellers">
-                <div className="sg-product-grid sg-best-sellers">
-                  {(showAll ? bestSellers : bestSellers.slice(0, 10)).map((p, i) => (
-                    <ProductMiniCard key={`${p.id}-seller-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
-                  ))}
-                </div>
-                {!showAll && bestSellers.length > 10 && (
-                  <div className="sg-view-more">
-                    <button type="button" onClick={() => setShowAll(true)}>View more</button>
-                  </div>
-                )}
-              </HomeSection>
-            </>
-          )}
+          <HomeSection title="Best sellers">
+            <div className="sg-product-grid sg-best-sellers">
+              {(showAll ? bestSellers : bestSellers.slice(0, 10)).map((p, i) => (
+                <ProductMiniCard key={`${p.id}-seller-${i}`} p={p} onOpen={onOpen} onAdd={onAdd} dark={false} />
+              ))}
+            </div>
+            {!showAll && bestSellers.length > 10 && (
+              <div className="sg-view-more">
+                <button type="button" onClick={() => setShowAll(true)}>View more</button>
+              </div>
+            )}
+          </HomeSection>
         </>
       )}
     </main>
