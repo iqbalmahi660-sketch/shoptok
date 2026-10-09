@@ -59,6 +59,21 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [sellerVideos,setSellerVideos] = useState([]);
  const [showUploadVideo,setShowUploadVideo] = useState(false);
  const [buyerOrders,setBO] = useState([]);
+ const [buyerNotifs,setBuyerNotifs] = useState(()=>{
+   try{
+     const key=`tokzooBuyerNotifs:${user?.id||user?.email||"guest"}`;
+     const saved=JSON.parse(localStorage.getItem(key)||"null");
+     return saved || {orders:true,promotions:true,flashSales:false};
+   }catch{
+     return {orders:true,promotions:true,flashSales:false};
+   }
+ });
+ useEffect(()=>{
+   try{
+     const key=`tokzooBuyerNotifs:${user?.id||user?.email||"guest"}`;
+     localStorage.setItem(key,JSON.stringify(buyerNotifs));
+   }catch{}
+ },[buyerNotifs,user?.id,user?.email]);
  const [showAddProd,setAP] = useState(false);
  const [showProfEdit,setPE] = useState(false);
  const [editProd,setEditProd] = useState(null);
@@ -1387,16 +1402,24 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"rgba(0,0,0,0.4)",marginBottom:16}}>No orders yet</p><button onClick={()=>setPage("shop")} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :<div style={{display:"flex",flexDirection:"column",gap:12}}>{buyerOrders.map((order,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div style={{padding:"13px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #1a1a1a"}}><div><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>{order.id}</span><span style={{fontSize:11,color:"rgba(0,0,0,0.35)",marginLeft:10}}>{order.date}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:11,fontWeight:700,color:order.statusColor,background:order.statusColor+"18",padding:"4px 9px",borderRadius:100}}>● {order.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${order.total.toLocaleString()}</span></div></div><div style={{padding:"12px 16px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><div style={{display:"flex",gap:6}}>{order.items.map((p,j)=>(<div key={j} style={{width:36,height:36,borderRadius:8,background:`${p.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{p.emoji}</div>))}</div><div style={{flex:1}}><p style={{fontSize:12,color:"rgba(0,0,0,0.5)"}}>{order.items.map(p=>p.title).join(", ")}</p></div><button onClick={()=>{order.items.forEach(p=>addToCart(p));showToast(" Re-added!");}} style={{padding:"7px 14px",background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",borderRadius:100,color:"#fe2c55",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Reorder</button></div>
- <div style={{padding:"10px 16px 14px"}}><div style={{display:"flex",alignItems:"center",gap:0}}>
- {["Placed","Confirmed","Shipped","Delivered"].map((s,si)=>{
- const done=["Placed","Confirmed"].includes(order.status)||si===0||(order.status==="Shipped"&&si<=2)||(order.status==="Delivered"&&si<=3);
- return(
- <div key={s} style={{display:"flex",alignItems:"center",flex:si<3?1:"auto"}}><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}><div style={{width:18,height:18,borderRadius:"50%",background:done?"#34d399":"#222",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9}}>{done?"":""}</div><span style={{fontSize:9,color:done?"#34d399":"#444",whiteSpace:"nowrap"}}>{s}</span></div>
- {si<3&&(<div style={{flex:1,height:2,background:done?"#34d399":"#222",margin:"0 4px",marginBottom:14}}/>)}
- </div>
- );
- })}
- </div></div></div>
+ <div style={{padding:"10px 16px 14px"}}>
+   {(()=>{
+     const delivered=String(order.status||"").toLowerCase()==="delivered";
+     return <div style={{display:"flex",alignItems:"center",gap:0}}>
+       <div style={{display:"flex",alignItems:"center",flex:1}}>
+         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+           <div style={{width:18,height:18,borderRadius:"50%",background:"#34d399"}}/>
+           <span style={{fontSize:9,color:"#34d399",whiteSpace:"nowrap"}}>Processing</span>
+         </div>
+         <div style={{flex:1,height:2,background:delivered?"#34d399":"#222",margin:"0 8px",marginBottom:14}}/>
+       </div>
+       <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+         <div style={{width:18,height:18,borderRadius:"50%",background:delivered?"#34d399":"#222"}}/>
+         <span style={{fontSize:9,color:delivered?"#34d399":"#444",whiteSpace:"nowrap"}}>Delivered</span>
+       </div>
+     </div>;
+   })()}
+ </div></div>
  ))}</div>}
  </div>}
 
@@ -1415,9 +1438,24 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {profileTab==="reviews"&&<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}>⭐</p><p style={{color:"rgba(0,0,0,0.4)"}}>No reviews yet</p></div>}
 
  {profileTab==="settings"&&<div style={{display:"flex",flexDirection:"column",gap:14}}><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontSize:13,color:"#25f4ee",fontWeight:700,marginBottom:14}}>Notifications</p>
- {[["Order updates",true],["Promotions",true],["Flash sales",false]].map(([t,on])=>(
- <div key={t} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><span style={{fontSize:13,color:"rgba(0,0,0,0.7)"}}>{t}</span><div style={{width:40,height:22,borderRadius:11,background:on?"#fe2c55":"#222",position:"relative",cursor:"pointer"}}><div style={{position:"absolute",top:3,left:on?19:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.2s"}}/></div></div>
- ))}
+ {[
+   ["Order updates","orders"],
+   ["Promotions","promotions"],
+   ["Flash sales","flashSales"]
+ ].map(([t,key])=>{
+   const on=!!buyerNotifs[key];
+   return <div key={t} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+     <span style={{fontSize:13,color:"rgba(0,0,0,0.7)"}}>{t}</span>
+     <button
+       type="button"
+       aria-pressed={on}
+       onClick={()=>setBuyerNotifs(prev=>({...prev,[key]:!prev[key]}))}
+       style={{width:40,height:22,borderRadius:11,background:on?"#fe2c55":"#222",position:"relative",cursor:"pointer",border:"none",padding:0}}
+     >
+       <span style={{position:"absolute",top:3,left:on?19:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left 0.2s",display:"block"}}/>
+     </button>
+   </div>;
+ })}
  </div><div style={{background:"rgba(37,244,238,0.05)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:14,padding:18}}><p style={{fontSize:13,fontWeight:700,color:"#25f4ee",marginBottom:6}}>Sell on TikTokShop</p><p style={{fontSize:12,color:"rgba(0,0,0,0.4)",marginBottom:12}}>Apne isi account se seller ban sakte ho — naya account banana zaroori nahi!</p><Btn variant="outline" small onClick={()=>goAuth(S.ONBOARD)}>Become a Seller</Btn></div><div style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.15)",borderRadius:14,padding:18}}><p style={{fontSize:13,fontWeight:700,color:"#fe2c55",marginBottom:12}}>Account</p><div style={{display:"flex",gap:10}}><Btn variant="ghost" small onClick={()=>setPE(true)}>Edit Profile</Btn><Btn variant="danger" small onClick={logout}>Log Out</Btn></div></div></div>}
  </div></div>
  )}
