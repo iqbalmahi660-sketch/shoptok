@@ -809,12 +809,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }
  }
  const res=await fetch(`${API}/auth/profile`,{method:"PUT",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
- body:JSON.stringify({name:f.name,phone:f.phone,city:f.city,profileImg:imgUrl,password:f.password||undefined})});
+ body:JSON.stringify({name:f.name,phone:f.phone,city:f.city,profileImg:imgUrl,shopName:f.shopName,bio:f.bio})});
  const data=await res.json();
  if(!res.ok)throw new Error(data.message||"Failed");
  setUser(u=>{
- const updated={...u,name:f.name||u.name,phone:f.phone||u.phone,city:f.city||u.city,profileImg:imgUrl||u.profileImg};
- localStorage.setItem("shopUser",JSON.stringify({name:updated.name,email:updated.email,phone:updated.phone,city:updated.city,role:updated.role,profileImg:updated.profileImg}));
+ const updated={...u,name:f.name||u.name,phone:f.phone||u.phone,city:f.city||u.city,profileImg:imgUrl||u.profileImg,seller:data.seller||u.seller};
+ localStorage.setItem("shopUser",JSON.stringify(updated));
  return updated;
  });
  showToast(" Profile saved!");

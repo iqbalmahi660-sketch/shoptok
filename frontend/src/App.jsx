@@ -6,8 +6,12 @@ import Register from "./pages/auth/Register";
 import Verify from "./pages/auth/Verify";
 import SellerOnboard from "./pages/seller/SellerOnboard";
 import MainApp from "./pages/MainApp";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 export default function App() {
+  const params = new URLSearchParams(window.location.search);
+  const resetToken = params.get("reset_token");
+  const resetUid = params.get("uid");
   const [screen, setScreen] = useState(S.APP);
   const [user, setUser] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -34,6 +38,10 @@ export default function App() {
       })
       .catch(() => setAuthLoading(false));
   }, []);
+
+  if (resetToken && resetUid) {
+    return <ResetPassword uid={resetUid} token={resetToken} />;
+  }
 
   if (authLoading) {
     return (
