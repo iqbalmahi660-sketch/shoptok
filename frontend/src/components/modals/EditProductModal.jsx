@@ -21,9 +21,13 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  promoDiscount:prod.promoDiscount||"",
  });
  const [tab,setTab]=useState("basic");
+ const [customSize,setCustomSize]=useState("");
+ const [customColor,setCustomColor]=useState("#111111");
  const [loading,setLoading]=useState(false);
  const toggleSize=s=>sf(p=>({...p,sizes:p.sizes.includes(s)?p.sizes.filter(x=>x!==s):[...p.sizes,s]}));
  const toggleColor=c=>sf(p=>({...p,colors:p.colors.includes(c)?p.colors.filter(x=>x!==c):[...p.colors,c]}));
+ const addCustomSize=()=>{const v=customSize.trim();if(!v)return;sf(p=>({...p,sizes:p.sizes.some(x=>String(x).toLowerCase()===v.toLowerCase())?p.sizes:[...p.sizes,v]}));setCustomSize("");};
+ const addCustomColor=()=>sf(p=>({...p,colors:p.colors.includes(customColor)?p.colors:[...p.colors,customColor]}));
 
  const save=async()=>{
  setLoading(true);
@@ -73,14 +77,18 @@ export const EditProductModal=({prod,onClose,onSave})=>{
 
  {/* Sizes - optional, available for any product */}
  <div style={{marginBottom:14}}><label style={{fontSize:11,color:"#666",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.05em"}}>Available Sizes (optional)</label><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
- {SIZES_CLOTHING.map(s=><button key={s} onClick={()=>toggleSize(s)}
+ {SIZES_CLOTHING.map(s=><button type="button" key={s} onClick={()=>toggleSize(s)}
  style={{padding:"6px 14px",borderRadius:6,border:`1px solid ${f.sizes.includes(s)?"#fe2c55":"rgba(0,0,0,0.1)"}`,background:f.sizes.includes(s)?"rgba(254,44,85,0.12)":"rgba(0,0,0,0.04)",color:f.sizes.includes(s)?"#fe2c55":"#666",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>{s}</button>)}
+ <div style={{width:"100%",display:"flex",gap:8,marginTop:8}}><input value={customSize} onChange={e=>setCustomSize(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();addCustomSize();}}} placeholder="Custom size e.g. 42, Free Size" style={{flex:1,padding:"9px 11px",border:"1px solid #ddd",borderRadius:8,fontFamily:"inherit"}}/><button type="button" onClick={addCustomSize} style={{padding:"9px 12px",border:"none",borderRadius:8,background:"#111",color:"#fff",fontWeight:700,cursor:"pointer"}}>+ Add</button></div>
+ {f.sizes.length>0&&<div style={{width:"100%",display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>{f.sizes.map(s=><span key={`selected-${s}`} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 8px",borderRadius:100,background:"#f3f3f3",fontSize:11}}>{s}<button type="button" onClick={()=>sf(p=>({...p,sizes:p.sizes.filter(x=>x!==s)}))} style={{border:"none",background:"none",cursor:"pointer"}}>×</button></span>)}</div>}
  </div></div>
 
  {/* Colors - optional, available for any product */}
  <div style={{marginBottom:14}}><label style={{fontSize:11,color:"#666",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.05em"}}>Available Colors (optional)</label><div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
- {COLORS_LIST.map(c=><div key={c} onClick={()=>toggleColor(c)}
+ {COLORS_LIST.map(c=><button type="button" key={c} onClick={()=>toggleColor(c)}
  style={{width:28,height:28,borderRadius:"50%",background:c,cursor:"pointer",border:`3px solid ${f.colors.includes(c)?"#fe2c55":"transparent"}`,boxShadow:c==="#ffffff"?"0 0 0 1px rgba(0,0,0,0.2)":"none"}}/>)}
+ <div style={{width:"100%",display:"flex",alignItems:"center",gap:8,marginTop:8}}><input type="color" value={customColor} onChange={e=>setCustomColor(e.target.value)} style={{width:44,height:38,border:"1px solid #ddd",borderRadius:8}}/><input value={customColor} onChange={e=>/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)&&setCustomColor(e.target.value)} style={{flex:1,padding:"9px 11px",border:"1px solid #ddd",borderRadius:8,fontFamily:"monospace"}}/><button type="button" onClick={addCustomColor} style={{padding:"9px 12px",border:"none",borderRadius:8,background:"#111",color:"#fff",fontWeight:700,cursor:"pointer"}}>+ Add</button></div>
+ {f.colors.length>0&&<div style={{width:"100%",display:"flex",gap:7,flexWrap:"wrap",marginTop:8}}>{f.colors.map(c=><span key={`selected-${c}`} style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 8px",borderRadius:100,background:"#f3f3f3",fontSize:11}}><span style={{width:13,height:13,borderRadius:"50%",background:c,border:"1px solid #ccc"}}/>{c}<button type="button" onClick={()=>sf(p=>({...p,colors:p.colors.filter(x=>x!==c)}))} style={{border:"none",background:"none",cursor:"pointer"}}>×</button></span>)}</div>}
  </div></div>
 
  {/* Price preview */}
@@ -128,7 +136,7 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  <><div style={{background:"rgba(37,244,238,0.06)",border:"1px solid rgba(37,244,238,0.2)",borderRadius:12,padding:16,marginBottom:14}}><p style={{fontWeight:700,fontSize:14,marginBottom:4}}>Shipping Settings</p><p style={{fontSize:12,color:"rgba(0,0,0,0.4)",marginBottom:14}}>Configure delivery options for this product</p>
  {inp("Weight (kg)","weight","number","e.g. 0.5")}
  {inp("SKU / Product Code","sku","text","e.g. PROD-001")}
- <div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,padding:"12px 14px"}}><p style={{fontSize:12,color:"#fbbf24"}}>Free delivery is automatically applied on orders above $1,000. Enable "Free Shipping" in Promotions tab to always offer free delivery.</p></div></div></>
+ <div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,padding:"12px 14px"}}><p style={{fontSize:12,color:"#fbbf24"}}>Shipping is currently free at checkout.</p></div></div></>
  )}
 
  <div style={{display:"flex",gap:10,marginTop:16}}><button onClick={onClose} style={{flex:1,padding:"12px",background:"rgba(0,0,0,0.06)",border:"none",borderRadius:10,color:"rgba(0,0,0,0.6)",cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Cancel</button><button onClick={save} disabled={loading}

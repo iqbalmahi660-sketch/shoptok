@@ -147,15 +147,15 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(!search){setStores(allStores);return;}
  setStores(allStores.filter(s=>s.shop_name?.toLowerCase().includes(search.toLowerCase())||s.category?.toLowerCase().includes(search.toLowerCase())));
  },[search,allStores,searchMode]);
- const totalRev=sellerOrders.reduce((s,o)=>s+o.total,0);
+ const totalRev=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.total)||0),0);
  const activePrds=sellerProds.filter(p=>p.status==="active"||p.status==="live").length;
  const pendingPrds=sellerProds.filter(p=>p.status==="pending").length;
  const pendingOrd=sellerOrders.filter(o=>o.status==="Processing").length;
  const logout=()=>{setUser(null);setPImg(null);localStorage.removeItem('shopToken');localStorage.removeItem('shopPage');localStorage.removeItem('shopUser');setPage('shop');goAuth(S.APP);};
 
  const onOrderDone=async()=>{
- const shipping=cartTotal>=1000?0:150;
- const o={id:`#ORD-${Date.now().toString().slice(-6)}`,items:[...cart],total:cartTotal+shipping,status:"Processing",date:new Date().toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),statusColor:"#fbbf24"};
+ const shipping=0;
+ const o={id:`#ORD-${Date.now().toString().slice(-6)}`,items:[...cart],total:cartTotal,status:"Processing",date:new Date().toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),statusColor:"#fbbf24"};
  setBO(prev=>[o,...prev]);setSO(prev=>[o,...prev]);setCart([]);
  try{
  const token=localStorage.getItem("shopToken");
@@ -165,7 +165,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(data.orders){
  const mapped=data.orders.map(ord=>({
  id:ord.order_number||`#ORD-${ord.id}`,
- items:[{title:ord.product_title,emoji:ord.product_emoji||"",qty:ord.quantity,price:ord.unit_price}],
+ items:[{title:ord.product_title,emoji:ord.product_emoji||"",img:ord.product_image||ord.image_url||ord.product_img||null,qty:ord.quantity,price:ord.unit_price}],
  total:ord.total_amount,
  status:ord.status==="pending"?"Processing":ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
  date:new Date(ord.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
@@ -187,7 +187,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(data.orders&&data.orders.length>0){
  const mapped=data.orders.map(ord=>({
  id:ord.order_number||`#ORD-${ord.id}`,
- items:[{title:ord.product_title,emoji:ord.product_emoji||"",qty:ord.quantity,price:ord.unit_price}],
+ items:[{title:ord.product_title,emoji:ord.product_emoji||"",img:ord.product_image||ord.image_url||ord.product_img||null,qty:ord.quantity,price:ord.unit_price}],
  total:Number(ord.total_amount)||0,
  status:ord.status==="pending"?"Processing":ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
  date:new Date(ord.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
@@ -234,9 +234,10 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  setSO(d.orders.map(o=>({
  ...o,
  id:o.order_number||`#ORD-${o.id}`,
- items:[{title:o.product_title,emoji:o.product_emoji||"",qty:o.quantity,price:Number(o.unit_price)||0}],
+ items:[{title:o.product_title,emoji:o.product_emoji||"",img:o.product_image||o.image_url||o.product_img||null,qty:o.quantity,price:Number(o.unit_price)||0}],
  total:Number(o.total_amount)||0,
  status:o.status==="pending"?"Processing":o.status.charAt(0).toUpperCase()+o.status.slice(1),
+ created_at:o.created_at,
  date:new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
  statusColor:o.status==="delivered"?"#34d399":o.status==="shipped"?"#25f4ee":o.status==="cancelled"?"#fe2c55":"#fbbf24"
  })));
@@ -851,12 +852,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {cart.length===0
  ?<div style={{textAlign:"center",paddingTop:60}}><div style={{fontSize:46,marginBottom:12}}></div><p style={{color:"rgba(0,0,0,0.4)"}}>Cart is empty</p><button onClick={()=>{setCO(false);setPage("shop");}} style={{marginTop:16,background:"#fe2c55",color:"#fff",border:"none",padding:"10px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :cart.map(item=>(
- <div key={item.id} style={{background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.08)",borderRadius:12,padding:12,display:"flex",gap:11}}><div style={{width:50,height:50,borderRadius:10,background:`${item.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{item.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{item.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55",fontSize:13}}>${(item.price*item.qty).toLocaleString()}</span><div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>updateQty(item.id,-1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontSize:12,fontWeight:600,minWidth:14,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button><button onClick={()=>removeFromCart(item.id)} style={{color:"#fe2c55",background:"none",border:"none",cursor:"pointer",fontSize:15}}></button></div></div></div></div>
+ <div key={item.id} style={{background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.08)",borderRadius:12,padding:12,display:"flex",gap:11}}><div style={{width:50,height:50,borderRadius:10,background:"#f3f3f3",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,flexShrink:0,overflow:"hidden",color:"#999"}}>{(item.img||item.image_url||item.image||item.thumbnail||item.images?.[0])?<img src={item.img||item.image_url||item.image||item.thumbnail||item.images?.[0]} alt={item.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span>No image</span>}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,lineHeight:1.4,marginBottom:6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{item.title}</p><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,color:"#fe2c55",fontSize:13}}>${(item.price*item.qty).toLocaleString()}</span><div style={{display:"flex",alignItems:"center",gap:5}}><button onClick={()=>updateQty(item.id,-1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button><span style={{fontSize:12,fontWeight:600,minWidth:14,textAlign:"center"}}>{item.qty}</span><button onClick={()=>updateQty(item.id,1)} style={{width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,0.1)",border:"none",color:"#111",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button><button onClick={()=>removeFromCart(item.id)} style={{color:"#fe2c55",background:"none",border:"none",cursor:"pointer",fontSize:15}}></button></div></div></div></div>
  ))
  }
  </div>
  {cart.length>0&&(
- <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>${cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"rgba(0,0,0,0.3)",marginBottom:14}}>{cartTotal>=1000?" Free shipping!":"Add $"+(1000-cartTotal)+" for free shipping"}</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — ${(cartTotal+(cartTotal>=1000?0:150)).toLocaleString()}
+ <div style={{padding:"16px 20px",borderTop:"1px solid rgba(0,0,0,0.08)"}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{color:"rgba(0,0,0,0.4)"}}>Subtotal</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:16}}>${cartTotal.toLocaleString()}</span></div><p style={{fontSize:11,color:"#34d399",marginBottom:14}}>Free shipping</p><button onClick={()=>{setCO(false);setCheckout(true);}} style={{width:"100%",background:"linear-gradient(135deg,#fe2c55,#ff6b35)",color:"#fff",border:"none",padding:"14px",borderRadius:100,fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>Checkout — ${cartTotal.toLocaleString()}
  </button></div>
  )}
  </div></>
@@ -1191,9 +1192,18 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </button>
  ))}
  </div></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Monthly Summary</p>
- {["January","February","March","April","May","June"].map((m,i)=>(
- <div key={m} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span style={{fontSize:13,color:"rgba(0,0,0,0.6)"}}>{m} 2026</span><span style={{fontSize:13,fontWeight:600,color:"#34d399"}}>${(i*2500).toLocaleString()}</span></div>
- ))}
+ {(()=>{
+ const year=new Date().getFullYear();
+ const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+ const delivered=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered");
+ return months.map((m,i)=>{
+ const amount=delivered.reduce((sum,o)=>{
+ const d=new Date(o.created_at||o.date);
+ return !Number.isNaN(d.getTime())&&d.getFullYear()===year&&d.getMonth()===i?sum+(Number(o.total)||0):sum;
+ },0);
+ return <div key={m} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span style={{fontSize:13,color:"rgba(0,0,0,0.6)"}}>{m} {year}</span><span style={{fontSize:13,fontWeight:600,color:"#34d399"}}>${amount.toLocaleString()}</span></div>;
+ });
+ })()}
  </div></div>
  );
  })()}
