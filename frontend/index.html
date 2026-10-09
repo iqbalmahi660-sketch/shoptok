@@ -2,30 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-    <title>Tiktok Shop</title>
+    <title>TokZoo</title>
 
     <meta
       name="description"
       content="TokZoo - Shop, discover products, and connect with sellers."
     />
 
-    <meta
-      name="robots"
-      content="noindex, nofollow, noarchive, nosnippet"
-    />
-    <meta
-      name="googlebot"
-      content="noindex, nofollow, noarchive, nosnippet"
-    />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-
     <link rel="manifest" href="/manifest.webmanifest" />
 
     <meta name="theme-color" content="#fe2c55" />
@@ -33,10 +23,7 @@
     <meta name="msapplication-TileColor" content="#fe2c55" />
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="default"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="TokZoo" />
   </head>
 
@@ -64,13 +51,29 @@
           navigator.serviceWorker
             .register("/sw.js")
             .catch((error) => {
-              console.error(
-                "Service worker registration failed:",
-                error
-              );
+              console.error("Service worker registration failed:", error);
             });
         });
       }
     </script>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+      var Tawk_API = Tawk_API || {},
+        Tawk_LoadStart = new Date();
+
+      (function () {
+        var s1 = document.createElement("script"),
+          s0 = document.getElementsByTagName("script")[0];
+
+        s1.async = true;
+        s1.src = "https://embed.tawk.to/6ac60b80c3a1ab34c3ff5d9e/1k4appsck";
+        s1.charset = "UTF-8";
+        s1.setAttribute("crossorigin", "*");
+
+        s0.parentNode.insertBefore(s1, s0);
+      })();
+    </script>
+    <!--End of Tawk.to Script-->
   </body>
 </html>
