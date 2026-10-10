@@ -19,6 +19,9 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  buyXgetY:prod.buyXgetY||"",
  promoCode:prod.promoCode||"",
  promoDiscount:prod.promoDiscount||"",
+ allowReselling:!!prod.allow_reselling,
+ resellerBasePrice:prod.reseller_base_price||prod.price||"",
+ minResalePrice:prod.min_resale_price||prod.reseller_base_price||prod.price||"",
  });
  const [tab,setTab]=useState("basic");
  const [customSize,setCustomSize]=useState("");
@@ -30,13 +33,30 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  const addCustomColor=()=>sf(p=>({...p,colors:p.colors.includes(customColor)?p.colors:[...p.colors,customColor]}));
 
  const save=async()=>{
+ if(f.allowReselling){
+   const base=Number(f.resellerBasePrice||f.price);
+   const min=Number(f.minResalePrice||f.resellerBasePrice||f.price);
+   if(!Number.isFinite(base)||base<=0){alert("Enter a valid reseller base price");return;}
+   if(!Number.isFinite(min)||min<base){alert("Minimum resale price cannot be below reseller base price");return;}
+ }
  setLoading(true);
  try{
  const token=localStorage.getItem("shopToken");
  await fetch(`${API}/products/${prod.id}`,{
  method:"PUT",
  headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},
- body:JSON.stringify({title:f.title,price:Number(f.price),original_price:Number(f.orig)||Number(f.price),stock:Number(f.stock),description:f.description,sizes:f.sizes,colors:f.colors})
+ body:JSON.stringify({
+ title:f.title,
+ price:Number(f.price),
+ original_price:Number(f.orig)||Number(f.price),
+ stock:Number(f.stock),
+ description:f.description,
+ sizes:f.sizes,
+ colors:f.colors,
+ allow_reselling:f.allowReselling,
+ reseller_base_price:f.allowReselling?Number(f.resellerBasePrice||f.price):null,
+ min_resale_price:f.allowReselling?Number(f.minResalePrice||f.resellerBasePrice||f.price):null
+ })
  });
  }catch(e){console.log("API update failed, updating locally");}
  onSave({...prod,...f,price:Number(f.price),orig:Number(f.orig)||Number(f.price),stock:Number(f.stock),disc:f.orig?Math.round((1-f.price/f.orig)*100):0});
@@ -56,7 +76,7 @@ export const EditProductModal=({prod,onClose,onSave})=>{
 
  {/* Tabs */}
  <div style={{display:"flex",borderBottom:"1px solid rgba(0,0,0,0.07)"}}>
- {[["basic"," Basic Info"],["promo"," Promotions"],["shipping"," Shipping"]].map(([k,l])=>(
+ {[["basic"," Basic Info"],["reseller"," Reseller"],["promo"," Promotions"],["shipping"," Shipping"]].map(([k,l])=>(
  <button key={k} onClick={()=>setTab(k)}
  style={{flex:1,padding:"12px 8px",background:"none",border:"none",borderBottom:`2px solid ${tab===k?"#fe2c55":"transparent"}`,color:tab===k?"#fe2c55":"rgba(0,0,0,0.5)",fontFamily:"inherit",fontWeight:600,fontSize:12,cursor:"pointer"}}>
  {l}
@@ -96,6 +116,44 @@ export const EditProductModal=({prod,onClose,onSave})=>{
  <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:14}}><p style={{fontSize:13,color:"#34d399"}}>Discount: {Math.round((1-f.price/f.orig)*100)}% OFF — Customer saves ${(f.orig-f.price).toLocaleString()}</p></div>
  )}
  </>
+ )}
+
+
+ {tab==="reseller"&&(
+ <div>
+   <div style={{background:"rgba(254,44,85,0.05)",border:"1px solid rgba(254,44,85,0.16)",borderRadius:12,padding:16,marginBottom:14}}>
+     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:14}}>
+       <div>
+         <p style={{fontWeight:700,fontSize:14,color:"#111"}}>Allow Reselling</p>
+         <p style={{fontSize:12,color:"rgba(0,0,0,0.48)",marginTop:3,lineHeight:1.5}}>Other TokZoo sellers can add this product to their stores while your stock stays the master inventory.</p>
+       </div>
+       <div
+         onClick={()=>sf(p=>({
+           ...p,
+           allowReselling:!p.allowReselling,
+           resellerBasePrice:!p.allowReselling?(p.resellerBasePrice||p.price):p.resellerBasePrice,
+           minResalePrice:!p.allowReselling?(p.minResalePrice||p.resellerBasePrice||p.price):p.minResalePrice
+         }))}
+         style={{width:44,height:24,borderRadius:12,background:f.allowReselling?"#fe2c55":"#ccc",position:"relative",cursor:"pointer",transition:"background 0.2s",flexShrink:0}}
+       >
+         <div style={{position:"absolute",top:3,left:f.allowReselling?22:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left 0.2s"}}/>
+       </div>
+     </div>
+   </div>
+
+   {f.allowReselling&&(
+     <>
+       {inp("Supplier / Base Price ($)","resellerBasePrice","number","e.g. 20")}
+       {inp("Minimum Resale Price ($)","minResalePrice","number","e.g. 24")}
+       <div style={{background:"#fafafa",border:"1px solid #eee",borderRadius:10,padding:"12px 14px"}}>
+         <p style={{fontSize:12,color:"#666",lineHeight:1.6}}>
+           The reseller chooses their customer price, but it cannot be below your minimum resale price.
+           Your inventory remains the single source of truth.
+         </p>
+       </div>
+     </>
+   )}
+ </div>
  )}
 
  {tab==="promo"&&(

@@ -7,6 +7,7 @@ import Btn from "../components/common/Btn.jsx";
 import { AddProductModal } from "../components/modals/AddProductModal.jsx";
 import { CheckoutFlow } from "../components/checkout/CheckoutFlow.jsx";
 import { EditProductModal } from "../components/modals/EditProductModal.jsx";
+import { ResellProductModal } from "../components/modals/ResellProductModal.jsx";
 import { FullProductPage } from "./shop/FullProductPage.jsx";
 import { Landing } from "./auth/Landing.jsx";
 import { Login } from "./auth/Login.jsx";
@@ -56,6 +57,10 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [expandedOrder,setExpandedOrder] = useState(null);
  const [sellerOrders,setSO] = useState([]);
  const [sellerProds,setSP2] = useState([]);
+ const [resellerListings,setResellerListings] = useState([]);
+ const [resellableProducts,setResellableProducts] = useState([]);
+ const [resellerOrders,setResellerOrders] = useState([]);
+ const [resellModal,setResellModal] = useState(null);
  const [sellerVideos,setSellerVideos] = useState([]);
  const [showUploadVideo,setShowUploadVideo] = useState(false);
  const [buyerOrders,setBO] = useState([]);
@@ -289,6 +294,69 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  loadSellerProds();
  },[user]);
 
+ const normalizeResellerProduct=(p)=>({
+   ...p,
+   price:Number(p.price||p.selling_price)||0,
+   selling_price:Number(p.selling_price)||0,
+   supplier_price:Number(p.supplier_price||p.reseller_base_price||p.price)||0,
+   min_resale_price:Number(p.min_resale_price)||0,
+   profit_per_unit:Number(p.profit_per_unit)||0,
+   stock:Number(p.stock)||0,
+   img:Array.isArray(p.images)&&p.images.length?p.images[0]:(p.image_url||p.image||p.thumbnail||p.img||null),
+ });
+
+ const loadResellerData=async()=>{
+   if(!user||user.role!=="seller")return;
+   const token=localStorage.getItem("shopToken");
+   if(!token)return;
+
+   try{
+     const [mineRes,availableRes,ordersRes]=await Promise.all([
+       fetch(`${API}/products/reseller-listings/my`,{headers:{Authorization:`Bearer ${token}`}}),
+       fetch(`${API}/products/resellable`,{headers:{Authorization:`Bearer ${token}`}}),
+       fetch(`${API}/orders/reseller`,{headers:{Authorization:`Bearer ${token}`}}),
+     ]);
+
+     const [mine,available,orders]=await Promise.all([
+       mineRes.json().catch(()=>({})),
+       availableRes.json().catch(()=>({})),
+       ordersRes.json().catch(()=>({})),
+     ]);
+
+     if(mineRes.ok)setResellerListings((mine.listings||[]).map(normalizeResellerProduct));
+     if(availableRes.ok)setResellableProducts((available.products||[]).map(normalizeResellerProduct));
+     if(ordersRes.ok)setResellerOrders((orders.orders||[]).map(o=>({
+       ...o,
+       total:Number(o.total_amount)||0,
+       reseller_profit:Number(o.reseller_profit)||0,
+       status:o.status==="pending"?"Processing":String(o.status||"processing").charAt(0).toUpperCase()+String(o.status||"processing").slice(1),
+     })));
+   }catch(e){
+     console.log("Reseller data load failed",e);
+   }
+ };
+
+ useEffect(()=>{
+   loadResellerData();
+ },[user]);
+
+ const removeResellerListing=async(id)=>{
+   if(!window.confirm("Remove this reseller product from your store?"))return;
+   try{
+     const token=localStorage.getItem("shopToken");
+     const res=await fetch(`${API}/products/reseller-listings/${id}`,{
+       method:"DELETE",
+       headers:{Authorization:`Bearer ${token}`}
+     });
+     const data=await res.json().catch(()=>({}));
+     if(!res.ok)throw new Error(data.message||"Could not remove product");
+     showToast("Product removed from your store");
+     loadResellerData();
+   }catch(e){
+     showToast(e.message||"Could not remove product");
+   }
+ };
+
  const loadSellerVideos=async()=>{
  if(!user||user.role!=="seller")return;
  try{
@@ -307,6 +375,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {key:"wallet", icon:"", label:"My Wallet", badge:0},
  {key:"funds", icon:"", label:"Fund Record", badge:0},
  {key:"products", icon:"", label:"Store Products", badge:0},
+ {key:"reseller", icon:"", label:"Reseller Products", badge:0},
  {key:"videos", icon:"", label:"Videos", badge:0},
  {key:"refunds", icon:"↩", label:"Refund Request", badge:0},
  {key:"reviews", icon:"⭐", label:"Product Review", badge:0},
@@ -810,6 +879,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  {showAddProd&&<AddProductModal onClose={()=>setAP(false)} onAdd={p=>{setSP2(prev=>[...prev,p]);showToast(`${p.emoji} Product added — pending review`);}}/>}
  {editProd&&<EditProductModal prod={editProd} onClose={()=>setEditProd(null)} onSave={p=>{setSP2(prev=>prev.map(x=>x.id===p.id?p:x));showToast(" Product updated!");setEditProd(null);}}/>}
+ {resellModal&&<ResellProductModal
+   product={resellModal.type==="add"?resellModal.product:null}
+   listing={resellModal.type==="edit"?resellModal.listing:null}
+   onClose={()=>setResellModal(null)}
+   onSaved={()=>{showToast(resellModal.type==="add"?"Product added to your store":"Reseller price updated");loadResellerData();}}
+ />}
  {showProfEdit&&<ProfileEditModal onClose={()=>setPE(false)} onSave={async(f,newImgFile)=>{
  try{
  const token=localStorage.getItem("shopToken");
@@ -1123,6 +1198,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"#555",marginBottom:16}}>No products yet</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 24px",borderRadius:100,fontSize:13,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600}}>+ Add First Product</button></div>
  :<div style={{display:"flex",flexDirection:"column",gap:10}}>{sellerProds.map((p,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:11,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,overflow:"hidden"}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:600,marginBottom:3}}>{p.title}</p><div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock}</p>
+ {p.allow_reselling&&(<span style={{fontSize:10,background:"rgba(167,139,250,0.12)",color:"#7c3aed",padding:"2px 7px",borderRadius:100}}>Reselling On</span>)}
  {p.flashSale&&(<span style={{fontSize:10,background:"rgba(254,44,85,0.1)",color:"#fe2c55",padding:"2px 7px",borderRadius:100}}>Flash Sale</span>)}
  {p.freeShipping&&(<span style={{fontSize:10,background:"rgba(37,244,238,0.1)",color:"#25f4ee",padding:"2px 7px",borderRadius:100}}>Free Ship</span>)}
  {p.featured&&(<span style={{fontSize:10,background:"rgba(251,191,36,0.1)",color:"#fbbf24",padding:"2px 7px",borderRadius:100}}>Featured</span>)}
@@ -1131,6 +1207,101 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  style={{background:"rgba(37,244,238,0.1)",border:"1px solid rgba(37,244,238,0.2)",color:"#25f4ee",padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Edit
  </button></div></div>
  ))}</div>}
+ </div>}
+
+
+ {sellerTab==="reseller"&&<div>
+   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10,marginBottom:18}}>
+     {[
+       ["My Listings",resellerListings.length],
+       ["Available Products",resellableProducts.length],
+       ["Reseller Sales",resellerOrders.length],
+       ["Delivered Profit",`$${resellerOrders.filter(o=>String(o.status).toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.reseller_profit)||0),0).toLocaleString()}`],
+     ].map(([label,value])=>(
+       <div key={label} style={{background:"#fff",border:"1px solid #e8e8e8",borderRadius:12,padding:"14px 16px"}}>
+         <p style={{fontSize:10.5,color:"#777",textTransform:"uppercase",letterSpacing:"0.04em"}}>{label}</p>
+         <p style={{fontSize:20,fontWeight:800,marginTop:5}}>{value}</p>
+       </div>
+     ))}
+   </div>
+
+   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:10}}>
+     <div>
+       <h3 style={{fontSize:15,fontWeight:800}}>My Reseller Products</h3>
+       <p style={{fontSize:11.5,color:"#777",marginTop:3}}>Stock is controlled by the original supplier.</p>
+     </div>
+     <button onClick={loadResellerData} style={{border:"1px solid #ddd",background:"#fff",borderRadius:100,padding:"7px 12px",fontSize:11.5,cursor:"pointer",fontFamily:"inherit"}}>Refresh</button>
+   </div>
+
+   {resellerListings.length===0?(
+     <div style={{background:"#fff",border:"1px dashed #ddd",borderRadius:12,padding:"28px 18px",textAlign:"center",marginBottom:22}}>
+       <p style={{fontSize:13,fontWeight:700}}>No reseller products yet</p>
+       <p style={{fontSize:11.5,color:"#777",marginTop:5}}>Choose a product from the reseller catalogue below and add it to your store.</p>
+     </div>
+   ):(
+     <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
+       {resellerListings.map(l=>(
+         <div key={l.id} style={{background:"#fff",border:"1px solid #e8e8e8",borderRadius:12,padding:13,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+           <div style={{width:58,height:58,borderRadius:10,overflow:"hidden",background:"#f2f2f2",flexShrink:0}}>
+             {l.img?<img src={l.img} alt={l.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:null}
+           </div>
+           <div style={{flex:"1 1 210px",minWidth:0}}>
+             <p style={{fontSize:13,fontWeight:700,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{l.title}</p>
+             <p style={{fontSize:10.8,color:"#777",marginTop:3}}>Supplier: {l.supplier_name||"—"} · Stock: {l.stock}</p>
+             <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:6}}>
+               <span style={{fontSize:10.5,background:"#f5f5f5",padding:"3px 7px",borderRadius:100}}>Cost ${Number(l.supplier_price||0).toLocaleString()}</span>
+               <span style={{fontSize:10.5,background:"rgba(52,211,153,0.10)",color:"#198754",padding:"3px 7px",borderRadius:100}}>Profit ${Math.max(0,Number(l.selling_price||0)-Number(l.supplier_price||0)).toLocaleString()}</span>
+               <span style={{fontSize:10.5,background:l.status==="active"?"rgba(52,211,153,0.10)":"rgba(251,191,36,0.12)",color:l.status==="active"?"#198754":"#b45309",padding:"3px 7px",borderRadius:100}}>{l.status==="active"&&Number(l.stock)>0?"Live":"Unavailable"}</span>
+             </div>
+           </div>
+           <div style={{textAlign:"right",minWidth:120}}>
+             <p style={{fontSize:14,fontWeight:800,color:"#fe2c55"}}>${Number(l.selling_price||0).toLocaleString()}</p>
+             <div style={{display:"flex",gap:6,marginTop:7,justifyContent:"flex-end"}}>
+               <button onClick={()=>setResellModal({type:"edit",listing:l})} style={{border:"1px solid #ddd",background:"#fff",borderRadius:8,padding:"6px 9px",fontSize:10.5,cursor:"pointer",fontFamily:"inherit"}}>Edit Price</button>
+               <button onClick={()=>removeResellerListing(l.id)} style={{border:"1px solid rgba(239,68,68,0.22)",background:"rgba(239,68,68,0.06)",color:"#dc2626",borderRadius:8,padding:"6px 9px",fontSize:10.5,cursor:"pointer",fontFamily:"inherit"}}>Remove</button>
+             </div>
+           </div>
+         </div>
+       ))}
+     </div>
+   )}
+
+   <div style={{marginBottom:10}}>
+     <h3 style={{fontSize:15,fontWeight:800}}>Available to Resell</h3>
+     <p style={{fontSize:11.5,color:"#777",marginTop:3}}>Only products whose original seller has enabled reselling appear here.</p>
+   </div>
+
+   {resellableProducts.length===0?(
+     <div style={{background:"#fff",border:"1px dashed #ddd",borderRadius:12,padding:"28px 18px",textAlign:"center"}}>
+       <p style={{fontSize:12.5,color:"#666"}}>No new resellable products are available right now.</p>
+     </div>
+   ):(
+     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(235px,1fr))",gap:12}}>
+       {resellableProducts.map(p=>(
+         <div key={p.id} style={{background:"#fff",border:"1px solid #e8e8e8",borderRadius:13,overflow:"hidden"}}>
+           <div style={{height:150,background:"#f4f4f4",overflow:"hidden"}}>
+             {p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:null}
+           </div>
+           <div style={{padding:13}}>
+             <p style={{fontSize:13,fontWeight:700,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p>
+             <p style={{fontSize:10.8,color:"#777",marginTop:4}}>Supplier: {p.supplier_name||"—"}</p>
+             <p style={{fontSize:10.8,color:"#777",marginTop:2}}>Available stock: {p.stock}</p>
+             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:10}}>
+               <div style={{background:"#fafafa",borderRadius:8,padding:8}}>
+                 <p style={{fontSize:9.5,color:"#888"}}>SUPPLIER</p>
+                 <p style={{fontSize:12.5,fontWeight:800,marginTop:2}}>${Number(p.supplier_price||0).toLocaleString()}</p>
+               </div>
+               <div style={{background:"#fafafa",borderRadius:8,padding:8}}>
+                 <p style={{fontSize:9.5,color:"#888"}}>MIN RESALE</p>
+                 <p style={{fontSize:12.5,fontWeight:800,marginTop:2}}>${Number(p.minimum_listing_price||p.min_resale_price||p.supplier_price||0).toLocaleString()}</p>
+               </div>
+             </div>
+             <button onClick={()=>setResellModal({type:"add",product:p})} disabled={Number(p.stock)<=0} style={{width:"100%",marginTop:11,border:"none",borderRadius:100,padding:"9px 12px",background:Number(p.stock)>0?"#111":"#ddd",color:Number(p.stock)>0?"#fff":"#888",fontSize:11.5,fontWeight:700,cursor:Number(p.stock)>0?"pointer":"default",fontFamily:"inherit"}}>Add to My Store</button>
+           </div>
+         </div>
+       ))}
+     </div>
+   )}
  </div>}
 
  {sellerTab==="videos"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12}}>

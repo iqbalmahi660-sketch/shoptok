@@ -27,6 +27,10 @@ export const AddProductModal = ({ onClose, onAdded, onAdd, showToast }) => {
   const [customSize, setCustomSize] = useState("");
   const [customColor, setCustomColor] = useState("#111111");
 
+  const [allowReselling, setAllowReselling] = useState(false);
+  const [resellerBasePrice, setResellerBasePrice] = useState("");
+  const [minResalePrice, setMinResalePrice] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -62,6 +66,15 @@ export const AddProductModal = ({ onClose, onAdded, onAdd, showToast }) => {
     if (!stock || Number(stock) < 0) return setError("Stock is required");
     if (!category) return setError("Please select a category");
     if (!subcategory) return setError("Please select a subcategory");
+
+    if (allowReselling) {
+      const base = Number(resellerBasePrice || price);
+      const minimum = Number(minResalePrice || resellerBasePrice || price);
+      if (!Number.isFinite(base) || base <= 0) return setError("Enter a valid reseller base price");
+      if (!Number.isFinite(minimum) || minimum < base) {
+        return setError("Minimum resale price cannot be below the reseller base price");
+      }
+    }
 
     setSaving(true);
     try {
@@ -102,6 +115,13 @@ export const AddProductModal = ({ onClose, onAdded, onAdd, showToast }) => {
           weight_grams: weight ? Number(weight) : null,
           sizes: hasSizes ? selSizes : [],
           colors: hasColors ? selColors : [],
+          allow_reselling: allowReselling,
+          reseller_base_price: allowReselling
+            ? Number(resellerBasePrice || price)
+            : null,
+          min_resale_price: allowReselling
+            ? Number(minResalePrice || resellerBasePrice || price)
+            : null,
         }),
       });
       const data = await res.json();
@@ -254,6 +274,55 @@ export const AddProductModal = ({ onClose, onAdded, onAdd, showToast }) => {
               {selColors.length>0&&<div style={{width:"100%",display:"flex",gap:8,flexWrap:"wrap",marginTop:10}}>
                 {selColors.map(c=><span key={`chosen-${c}`} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 8px",borderRadius:100,background:"#f4f4f4",fontSize:11}}><span style={{width:14,height:14,borderRadius:"50%",background:c,border:"1px solid #ccc"}}/>{c}<button type="button" onClick={()=>setSelColors(prev=>prev.filter(x=>x!==c))} style={{border:"none",background:"none",cursor:"pointer",fontWeight:800}}>×</button></span>)}
               </div>}
+            </div>
+          )}
+        </div>
+
+
+        {/* Reseller settings */}
+        <div style={{ marginBottom: 22, border: "1px solid #eee", borderRadius: 12, padding: 14 }}>
+          <label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, cursor: "pointer" }}>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#111" }}>Allow Reselling</p>
+              <p style={{ fontSize: 11.5, color: "#777", marginTop: 3 }}>
+                Let other TokZoo sellers add this product to their stores. You keep control of the real stock.
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={allowReselling}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAllowReselling(checked);
+                if (checked && !resellerBasePrice) setResellerBasePrice(price || "");
+                if (checked && !minResalePrice) setMinResalePrice(price || "");
+              }}
+              style={{ width: 18, height: 18, accentColor: "#fe2c55", flexShrink: 0 }}
+            />
+          </label>
+
+          {allowReselling && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field
+                  label="Supplier / Base Price ($)"
+                  value={resellerBasePrice}
+                  onChange={setResellerBasePrice}
+                  placeholder={price || "20"}
+                  type="number"
+                />
+                <Field
+                  label="Minimum Resale Price ($)"
+                  value={minResalePrice}
+                  onChange={setMinResalePrice}
+                  placeholder={resellerBasePrice || price || "20"}
+                  type="number"
+                />
+              </div>
+
+              <p style={{ fontSize: 11.5, color: "#777", lineHeight: 1.6 }}>
+                Example: base price $20 and reseller sells for $28 → reseller gross margin is $8 before any future platform fee.
+              </p>
             </div>
           )}
         </div>
