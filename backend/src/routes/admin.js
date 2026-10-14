@@ -276,8 +276,37 @@ router.get('/orders', async (req, res) => {
 });
 
 router.patch('/orders/:id/status', async (req, res) => {
-  const { status, tracking_number, cancelled_reason } = req.body;
+  const status = String(req.body?.status || '').trim().toLowerCase();
+  const { tracking_number, cancelled_reason } = req.body;
+  const adminStatuses = ['processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+
+  if (!adminStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Seller must confirm the order first. Admin cannot set Pending or Confirmed status.',
+    });
+  }
+
   try {
+    const current = await query('SELECT * FROM orders WHERE id=$1', [req.params.id]);
+    const order = current.rows[0];
+    if (!order) return res.status(404).json({ success: false, message: 'Not found' });
+
+    if (String(order.status || '').toLowerCase() === 'pending') {
+      return res.status(409).json({
+        success: false,
+        message: 'Waiting for seller confirmation. Admin can update delivery status only after seller confirms the order.',
+      });
+    }
+
+    const allowedCurrentStatuses = ['confirmed', 'processing', 'shipped', 'delivered'];
+    if (!allowedCurrentStatuses.includes(String(order.status || '').toLowerCase())) {
+      return res.status(409).json({
+        success: false,
+        message: `Order status ${order.status} cannot be changed by admin`,
+      });
+    }
+
     const { rows } = await query(`
       UPDATE orders SET status=$1,
         tracking_number  = COALESCE($2, tracking_number),
@@ -285,11 +314,14 @@ router.patch('/orders/:id/status', async (req, res) => {
         updated_at=NOW()
       WHERE id=$4 RETURNING *
     `, [status, tracking_number||null, cancelled_reason||null, req.params.id]);
-    if (!rows[0]) return res.status(404).json({ success: false, message: 'Not found' });
+
     await syncOrderWallet(rows[0]);
     logAction(req.admin.id, req.admin.name, `order_${status}`, 'order', req.params.id, rows[0].order_number, {}, req.ip);
     res.json({ success: true, message: `Order updated to ${status}`, order: rows[0] });
-  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Failed' }); }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed' });
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════

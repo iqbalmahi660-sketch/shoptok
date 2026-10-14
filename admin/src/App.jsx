@@ -965,12 +965,17 @@ export default function AdminApp() {
                             return (
                               <select
                                 value={o.status}
+                                disabled={o.status==="pending"}
                                 onChange={e=>updateOrder(o.id, e.target.value)}
+                                title={o.status==="pending"?"Waiting for seller confirmation":"Update delivery status"}
                                 style={{ background:"#1a1a1a", border:`1px solid ${c}50`, borderRadius:8,
                                   padding:"6px 10px", color:c, fontSize:12, fontFamily:"inherit",
-                                  cursor:"pointer", minWidth:130, fontWeight:600,
+                                  cursor:o.status==="pending"?"not-allowed":"pointer", minWidth:150, fontWeight:600,
+                                  opacity:o.status==="pending"?.55:1,
                                   outline:"none", appearance:"auto" }}>
-                                {["pending","confirmed","processing","shipped","delivered","cancelled","refunded"].map(s=>(
+                                {o.status==="pending"&&<option value="pending" style={{color:statusColors.pending,background:"#1a1a1a"}}>Waiting for Seller</option>}
+                                {o.status==="confirmed"&&<option value="confirmed" style={{color:statusColors.confirmed,background:"#1a1a1a"}}>Confirmed by Seller</option>}
+                                {["processing","shipped","delivered","cancelled","refunded"].map(s=>(
                                   <option key={s} value={s} style={{ color: statusColors[s]||"#fff", background:"#1a1a1a" }}>
                                     {s.charAt(0).toUpperCase()+s.slice(1)}
                                   </option>

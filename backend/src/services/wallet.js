@@ -68,8 +68,11 @@ const ensureWalletSchema = () => {
 const orderWalletStatus = (orderStatus) => {
   const status = String(orderStatus || '').toLowerCase();
   if (status === 'delivered') return 'available';
+  if (status === 'processing' || status === 'shipped') return 'pending';
   if (status === 'cancelled' || status === 'refunded') return 'reversed';
-  return 'pending';
+  // New and seller-confirmed orders are not earnings yet. They become pending
+  // only after admin moves the order into Processing/Shipped.
+  return 'held';
 };
 
 const upsertOrderTransaction = async (client, {

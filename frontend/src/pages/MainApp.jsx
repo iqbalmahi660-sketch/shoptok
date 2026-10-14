@@ -190,7 +190,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  id:ord.order_number||`#ORD-${ord.id}`,
  items:[{title:ord.product_title,emoji:ord.product_emoji||"",img:ord.product_image||ord.image_url||ord.product_img||null,qty:ord.quantity,price:ord.unit_price}],
  total:ord.total_amount,
- status:ord.status==="pending"?"Processing":ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
+ status:ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
  date:new Date(ord.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
  statusColor:ord.status==="delivered"?"#34d399":ord.status==="shipped"?"#25f4ee":"#fbbf24"
  }));
@@ -212,7 +212,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  id:ord.order_number||`#ORD-${ord.id}`,
  items:[{title:ord.product_title,emoji:ord.product_emoji||"",img:ord.product_image||ord.image_url||ord.product_img||null,qty:ord.quantity,price:ord.unit_price}],
  total:Number(ord.total_amount)||0,
- status:ord.status==="pending"?"Processing":ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
+ status:ord.status.charAt(0).toUpperCase()+ord.status.slice(1),
  date:new Date(ord.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
  statusColor:ord.status==="delivered"?"#34d399":ord.status==="shipped"?"#25f4ee":ord.status==="cancelled"?"#fe2c55":"#fbbf24"
  }));
@@ -256,13 +256,14 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  if(d.orders){
  setSO(d.orders.map(o=>({
  ...o,
+ order_db_id:o.id,
  id:o.order_number||`#ORD-${o.id}`,
  items:[{title:o.product_title,emoji:o.product_emoji||"",img:o.product_image||o.image_url||o.product_img||null,qty:o.quantity,price:Number(o.unit_price)||0}],
  total:Number(o.total_amount)||0,
- status:o.status==="pending"?"Processing":o.status.charAt(0).toUpperCase()+o.status.slice(1),
+ status:o.status.charAt(0).toUpperCase()+o.status.slice(1),
  created_at:o.created_at,
  date:new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"}),
- statusColor:o.status==="delivered"?"#34d399":o.status==="shipped"?"#25f4ee":o.status==="cancelled"?"#fe2c55":"#fbbf24"
+ statusColor:o.status==="delivered"?"#34d399":o.status==="shipped"?"#25f4ee":o.status==="confirmed"?"#a78bfa":o.status==="cancelled"?"#fe2c55":"#fbbf24"
  })));
  }
  }).catch(e=>console.log("Seller orders load failed",e));
@@ -272,6 +273,35 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const interval = setInterval(loadSellerData, 30000);
  return () => clearInterval(interval);
  },[user]);
+
+ const sellerOrderAction=async(order,status)=>{
+   const orderId=order?.order_db_id;
+   if(!orderId)return showToast("Order ID is missing. Please refresh and try again.");
+   const token=localStorage.getItem("shopToken");
+   if(!token)return showToast("Please sign in again.");
+
+   let cancelled_reason=null;
+   if(status==="cancelled") cancelled_reason=window.prompt("Reason for rejecting this order (optional):")||"Rejected by seller";
+
+   try{
+     const res=await fetch(`${API}/orders/seller/${orderId}/status`,{
+       method:"PATCH",
+       headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
+       body:JSON.stringify({status,cancelled_reason})
+     });
+     const data=await res.json().catch(()=>({}));
+     if(!res.ok)throw new Error(data.message||"Could not update order");
+     const next=String(data.order?.status||status);
+     setSO(prev=>prev.map(o=>o.order_db_id===orderId?{
+       ...o,
+       status:next.charAt(0).toUpperCase()+next.slice(1),
+       statusColor:next==="confirmed"?"#a78bfa":next==="cancelled"?"#fe2c55":o.statusColor
+     }:o));
+     showToast(data.message||"Order updated");
+   }catch(err){
+     showToast(err.message||"Could not update order");
+   }
+ };
 
  useEffect(()=>{
  if(!user||user.role!=="seller")return;
@@ -332,7 +362,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
        ...o,
        total:Number(o.total_amount)||0,
        reseller_profit:Number(o.reseller_profit)||0,
-       status:o.status==="pending"?"Processing":String(o.status||"processing").charAt(0).toUpperCase()+String(o.status||"processing").slice(1),
+       status:String(o.status||"pending").charAt(0).toUpperCase()+String(o.status||"pending").slice(1),
      })));
    }catch(e){
      console.log("Reseller data load failed",e);
@@ -1030,6 +1060,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {!user&&(
  <button onClick={()=>goAuth(S.REG)} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left",fontWeight:600}}>Sign up</button>
  )}
+ {user?.role==="seller"&&(
+ <button onClick={()=>goAuth(S.REG)} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left",fontWeight:600}}>Buyer Sign up</button>
+ )}
  <button onClick={()=>setPage("seller")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>Sell
  </button><button onClick={()=>setPage("sitemap")} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",color:"#111",fontSize:14,fontFamily:"inherit",padding:"9px 0",textAlign:"left"}}>More
  </button>
@@ -1099,6 +1132,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  {mobileMenu&&(
    <div className="mobile-nav-menu">
+     {user?.role==="seller"&&(
+       <button onClick={()=>{setMobileMenu(false);goAuth(S.REG);}}>Buyer Sign up</button>
+     )}
      {[["Shop","shop"],["Sell","seller"],["More","sitemap"],["About","about"],["Customer support","customer-support"],["Legal","legal"]].map(([label,target])=>(
        <button key={label} onClick={()=>{if(target==="shop")goHome();else{setPage(target);setMobileMenu(false);}}}>{label}</button>
      ))}
@@ -1255,11 +1291,16 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  (o.status||"").toLowerCase()==="delivered"?"":
  (o.status||"").toLowerCase()==="shipped"?"":
  (o.status||"").toLowerCase()==="cancelled"?"":"⏳"
- }</span><div><p style={{fontSize:13,fontWeight:700,color:
+ }</span><div style={{flex:1}}><p style={{fontSize:13,fontWeight:700,color:
  (o.status||"").toLowerCase()==="delivered"?"#34d399":
  (o.status||"").toLowerCase()==="shipped"?"#25f4ee":
+ (o.status||"").toLowerCase()==="confirmed"?"#a78bfa":
  (o.status||"").toLowerCase()==="cancelled"?"#ef4444":"#fbbf24"
- }}>{o.status||"Processing"}</p><p style={{fontSize:11,color:"#555",marginTop:2}}>Status is managed by admin</p></div></div></div></div>
+ }}>{o.status||"Pending"}</p><p style={{fontSize:11,color:"#555",marginTop:2}}>{
+ (o.status||"").toLowerCase()==="pending"?"Confirm this order before admin can manage delivery status":
+ (o.status||"").toLowerCase()==="confirmed"?"Seller confirmed — admin can now manage delivery status":
+ "Delivery status is managed by admin"
+ }</p></div>{(o.status||"").toLowerCase()==="pending"&&<div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}><button onClick={()=>sellerOrderAction(o,"confirmed")} style={{background:"#16a34a",color:"#fff",border:"none",padding:"8px 14px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Confirm Order</button><button onClick={()=>sellerOrderAction(o,"cancelled")} style={{background:"#fff",color:"#ef4444",border:"1px solid #ef4444",padding:"8px 14px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Reject</button></div>}</div></div></div>
  )}
  </div>
  ))}

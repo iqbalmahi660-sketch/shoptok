@@ -143,7 +143,7 @@ router.post('/', authUser, async (req, res) => {
       VALUES (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
         $11,$12,$13,$14,$15,$16,
-        'processing',
+        'pending',
         $17,$18,$19,$20,$21,$22
       )
       RETURNING *
@@ -272,65 +272,59 @@ router.get('/reseller', authSeller, async (req, res) => {
   }
 });
 
-// ─── SELLER UPDATE DELIVERY STATUS ───────────────────────────────────────────
+// ─── SELLER CONFIRM / REJECT ORDER ──────────────────────────────────────────
 router.patch('/seller/:id/status', authSeller, async (req, res) => {
   try {
-    const status = String(req.body?.status || '')
-      .trim()
-      .toLowerCase();
+    const status = String(req.body?.status || '').trim().toLowerCase();
 
-    if (status !== 'delivered') {
+    if (!['confirmed', 'cancelled'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Seller can only mark an order as Delivered',
+        message: 'Seller can only confirm or reject a new order',
       });
     }
 
     const { rows } = await query(`
       UPDATE orders
-      SET status=$1
+      SET status=$1,
+          cancelled_reason = CASE
+            WHEN $1='cancelled' THEN COALESCE($4, 'Rejected by seller')
+            ELSE cancelled_reason
+          END,
+          updated_at=NOW()
       WHERE id=$2
         AND seller_id=$3
+        AND status='pending'
       RETURNING *
-    `, [status, req.params.id, req.seller.id]);
+    `, [status, req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
 
     if (!rows[0]) {
-      return res.status(404).json({
+      return res.status(409).json({
         success: false,
-        message: 'Order not found or you do not have permission to update it',
+        message: 'Only pending orders can be confirmed or rejected by the seller',
       });
     }
 
     try {
       await syncOrderWallet(rows[0]);
     } catch (walletErr) {
-      console.error('Delivered wallet ledger sync failed:', walletErr);
-      return res.status(500).json({
-        success: false,
-        message: 'Order delivered, but wallet could not be updated. Please contact admin.',
-      });
+      console.error('Seller confirmation wallet sync failed:', walletErr);
     }
 
     try {
-      if (notify?.orderStatus) {
-        notify.orderStatus(rows[0]);
-      }
+      if (notify?.orderStatus) notify.orderStatus(rows[0]);
     } catch (notifyErr) {
       console.error('Order status notification failed:', notifyErr);
     }
 
     return res.json({
       success: true,
-      message: 'Order marked as delivered',
+      message: status === 'confirmed' ? 'Order confirmed. Admin can now manage delivery status.' : 'Order rejected and cancelled.',
       order: rows[0],
     });
   } catch (err) {
     console.error('Seller order status update failed:', err);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to update order status',
-    });
+    return res.status(500).json({ success: false, message: 'Failed to update order status' });
   }
 });
 

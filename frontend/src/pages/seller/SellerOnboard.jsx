@@ -477,9 +477,6 @@ export const SellerOnboard = ({
 
     inviteCode: "",
 
-    bankName: "",
-    accountTitle: "",
-    accountNumber: "",
 
     phone: "",
     category: "",
@@ -608,17 +605,6 @@ export const SellerOnboard = ({
       return;
     }
 
-    if (
-      !f.bankName.trim() ||
-      !f.accountTitle.trim() ||
-      !f.accountNumber.trim()
-    ) {
-      alert(
-        "Complete bank details are required."
-      );
-
-      return;
-    }
 
     sl(true);
 
@@ -699,14 +685,6 @@ export const SellerOnboard = ({
             category:
               f.category,
 
-            bankName:
-              f.bankName,
-
-            accountTitle:
-              f.accountTitle,
-
-            accountNumber:
-              f.accountNumber,
 
             inviteCode:
               f.inviteCode,
@@ -1714,93 +1692,6 @@ export const SellerOnboard = ({
               )}
             </div>
           </div>
-        </div>
-
-        {/* Bank Details */}
-
-        <div
-          style={{
-            background:
-              "#ffffff",
-
-            border:
-              "1px solid #1a1a1a",
-
-            borderRadius:
-              14,
-
-            padding:
-              20,
-
-            marginBottom:
-              16,
-          }}
-        >
-          <p
-            style={{
-              fontSize:
-                14,
-
-              fontWeight:
-                700,
-
-              color:
-                "#111",
-
-              marginBottom:
-                16,
-            }}
-          >
-            Bank & Payout Details
-          </p>
-
-          <SField
-            label="Bank name / Bank details"
-            value={
-              f.bankName
-            }
-            onChange={(
-              v
-            ) =>
-              up(
-                "bankName",
-                v
-              )
-            }
-            placeholder="e.g. HBL, UBL, Meezan Bank"
-          />
-
-          <SField
-            label="Account title"
-            value={
-              f.accountTitle
-            }
-            onChange={(
-              v
-            ) =>
-              up(
-                "accountTitle",
-                v
-              )
-            }
-            placeholder="Name on bank account"
-          />
-
-          <SField
-            label="Account number"
-            value={
-              f.accountNumber
-            }
-            onChange={(
-              v
-            ) =>
-              up(
-                "accountNumber",
-                v
-              )
-            }
-            placeholder="Enter bank account number"
-          />
         </div>
 
         {/* Verification */}
