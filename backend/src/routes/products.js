@@ -776,6 +776,189 @@ router.put('/:id', authSeller, async (req, res) => {
   }
 });
 
+// ── PUBLIC STORES ─────────────────────────────────────────────────────────────
+// Buyer storefront directory. This route is intentionally public and only
+// exposes active seller/store information plus live catalogue counts.
+router.get('/stores', async (req, res) => {
+  const { search = '', limit = 100 } = req.query;
+  const lim = Math.min(Math.max(Number(limit) || 100, 1), 200);
+
+  try {
+    const params = [];
+    let searchSql = '';
+
+    if (String(search).trim()) {
+      params.push(`%${String(search).trim()}%`);
+      searchSql = `AND (
+        s.shop_name ILIKE $${params.length}
+        OR COALESCE(s.category,'') ILIKE $${params.length}
+        OR COALESCE(s.city,'') ILIKE $${params.length}
+      )`;
+    }
+
+    params.push(lim);
+
+    const { rows } = await query(`
+      SELECT
+        s.id,
+        s.shop_name,
+        s.shop_bio,
+        s.category,
+        s.city,
+        s.rating,
+        s.created_at,
+        u.profile_img,
+        u.name AS owner_name,
+        (
+          SELECT COUNT(*)::int
+          FROM products p
+          WHERE p.seller_id=s.id
+            AND p.status='live'
+        ) + (
+          SELECT COUNT(*)::int
+          FROM reseller_listings rl
+          JOIN products rp ON rp.id=rl.product_id
+          WHERE rl.reseller_seller_id=s.id
+            AND rl.status='active'
+            AND rp.status='live'
+            AND rp.allow_reselling=true
+        ) AS product_count
+      FROM sellers s
+      JOIN users u ON u.id=s.user_id
+      WHERE s.status='active'
+        AND u.status='active'
+        ${searchSql}
+      ORDER BY product_count DESC, s.created_at DESC
+      LIMIT $${params.length}
+    `, params);
+
+    return res.json({ success: true, stores: rows });
+  } catch (err) {
+    console.error('Public stores load failed:', err);
+    return res.status(500).json({ success: false, message: 'Failed to load stores' });
+  }
+});
+
+// Public store detail: seller profile + everything currently sold through that
+// store, including the seller's own products and active reseller listings.
+router.get('/stores/:id', async (req, res) => {
+  try {
+    const storeResult = await query(`
+      SELECT
+        s.id,
+        s.shop_name,
+        s.shop_bio,
+        s.category,
+        s.city,
+        s.rating,
+        s.created_at,
+        u.profile_img,
+        u.name AS owner_name
+      FROM sellers s
+      JOIN users u ON u.id=s.user_id
+      WHERE s.id=$1
+        AND s.status='active'
+        AND u.status='active'
+    `, [req.params.id]);
+
+    const store = storeResult.rows[0];
+    if (!store) {
+      return res.status(404).json({ success: false, message: 'Store not found' });
+    }
+
+    const productsResult = await query(`
+      WITH store_catalogue AS (
+        SELECT
+          p.id,
+          p.id AS source_product_id,
+          NULL::uuid AS reseller_listing_id,
+          'master'::text AS listing_type,
+          p.seller_id AS original_seller_id,
+          NULL::uuid AS reseller_seller_id,
+          p.title,
+          p.description,
+          p.price::numeric AS price,
+          p.original_price::numeric AS original_price,
+          p.discount_pct,
+          p.category,
+          p.subcategory,
+          p.emoji,
+          p.images,
+          p.stock,
+          p.sold,
+          p.rating,
+          p.review_count,
+          p.brand,
+          p.sku,
+          p.weight_grams,
+          p.sizes,
+          p.colors,
+          p.created_at
+        FROM products p
+        WHERE p.seller_id=$1
+          AND p.status='live'
+
+        UNION ALL
+
+        SELECT
+          rl.id AS id,
+          p.id AS source_product_id,
+          rl.id AS reseller_listing_id,
+          'reseller'::text AS listing_type,
+          p.seller_id AS original_seller_id,
+          rl.reseller_seller_id,
+          p.title,
+          p.description,
+          rl.selling_price::numeric AS price,
+          CASE
+            WHEN p.original_price IS NOT NULL AND p.original_price > rl.selling_price
+              THEN p.original_price::numeric
+            ELSE rl.selling_price::numeric
+          END AS original_price,
+          CASE
+            WHEN p.original_price IS NOT NULL AND p.original_price > 0
+              THEN GREATEST(0, ROUND((1-(rl.selling_price/p.original_price))*100))
+            ELSE 0
+          END::int AS discount_pct,
+          p.category,
+          p.subcategory,
+          p.emoji,
+          p.images,
+          p.stock,
+          p.sold,
+          p.rating,
+          p.review_count,
+          p.brand,
+          p.sku,
+          p.weight_grams,
+          p.sizes,
+          p.colors,
+          rl.created_at
+        FROM reseller_listings rl
+        JOIN products p ON p.id=rl.product_id
+        WHERE rl.reseller_seller_id=$1
+          AND rl.status='active'
+          AND p.status='live'
+          AND p.allow_reselling=true
+      )
+      SELECT *
+      FROM store_catalogue
+      ORDER BY created_at DESC
+    `, [req.params.id]);
+
+    store.product_count = productsResult.rows.length;
+
+    return res.json({
+      success: true,
+      store,
+      products: productsResult.rows,
+    });
+  } catch (err) {
+    console.error('Public store detail failed:', err);
+    return res.status(500).json({ success: false, message: 'Failed to load store' });
+  }
+});
+
 // ── PRODUCT DETAIL: MASTER OR RESELLER LISTING ────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {

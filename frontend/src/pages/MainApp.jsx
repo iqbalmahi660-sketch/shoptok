@@ -159,17 +159,76 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [stores,setStores] = useState([]);
  const [allStores,setAllStores] = useState([]);
  const [storesLoading,setStoresLoading] = useState(false);
+
  useEffect(()=>{
- if(searchMode!=="stores") return;
- setStoresLoading(true);
- fetch(`${API}/admin/sellers/public?limit=50`)
- .then(r=>r.json()).then(d=>{setAllStores(d.sellers||[]);setStores(d.sellers||[]);setStoresLoading(false);}).catch(()=>setStoresLoading(false));
- },[searchMode]);
+   let cancelled=false;
+   const loadStores=async()=>{
+     setStoresLoading(true);
+     try{
+       const res=await fetch(`${API}/products/stores?limit=100`);
+       const data=await res.json().catch(()=>({}));
+       if(!res.ok)throw new Error(data.message||"Could not load stores");
+       if(cancelled)return;
+       const list=Array.isArray(data.stores)?data.stores:[];
+       setAllStores(list);
+       setStores(list);
+     }catch(e){
+       if(!cancelled){
+         console.log("Stores load failed",e);
+         setAllStores([]);
+         setStores([]);
+       }
+     }finally{
+       if(!cancelled)setStoresLoading(false);
+     }
+   };
+   loadStores();
+   return()=>{cancelled=true;};
+ },[]);
+
  useEffect(()=>{
- if(searchMode!=="stores") return;
- if(!search){setStores(allStores);return;}
- setStores(allStores.filter(s=>s.shop_name?.toLowerCase().includes(search.toLowerCase())||s.category?.toLowerCase().includes(search.toLowerCase())));
+   if(searchMode!=="stores"){
+     setStores(allStores);
+     return;
+   }
+   if(!search){setStores(allStores);return;}
+   const q=search.toLowerCase();
+   setStores(allStores.filter(s=>
+     s.shop_name?.toLowerCase().includes(q)||
+     s.category?.toLowerCase().includes(q)||
+     s.city?.toLowerCase().includes(q)
+   ));
  },[search,allStores,searchMode]);
+
+ const openStore=async(store)=>{
+   setSelStore(store);
+   setStoreDetail({products:[],loading:true});
+   try{
+     const res=await fetch(`${API}/products/stores/${store.id}`);
+     const data=await res.json().catch(()=>({}));
+     if(!res.ok)throw new Error(data.message||"Could not load store");
+     if(data.store)setSelStore(prev=>({...prev,...data.store}));
+     setStoreDetail({
+       loading:false,
+       products:(data.products||[]).map(p=>({
+         ...p,
+         price:Number(p.price)||0,
+         orig:Number(p.original_price||p.price)||0,
+         disc:Number(p.discount_pct)||0,
+         cat:p.category?.toLowerCase().split(" ")[0]||"all",
+         color:"#fe2c55",
+         rating:Number(p.rating)||0,
+         sold:Number(p.sold)||0,
+         emoji:p.emoji||"",
+         img:Array.isArray(p.images)&&p.images.length?p.images[0]:(p.image_url||p.image||p.thumbnail||p.img||null),
+       }))
+     });
+   }catch(e){
+     console.log("Store detail load failed",e);
+     setStoreDetail({products:[],loading:false});
+     showToast(e.message||"Could not load store");
+   }
+ };
  const totalRev=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.total)||0),0);
  const activePrds=sellerProds.filter(p=>p.status==="active"||p.status==="live").length;
  const pendingPrds=sellerProds.filter(p=>p.status==="pending").length;
@@ -1181,6 +1240,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
        cat={cat}
        setCat={(nextCat)=>{setCat(nextCat);setSubcat("all");}}
        loading={dbLoading}
+       stores={stores}
+       storesLoading={storesLoading}
+       onOpenStore={openStore}
      />
    </div>
  )}

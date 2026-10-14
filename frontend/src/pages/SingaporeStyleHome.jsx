@@ -26,6 +26,9 @@ export default function SingaporeStyleHome({
   cat = "all",
   setCat,
   loading = false,
+  stores = [],
+  storesLoading = false,
+  onOpenStore,
 }) {
   const [showAll, setShowAll] = useState(false);
 
@@ -98,6 +101,57 @@ export default function SingaporeStyleHome({
         .sg-home .sg-section-title{
           line-height:1.25;
         }
+
+        .sg-store-row{
+          display:grid;
+          grid-template-columns:repeat(5,minmax(0,1fr));
+          gap:12px;
+          width:100%;
+        }
+
+        .sg-store-card{
+          appearance:none;
+          border:1px solid #ececef;
+          background:#fff;
+          border-radius:16px;
+          padding:16px;
+          min-width:0;
+          text-align:left;
+          cursor:pointer;
+          font-family:inherit;
+          box-shadow:0 3px 14px rgba(0,0,0,.04);
+          transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+        }
+
+        .sg-store-card:hover{
+          transform:translateY(-2px);
+          border-color:rgba(254,44,85,.35);
+          box-shadow:0 8px 22px rgba(0,0,0,.08);
+        }
+
+        .sg-store-logo{
+          width:54px;
+          height:54px;
+          border-radius:14px;
+          overflow:hidden;
+          background:linear-gradient(135deg,#fe2c55,#ff6b35);
+          color:#fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:22px;
+          font-weight:800;
+          margin-bottom:12px;
+        }
+
+        .sg-store-logo img{width:100%;height:100%;object-fit:cover;display:block;}
+        .sg-store-name{font-size:14px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .sg-store-meta{font-size:11.5px;color:#777;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .sg-store-stats{font-size:11.5px;color:#555;margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+
+        @media(max-width:1100px){.sg-store-row{grid-template-columns:repeat(4,minmax(0,1fr));}}
+        @media(max-width:860px){.sg-store-row{grid-template-columns:repeat(3,minmax(0,1fr));}}
+        @media(max-width:640px){.sg-store-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}}
 
         @media (min-width: 1500px){
           .sg-full-row,
@@ -346,6 +400,41 @@ export default function SingaporeStyleHome({
           ))}
         </div>
       </div>
+
+      {!search && cat === "all" && (
+        <HomeSection title="Stores">
+          {storesLoading ? (
+            <div className="sg-loading">Loading stores…</div>
+          ) : stores.length ? (
+            <div className="sg-store-row">
+              {stores.map((store) => (
+                <button
+                  type="button"
+                  className="sg-store-card"
+                  key={store.id}
+                  onClick={() => onOpenStore?.(store)}
+                >
+                  <div className="sg-store-logo">
+                    {store.profile_img ? (
+                      <img src={store.profile_img} alt={store.shop_name || "Store"} />
+                    ) : (
+                      <span>{String(store.shop_name || "S").charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="sg-store-name">{store.shop_name || "Store"}</div>
+                  <div className="sg-store-meta">{[store.category, store.city].filter(Boolean).join(" · ") || "TokZoo Seller"}</div>
+                  <div className="sg-store-stats">
+                    <span>⭐ {Number(store.rating || 0).toFixed(1)}</span>
+                    <span>{Number(store.product_count || 0)} products</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="sg-empty">No seller stores available yet.</div>
+          )}
+        </HomeSection>
+      )}
 
       {loading ? (
         <div className="sg-loading">Loading products…</div>
