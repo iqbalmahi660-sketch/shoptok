@@ -103,55 +103,95 @@ export default function SingaporeStyleHome({
         }
 
         .sg-store-row{
-          display:grid;
-          grid-template-columns:repeat(5,minmax(0,1fr));
-          gap:12px;
           width:100%;
+          display:flex;
+          gap:14px;
+          overflow-x:auto;
+          overflow-y:hidden;
+          padding:2px 2px 10px;
+          scrollbar-width:none;
+          -webkit-overflow-scrolling:touch;
+          scroll-snap-type:x proximity;
         }
+
+        .sg-store-row::-webkit-scrollbar{display:none;}
 
         .sg-store-card{
           appearance:none;
-          border:1px solid #ececef;
+          position:relative;
+          flex:0 0 250px;
+          min-width:250px;
+          border:1px solid #ededf0;
           background:#fff;
-          border-radius:16px;
-          padding:16px;
-          min-width:0;
+          border-radius:18px;
+          padding:0;
+          overflow:hidden;
           text-align:left;
           cursor:pointer;
           font-family:inherit;
-          box-shadow:0 3px 14px rgba(0,0,0,.04);
-          transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+          box-shadow:0 4px 18px rgba(15,23,42,.055);
+          transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+          scroll-snap-align:start;
         }
 
         .sg-store-card:hover{
-          transform:translateY(-2px);
-          border-color:rgba(254,44,85,.35);
-          box-shadow:0 8px 22px rgba(0,0,0,.08);
+          transform:translateY(-3px);
+          border-color:#dcdce2;
+          box-shadow:0 12px 30px rgba(15,23,42,.11);
+        }
+
+        .sg-store-cover{
+          height:62px;
+          background:
+            radial-gradient(circle at 86% 18%,rgba(255,255,255,.34),transparent 27%),
+            linear-gradient(125deg,#111827 0%,#2d3748 54%,#fe2c55 140%);
+        }
+
+        .sg-store-body{
+          position:relative;
+          padding:34px 14px 14px;
         }
 
         .sg-store-logo{
-          width:54px;
-          height:54px;
-          border-radius:14px;
+          position:absolute;
+          top:-31px;
+          left:14px;
+          width:58px;
+          height:58px;
+          border-radius:50%;
           overflow:hidden;
-          background:linear-gradient(135deg,#fe2c55,#ff6b35);
+          border:3px solid #fff;
+          background:linear-gradient(135deg,#fe2c55,#ff7a59);
           color:#fff;
           display:flex;
           align-items:center;
           justify-content:center;
           font-size:22px;
           font-weight:800;
-          margin-bottom:12px;
+          box-shadow:0 4px 12px rgba(15,23,42,.15);
         }
 
         .sg-store-logo img{width:100%;height:100%;object-fit:cover;display:block;}
-        .sg-store-name{font-size:14px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .sg-store-meta{font-size:11.5px;color:#777;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .sg-store-stats{font-size:11.5px;color:#555;margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+        .sg-store-name{font-size:14px;font-weight:800;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px;}
+        .sg-store-meta{font-size:11.5px;color:#7b8190;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .sg-store-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;}
+        .sg-store-stats{font-size:11px;color:#555f70;display:flex;gap:8px;align-items:center;min-width:0;}
+        .sg-store-visit{font-size:11px;font-weight:800;color:#fe2c55;white-space:nowrap;}
 
-        @media(max-width:1100px){.sg-store-row{grid-template-columns:repeat(4,minmax(0,1fr));}}
-        @media(max-width:860px){.sg-store-row{grid-template-columns:repeat(3,minmax(0,1fr));}}
-        @media(max-width:640px){.sg-store-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}}
+        @media(max-width:860px){
+          .sg-store-row{gap:10px;padding-bottom:8px;}
+          .sg-store-card{flex-basis:220px;min-width:220px;}
+        }
+        @media(max-width:640px){
+          .sg-store-card{flex-basis:190px;min-width:190px;border-radius:15px;}
+          .sg-store-cover{height:54px;}
+          .sg-store-body{padding:31px 12px 12px;}
+          .sg-store-logo{width:52px;height:52px;top:-27px;left:12px;}
+          .sg-store-name{font-size:13px;}
+          .sg-store-meta{font-size:10.5px;}
+          .sg-store-stats{font-size:10px;gap:6px;}
+          .sg-store-visit{font-size:10px;}
+        }
 
         @media (min-width: 1500px){
           .sg-full-row,
@@ -414,18 +454,24 @@ export default function SingaporeStyleHome({
                   key={store.id}
                   onClick={() => onOpenStore?.(store)}
                 >
-                  <div className="sg-store-logo">
-                    {store.profile_img ? (
-                      <img src={store.profile_img} alt={store.shop_name || "Store"} />
-                    ) : (
-                      <span>{String(store.shop_name || "S").charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
-                  <div className="sg-store-name">{store.shop_name || "Store"}</div>
-                  <div className="sg-store-meta">{[store.category, store.city].filter(Boolean).join(" · ") || "TokZoo Seller"}</div>
-                  <div className="sg-store-stats">
-                    <span>⭐ {Number(store.rating || 0).toFixed(1)}</span>
-                    <span>{Number(store.product_count || 0)} products</span>
+                  <div className="sg-store-cover" />
+                  <div className="sg-store-body">
+                    <div className="sg-store-logo">
+                      {store.profile_img ? (
+                        <img src={store.profile_img} alt={store.shop_name || "Store"} />
+                      ) : (
+                        <span>{String(store.shop_name || "S").charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="sg-store-name">{store.shop_name || "Store"}</div>
+                    <div className="sg-store-meta">{[store.category, store.city].filter(Boolean).join(" · ") || "TokZoo Seller"}</div>
+                    <div className="sg-store-footer">
+                      <div className="sg-store-stats">
+                        <span>★ {Number(store.rating || 0).toFixed(1)}</span>
+                        <span>{Number(store.product_count || 0)} items</span>
+                      </div>
+                      <span className="sg-store-visit">View Store →</span>
+                    </div>
                   </div>
                 </button>
               ))}
