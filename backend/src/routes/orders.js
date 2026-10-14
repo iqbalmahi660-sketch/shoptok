@@ -6,6 +6,41 @@ const { syncOrderWallet } = require('../services/wallet');
 
 const router = express.Router();
 
+// Keep the live Railway database compatible with the current order workflow.
+// Older deployments may still have an orders.status CHECK constraint that does
+// not allow the seller-confirmed state even when the source migration does.
+let orderStatusSchemaPromise = null;
+
+const ensureOrderStatusSchema = () => {
+  if (!orderStatusSchemaPromise) {
+    orderStatusSchemaPromise = (async () => {
+      await query(`
+        ALTER TABLE orders
+        DROP CONSTRAINT IF EXISTS orders_status_check
+      `);
+
+      await query(`
+        ALTER TABLE orders
+        ADD CONSTRAINT orders_status_check
+        CHECK (status IN (
+          'pending',
+          'confirmed',
+          'processing',
+          'shipped',
+          'delivered',
+          'cancelled',
+          'refunded'
+        )) NOT VALID
+      `);
+    })().catch((err) => {
+      orderStatusSchemaPromise = null;
+      throw err;
+    });
+  }
+
+  return orderStatusSchemaPromise;
+};
+
 const genOrderNum = () =>
   '#ORD-' +
   Date.now().toString(36).toUpperCase() +
@@ -224,9 +259,11 @@ router.get('/seller', authSeller, async (req, res) => {
       SELECT
         o.*,
         CASE WHEN o.reseller_seller_id IS NULL THEN false ELSE true END AS is_reseller_order,
-        rs.shop_name AS reseller_shop_name
+        rs.shop_name AS reseller_shop_name,
+        p.images[1] AS product_image
       FROM orders o
       LEFT JOIN sellers rs ON rs.id=o.reseller_seller_id
+      LEFT JOIN products p ON p.id=o.product_id
       WHERE o.seller_id=$1
       ORDER BY o.created_at DESC
     `, [req.seller.id]);
@@ -275,6 +312,7 @@ router.get('/reseller', authSeller, async (req, res) => {
 // ─── SELLER CONFIRM / REJECT ORDER ──────────────────────────────────────────
 router.patch('/seller/:id/status', authSeller, async (req, res) => {
   try {
+    await ensureOrderStatusSchema();
     const status = String(req.body?.status || '').trim().toLowerCase();
 
     if (!['confirmed', 'cancelled'].includes(status)) {
@@ -324,7 +362,18 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
     });
   } catch (err) {
     console.error('Seller order status update failed:', err);
-    return res.status(500).json({ success: false, message: 'Failed to update order status' });
+
+    if (err?.code === '23514') {
+      return res.status(500).json({
+        success: false,
+        message: 'Order status database rule is outdated. Please retry after deployment finishes.',
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: err?.message || 'Failed to update order status',
+    });
   }
 });
 
