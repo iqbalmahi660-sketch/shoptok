@@ -1,6 +1,7 @@
 const express = require('express');
-const { query } = require('../database/db');
+const { query, getClient } = require('../database/db');
 const { authAdmin, requireSuperAdmin, logAction } = require('../middleware/auth');
+const { ensureWalletSchema, syncOrderWallet } = require('../services/wallet');
 const router = express.Router();
 
 router.use(authAdmin);
@@ -285,9 +286,95 @@ router.patch('/orders/:id/status', async (req, res) => {
       WHERE id=$4 RETURNING *
     `, [status, tracking_number||null, cancelled_reason||null, req.params.id]);
     if (!rows[0]) return res.status(404).json({ success: false, message: 'Not found' });
+    await syncOrderWallet(rows[0]);
     logAction(req.admin.id, req.admin.name, `order_${status}`, 'order', req.params.id, rows[0].order_number, {}, req.ip);
     res.json({ success: true, message: `Order updated to ${status}`, order: rows[0] });
-  } catch { res.status(500).json({ success: false, message: 'Failed' }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Failed' }); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// WITHDRAWALS
+// ═══════════════════════════════════════════════════════════════
+router.get('/withdrawals', async (req, res) => {
+  try {
+    await ensureWalletSchema();
+    const { status = 'all' } = req.query;
+    const params = [];
+    let where = '';
+    if (status !== 'all') {
+      params.push(status);
+      where = `WHERE w.status=$1`;
+    }
+    const { rows } = await query(`
+      SELECT w.*, s.shop_name, u.name AS seller_name, u.email AS seller_email
+      FROM withdrawal_requests w
+      JOIN sellers s ON s.id=w.seller_id
+      LEFT JOIN users u ON u.id=s.user_id
+      ${where}
+      ORDER BY w.requested_at DESC
+      LIMIT 250
+    `, params);
+    return res.json({ success: true, withdrawals: rows });
+  } catch (err) {
+    console.error('Admin withdrawals load failed:', err);
+    return res.status(500).json({ success: false, message: 'Failed to load withdrawals' });
+  }
+});
+
+router.patch('/withdrawals/:id/status', async (req, res) => {
+  const status = String(req.body?.status || '').toLowerCase();
+  const adminNote = String(req.body?.admin_note || '').trim() || null;
+  if (!['approved','completed','rejected'].includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid withdrawal status' });
+  }
+
+  await ensureWalletSchema();
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const currentRes = await client.query(`
+      SELECT * FROM withdrawal_requests WHERE id=$1 FOR UPDATE
+    `, [req.params.id]);
+    const current = currentRes.rows[0];
+    if (!current) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ success: false, message: 'Withdrawal request not found' });
+    }
+    if (current.status === 'completed') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ success: false, message: 'Completed withdrawal cannot be changed' });
+    }
+
+    const updatedRes = await client.query(`
+      UPDATE withdrawal_requests
+      SET status=$1,
+          admin_note=COALESCE($2, admin_note),
+          processed_by=$3,
+          approved_at=CASE WHEN $1 IN ('approved','completed') THEN COALESCE(approved_at,NOW()) ELSE approved_at END,
+          completed_at=CASE WHEN $1='completed' THEN NOW() ELSE NULL END,
+          updated_at=NOW()
+      WHERE id=$4
+      RETURNING *
+    `, [status, adminNote, req.admin.id, req.params.id]);
+
+    const txStatus = status === 'rejected' ? 'reversed' : status;
+    await client.query(`
+      UPDATE wallet_transactions
+      SET status=$1, updated_at=NOW()
+      WHERE withdrawal_id=$2 AND transaction_type='withdrawal'
+    `, [txStatus, req.params.id]);
+
+    await client.query('COMMIT');
+    const updated = updatedRes.rows[0];
+    logAction(req.admin.id, req.admin.name, `withdrawal_${status}`, 'withdrawal', updated.id, updated.id, { amount: updated.amount, admin_note: adminNote }, req.ip);
+    return res.json({ success: true, message: `Withdrawal ${status}`, withdrawal: updated });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('Withdrawal status update failed:', err);
+    return res.status(500).json({ success: false, message: 'Failed to update withdrawal' });
+  } finally {
+    client.release();
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════

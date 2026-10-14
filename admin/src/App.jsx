@@ -150,6 +150,7 @@ export default function AdminApp() {
   const [sellers,  setSellers]  = useState([]);
   const [products, setProducts] = useState([]);
   const [orders,   setOrders]   = useState([]);
+  const [withdrawals,setWithdrawals] = useState([]);
   const [analytics,setAnalytics]= useState(null);
   const [logs,     setLogs]     = useState([]);
   const [dataLoading, setDataLoading] = useState(false);
@@ -160,6 +161,7 @@ export default function AdminApp() {
   const [sellerFilter,  setSellerFilter]  = useState("pending");
   const [productFilter, setProductFilter] = useState("all");
   const [orderFilter,   setOrderFilter]   = useState("all");
+  const [withdrawalFilter,setWithdrawalFilter] = useState("all");
   const [search,        setSearch]        = useState("");
 
   const addToast = (msg, type="success") => setToast({ msg, type });
@@ -356,6 +358,7 @@ export default function AdminApp() {
         case "sellers":   { const d = await api(`/admin/sellers?status=${sf}&search=${encodeURIComponent(sr)}&limit=100`); setSellers(d.sellers||[]); break; }
         case "products":  { const d = await api(`/admin/products?status=${pf}&search=${encodeURIComponent(sr)}&limit=100`); setProducts(d.products||[]); break; }
         case "orders":    { const d = await api(`/admin/orders?status=${of}&search=${encodeURIComponent(sr)}&limit=100`); setOrders(d.orders||[]); break; }
+        case "withdrawals": { const d = await api(`/admin/withdrawals?status=${withdrawalFilter}`); setWithdrawals(d.withdrawals||[]); break; }
         case "analytics": { const d = await api("/admin/analytics"); setAnalytics(d); break; }
         case "logs":      { const d = await api("/admin/logs"); setLogs(d.logs||[]); break; }
       }
@@ -372,6 +375,7 @@ export default function AdminApp() {
   useEffect(() => { if (authed && tab === "sellers")  loadSection("sellers");  }, [sellerFilter,  search]);
   useEffect(() => { if (authed && tab === "products") loadSection("products"); }, [productFilter, search]);
   useEffect(() => { if (authed && tab === "orders")   loadSection("orders");   }, [orderFilter,   search]);
+  useEffect(() => { if (authed && tab === "withdrawals") loadSection("withdrawals"); }, [withdrawalFilter]);
   useEffect(() => {
     if (authed && tab === "analytics" && orders.length === 0) loadSection("orders");
   }, [tab]);
@@ -414,6 +418,18 @@ export default function AdminApp() {
     } catch (err) {
       addToast(err.message || "Failed to update order", "error");
     }
+  };
+
+  const updateWithdrawal = async (id, status) => {
+    try {
+      let admin_note = null;
+      if (status === "rejected") {
+        admin_note = window.prompt("Reason for rejection (optional):") || null;
+      }
+      const d = await api(`/admin/withdrawals/${id}/status`, { method:"PATCH", body:{ status, admin_note } });
+      addToast(d.message || `Withdrawal ${status}`);
+      setWithdrawals(prev => prev.map(w => w.id===id ? { ...w, status, ...d.withdrawal } : w));
+    } catch (err) { addToast(err.message || "Failed to update withdrawal", "error"); }
   };
 
   const markNotifsRead = async () => {
@@ -502,6 +518,7 @@ export default function AdminApp() {
     { key:"sellers",   icon:"🏪", label:"Sellers",  badge: dash ? (dash.pendingSellers||0) : 0 },
     { key:"products",  icon:"📦", label:"Products", badge: dash ? (dash.pendingProducts||0) : 0 },
     { key:"orders",    icon:"🛒", label:"Orders",   badge: dash ? (dash.orders?.pending||0) : 0 },
+    { key:"withdrawals",icon:"💸", label:"Withdrawals", badge: withdrawals.filter(w=>w.status==="pending").length },
     { key:"analytics", icon:"📈", label:"Analytics" },
     { key:"logs",      icon:"📋", label:"Activity Log" },
     { key:"settings",  icon:"⚙️", label:"Settings" },
@@ -591,7 +608,7 @@ export default function AdminApp() {
           <button className="hamburger" onClick={()=>setSideOpen(o=>!o)} aria-label="Menu"
             style={{ width:38, height:38, borderRadius:10, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:18, color:adminDark?"#fff":"#333", flexShrink:0 }}>☰</button>
           <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:17, whiteSpace:"nowrap" }}>
-            {{ dashboard:"Dashboard",buyers:"Buyers",sellers:"Sellers",products:"Products",orders:"Orders",analytics:"Analytics",logs:"Activity Log",settings:"Settings" }[tab]}
+            {{ dashboard:"Dashboard",buyers:"Buyers",sellers:"Sellers",products:"Products",orders:"Orders",withdrawals:"Withdrawals",analytics:"Analytics",logs:"Activity Log",settings:"Settings" }[tab]}
           </h2>
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -965,6 +982,41 @@ export default function AdminApp() {
                       </tr>
                     ))}
                     {orders.length===0 && <tr><td colSpan={7} style={{ textAlign:"center", padding:40, color:"rgba(255,255,255,.3)" }}>{dataLoading?"⏳ Loading orders...":"No orders found"}</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════
+              WITHDRAWALS
+          ════════════════════════════════════════════ */}
+          {tab==="withdrawals" && (
+            <div style={{ animation:"fadeUp .3s ease" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:10 }}>
+                <FilterTabs tabs={["all","pending","approved","completed","rejected"]} active={withdrawalFilter} onChange={setWithdrawalFilter} />
+                <div style={{ fontSize:12, color:"rgba(255,255,255,.45)" }}>Seller payout requests using saved bank details</div>
+              </div>
+              <div className="card tcard" style={{ padding:0 }}>
+                <table>
+                  <thead><tr>{["Seller","Amount","Bank / Account","Status","Requested","Actions"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {withdrawals.map(w=>(
+                      <tr key={w.id} className="row">
+                        <td><p style={{fontWeight:600}}>{w.shop_name||w.seller_name||"Seller"}</p><p style={{fontSize:11,color:"rgba(255,255,255,.35)"}}>{w.seller_email||""}</p></td>
+                        <td><p style={{fontFamily:"'Syne',sans-serif",fontWeight:800,color:"#34d399"}}>${Number(w.amount||0).toFixed(2)}</p></td>
+                        <td><p style={{fontSize:12}}>{w.bank_name||"—"}</p><p style={{fontSize:11,color:"rgba(255,255,255,.45)"}}>{w.account_title||"—"} · {w.account_number||"—"}</p></td>
+                        <td><Badge status={w.status}/></td>
+                        <td style={{fontSize:12,color:"rgba(255,255,255,.4)"}}>{new Date(w.requested_at).toLocaleString("en-PK")}</td>
+                        <td><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                          {w.status==="pending"&&<><Btn small color="green" onClick={()=>updateWithdrawal(w.id,"approved")}>Approve</Btn><Btn small color="red" onClick={()=>updateWithdrawal(w.id,"rejected")}>Reject</Btn></>}
+                          {w.status==="approved"&&<Btn small color="green" onClick={()=>updateWithdrawal(w.id,"completed")}>Mark Paid</Btn>}
+                          {w.status==="completed"&&<span style={{fontSize:11,color:"#34d399",fontWeight:700}}>Payment completed</span>}
+                          {w.status==="rejected"&&<span style={{fontSize:11,color:"#fe2c55",fontWeight:700}}>Rejected</span>}
+                        </div></td>
+                      </tr>
+                    ))}
+                    {withdrawals.length===0&&<tr><td colSpan={6} style={{textAlign:"center",padding:40,color:"rgba(255,255,255,.3)"}}>No withdrawal requests found</td></tr>}
                   </tbody>
                 </table>
               </div>

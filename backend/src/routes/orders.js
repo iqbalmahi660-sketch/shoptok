@@ -2,6 +2,7 @@ const express = require('express');
 const { query } = require('../database/db');
 const { authUser, authSeller } = require('../middleware/auth');
 const { notify } = require('../socket');
+const { syncOrderWallet } = require('../services/wallet');
 
 const router = express.Router();
 
@@ -190,6 +191,12 @@ router.post('/', authUser, async (req, res) => {
     }
 
     try {
+      await syncOrderWallet(rows[0]);
+    } catch (walletErr) {
+      console.error('Initial wallet ledger sync failed:', walletErr);
+    }
+
+    try {
       notify.newOrder(rows[0]);
     } catch (notifyErr) {
       console.error('Order notification failed:', notifyErr);
@@ -291,6 +298,16 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Order not found or you do not have permission to update it',
+      });
+    }
+
+    try {
+      await syncOrderWallet(rows[0]);
+    } catch (walletErr) {
+      console.error('Delivered wallet ledger sync failed:', walletErr);
+      return res.status(500).json({
+        success: false,
+        message: 'Order delivered, but wallet could not be updated. Please contact admin.',
       });
     }
 

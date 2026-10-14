@@ -62,6 +62,9 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [resellerOrders,setResellerOrders] = useState([]);
  const [resellModal,setResellModal] = useState(null);
  const [sellerVideos,setSellerVideos] = useState([]);
+ const [walletData,setWalletData] = useState({summary:{available_balance:0,pending_balance:0,total_earnings:0,withdrawn:0},transactions:[],withdrawals:[],payout_account:null});
+ const [walletLoading,setWalletLoading] = useState(false);
+ const [fundFilter,setFundFilter] = useState("All");
  const [showUploadVideo,setShowUploadVideo] = useState(false);
  const [buyerOrders,setBO] = useState([]);
  const [buyerNotifs,setBuyerNotifs] = useState(()=>{
@@ -356,6 +359,76 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
      showToast(e.message||"Could not remove product");
    }
  };
+
+ const loadWalletData=async()=>{
+ if(!user||user.role!=="seller")return;
+ const token=localStorage.getItem("shopToken");
+ if(!token)return;
+ setWalletLoading(true);
+ try{
+ const res=await fetch(`${API}/wallet`,{headers:{Authorization:`Bearer ${token}`}});
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.message||"Could not load wallet");
+ setWalletData({
+ summary:{
+ available_balance:Number(data.summary?.available_balance)||0,
+ pending_balance:Number(data.summary?.pending_balance)||0,
+ total_earnings:Number(data.summary?.total_earnings)||0,
+ withdrawn:Number(data.summary?.withdrawn)||0,
+ },
+ transactions:Array.isArray(data.transactions)?data.transactions:[],
+ withdrawals:Array.isArray(data.withdrawals)?data.withdrawals:[],
+ payout_account:data.payout_account||null,
+ });
+ }catch(e){console.log("Wallet load failed",e);}
+ finally{setWalletLoading(false);}
+ };
+
+ useEffect(()=>{
+ if(!user||user.role!=="seller")return;
+ loadWalletData();
+ const interval=setInterval(loadWalletData,30000);
+ return()=>clearInterval(interval);
+ },[user]);
+
+ const requestWithdrawal=async()=>{
+ const available=Number(walletData.summary?.available_balance)||0;
+ if(available<=0){showToast("No available balance to withdraw");return;}
+ const account=walletData.payout_account;
+ if(!account?.bank_name||!account?.account_title||!account?.account_number){
+ showToast("Complete your bank/account details in Store Setting before withdrawing");return;
+ }
+ const raw=window.prompt(`Available balance: $${available.toFixed(2)}\nEnter withdrawal amount:`);
+ if(raw===null)return;
+ const amount=Number(raw);
+ if(!Number.isFinite(amount)||amount<=0){showToast("Enter a valid withdrawal amount");return;}
+ if(amount>available){showToast(`Maximum available amount is $${available.toFixed(2)}`);return;}
+ try{
+ const token=localStorage.getItem("shopToken");
+ const res=await fetch(`${API}/wallet/withdrawals`,{
+ method:"POST",
+ headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
+ body:JSON.stringify({amount}),
+ });
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.message||"Withdrawal request failed");
+ showToast("Withdrawal request sent to admin");
+ await loadWalletData();
+ }catch(e){showToast(e.message||"Withdrawal request failed");}
+ };
+
+ const walletTypeLabel=(type)=>({
+ product_sale:"Product Sale",
+ supplier_sale:"Supplier Sale",
+ reseller_profit:"Reseller Profit",
+ platform_fee:"Platform Fee",
+ withdrawal:"Withdrawal",
+ refund:"Refund / Adjustment",
+ adjustment:"Refund / Adjustment",
+ }[type]||String(type||"Transaction").replaceAll("_"," "));
+
+ const walletStatusLabel=(status)=>String(status||"").charAt(0).toUpperCase()+String(status||"").slice(1);
+ const walletMoney=(value)=>`${Number(value)<0?"-":"+"}$${Math.abs(Number(value)||0).toFixed(2)}`;
 
  const loadSellerVideos=async()=>{
  if(!user||user.role!=="seller")return;
@@ -1363,7 +1436,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  };
  return(
  <div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
- {[["Total Revenue","$"+totalRev.toLocaleString(),"#34d399"],["Total Orders",sellerOrders.length.toString(),"#25f4ee"],["Pending Payout","$0","#fbbf24"],["Withdrawn","$0","#a78bfa"]].map(([l,v,c])=>(
+ {[["Total Revenue","$"+totalRev.toLocaleString(),"#34d399"],["Total Orders",sellerOrders.length.toString(),"#25f4ee"],["Pending Payout","$"+(Number(walletData.summary?.pending_balance)||0).toFixed(2),"#fbbf24"],["Withdrawn","$"+(Number(walletData.summary?.withdrawn)||0).toFixed(2),"#a78bfa"]].map(([l,v,c])=>(
  <div key={l} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:18}}><p style={{fontSize:11,color:"#555",marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>{l}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,color:c}}>{v}</p></div>
  ))}
  </div>
@@ -1394,13 +1467,34 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  );
  })()}
 
- {sellerTab==="wallet"&&<div><div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:20,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/><p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>$0</p><p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>TikTokShop Seller Wallet</p></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}><button style={{padding:"14px",background:"#fe2c55",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Withdraw</button><button style={{padding:"14px",background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,color:"#111",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:"pointer"}}>Add Funds</button></div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Transaction History</p><div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:32,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No transactions yet</p></div></div></div>}
-
- {sellerTab==="funds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Fund Records</p><div style={{display:"flex",gap:8,marginBottom:16}}>
- {["All","Deposit","Withdrawal","Refund"].map(f=>(
- <button key={f} style={{padding:"6px 14px",borderRadius:100,border:"1px solid rgba(0,0,0,0.1)",background:"transparent",color:"rgba(0,0,0,0.5)",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{f}</button>
+ {sellerTab==="wallet"&&<div>
+ <div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",borderRadius:20,padding:28,marginBottom:16,position:"relative",overflow:"hidden"}}>
+ <div style={{position:"absolute",top:-20,right:-20,width:120,height:120,borderRadius:"50%",background:"rgba(0,0,0,0.1)"}}/>
+ <p style={{fontSize:12,color:"rgba(0,0,0,0.7)",marginBottom:8}}>Available Balance</p>
+ <p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:36,color:"#111",marginBottom:4}}>${Number(walletData.summary?.available_balance||0).toFixed(2)}</p>
+ <p style={{fontSize:12,color:"rgba(0,0,0,0.7)"}}>Real balance from delivered orders only</p>
+ </div>
+ <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
+ {[["Pending Balance",walletData.summary?.pending_balance,"#fbbf24"],["Total Earnings",walletData.summary?.total_earnings,"#34d399"],["Withdrawn",walletData.summary?.withdrawn,"#a78bfa"]].map(([label,value,color])=>(
+ <div key={label} style={{background:"#fff",border:"1px solid #1a1a1a",borderRadius:12,padding:14}}><p style={{fontSize:10,color:"#666",marginBottom:5}}>{label}</p><p style={{fontWeight:800,fontSize:18,color}}>${Number(value||0).toFixed(2)}</p></div>
  ))}
- </div><div style={{textAlign:"center",padding:"40px 0"}}><p style={{fontSize:40,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No fund records found</p></div></div></div>}
+ </div>
+ <button onClick={requestWithdrawal} disabled={walletLoading||Number(walletData.summary?.available_balance||0)<=0} style={{width:"100%",padding:"14px",background:Number(walletData.summary?.available_balance||0)>0?"#fe2c55":"#ccc",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:Number(walletData.summary?.available_balance||0)>0?"pointer":"not-allowed",marginBottom:12}}>Withdraw</button>
+ {walletData.payout_account&&<div style={{background:"#fff",border:"1px solid #e6e6e6",borderRadius:12,padding:14,marginBottom:16}}><p style={{fontWeight:700,fontSize:12,marginBottom:6}}>Payout Account</p><p style={{fontSize:12,color:"#555"}}>{walletData.payout_account.bank_name||"Bank not set"} · {walletData.payout_account.account_title||"Account title not set"}</p><p style={{fontSize:12,color:"#555"}}>{walletData.payout_account.account_number||"Account number not set"}</p></div>}
+ <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><p style={{fontWeight:700,color:"#fe2c55"}}>Transaction History</p>{walletLoading&&<span style={{fontSize:11,color:"#777"}}>Updating…</span>}</div>
+ {walletData.transactions.length===0?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{color:"#555",fontSize:13}}>No wallet transactions yet</p></div>:
+ <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",minWidth:620}}><thead><tr>{["Date","Type","Order / Ref","Amount","Status"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 8px",fontSize:11,color:"#777",borderBottom:"1px solid #eee"}}>{h}</th>)}</tr></thead><tbody>{walletData.transactions.map(tx=><tr key={tx.id}><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{new Date(tx.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short"})}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{walletTypeLabel(tx.transaction_type)}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1",color:"#555"}}>{tx.order_number||tx.withdrawal_id?.slice(0,8)||"—"}</td><td style={{padding:"10px 8px",fontSize:12,fontWeight:700,borderBottom:"1px solid #f1f1f1",color:Number(tx.amount)<0?"#fe2c55":"#16a34a"}}>{tx.transaction_type==="platform_fee"?`$${Number(tx.amount||0).toFixed(2)}`:walletMoney(tx.amount)}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{walletStatusLabel(tx.status)}</td></tr>)}</tbody></table></div>}
+ </div></div>}
+
+ {sellerTab==="funds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Fund Records</p><div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+ {["All","Sales","Reseller Earnings","Platform Fees","Withdrawals","Refund / Adjustment"].map(f=>(
+ <button key={f} onClick={()=>setFundFilter(f)} style={{padding:"6px 14px",borderRadius:100,border:"1px solid rgba(0,0,0,0.1)",background:fundFilter===f?"#fe2c55":"transparent",color:fundFilter===f?"#fff":"rgba(0,0,0,0.55)",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>{f}</button>
+ ))}
+ </div>{(()=>{
+ const match=(tx)=>fundFilter==="All"||(fundFilter==="Sales"&&["product_sale","supplier_sale"].includes(tx.transaction_type))||(fundFilter==="Reseller Earnings"&&tx.transaction_type==="reseller_profit")||(fundFilter==="Platform Fees"&&tx.transaction_type==="platform_fee")||(fundFilter==="Withdrawals"&&tx.transaction_type==="withdrawal")||(fundFilter==="Refund / Adjustment"&&(["refund","adjustment"].includes(tx.transaction_type)||tx.status==="reversed"));
+ const rows=walletData.transactions.filter(match);
+ return rows.length===0?<div style={{textAlign:"center",padding:"40px 0"}}><p style={{color:"#555",fontSize:13}}>No fund records found</p></div>:<div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",minWidth:680}}><thead><tr>{["Date","Category","Reference","Amount","Status"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 8px",fontSize:11,color:"#777",borderBottom:"1px solid #eee"}}>{h}</th>)}</tr></thead><tbody>{rows.map(tx=><tr key={tx.id}><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{new Date(tx.created_at).toLocaleString("en-PK")}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{walletTypeLabel(tx.transaction_type)}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{tx.order_number||tx.withdrawal_id?.slice(0,8)||"—"}</td><td style={{padding:"10px 8px",fontSize:12,fontWeight:700,borderBottom:"1px solid #f1f1f1",color:Number(tx.amount)<0?"#fe2c55":"#16a34a"}}>{tx.transaction_type==="platform_fee"?`$${Number(tx.amount||0).toFixed(2)}`:walletMoney(tx.amount)}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{walletStatusLabel(tx.status)}</td></tr>)}</tbody></table></div>;
+ })()}</div></div>}
 
  {sellerTab==="refunds"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>↩ Refund Requests</p><div style={{display:"flex",gap:8,marginBottom:16}}>
  {["All","Pending","Approved","Rejected"].map(f=>(

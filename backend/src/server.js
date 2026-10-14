@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const socketMgr = require('./socket');
+const { ensureWalletSchema } = require('./services/wallet');
 
 const app = express();
 
@@ -144,6 +145,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/videos', require('./routes/videos'));
 
@@ -184,6 +186,10 @@ app.use((err, req, res, next) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
+
+ensureWalletSchema().catch((err) => {
+  console.error('❌ Wallet schema initialization failed:', err.message);
+});
 
 server.listen(PORT, () => {
   console.log('\n🚀 ShopTok Backend v2.0');
