@@ -1174,6 +1174,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:72,display:"flex",alignItems:"center",gap:16}}>
  <a
    href="/"
+   onClick={()=>localStorage.setItem("shopPage","shop")}
    className="mobile-nav-brand"
    aria-label="Go to home"
    style={{display:"inline-flex",alignItems:"center",textDecoration:"none",cursor:"pointer"}}
