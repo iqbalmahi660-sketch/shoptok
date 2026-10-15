@@ -3,11 +3,6 @@ import { API, CITIES } from "../../data/catalogue.js";
 import Btn from "../common/Btn.jsx";
 import Field from "../common/Field.jsx";
 
-const BUYER_BANK_DETAILS = {
-  bankName: String(import.meta.env.VITE_BANK_NAME || "").trim(),
-  accountNumber: String(import.meta.env.VITE_BANK_ACCOUNT || "").trim(),
-};
-
 const getProductImage = (item) => {
   if (!item) return "";
   if (typeof item.img === "string" && item.img.trim()) return item.img.trim();
@@ -82,9 +77,35 @@ export const CheckoutFlow = ({
   const [locationError, setLocationError] = useState(false);
 
   const [pay] = useState({ method: "Bank Transfer" });
-  const bankConfigured = Boolean(BUYER_BANK_DETAILS.bankName && BUYER_BANK_DETAILS.accountNumber);
+  const [bankDetails, setBankDetails] = useState({ bankName: "", accountNumber: "" });
+  const [bankLoading, setBankLoading] = useState(true);
+  const bankConfigured = Boolean(bankDetails.bankName && bankDetails.accountNumber);
 
   const STEPS = ["Review", "Shipping", "Payment", "Confirm"];
+
+  useEffect(() => {
+    let active = true;
+    const loadBankDetails = async () => {
+      setBankLoading(true);
+      try {
+        const res = await fetch(`${API}/settings/payment`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || "Could not load bank details");
+        if (active) {
+          setBankDetails({
+            bankName: String(data?.bank_name || "").trim(),
+            accountNumber: String(data?.bank_account || "").trim(),
+          });
+        }
+      } catch (err) {
+        if (active) setBankDetails({ bankName: "", accountNumber: "" });
+      } finally {
+        if (active) setBankLoading(false);
+      }
+    };
+    loadBankDetails();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -885,15 +906,19 @@ export const CheckoutFlow = ({
                 <span style={{padding:"5px 9px",borderRadius:999,background:"rgba(254,44,85,.08)",color:"#fe2c55",fontSize:10,fontWeight:800}}>BANK</span>
               </div>
 
-              {bankConfigured ? (
+              {bankLoading ? (
+                <div style={{background:"#f7f7f8",border:"1px solid #ececec",borderRadius:10,padding:"11px 12px",fontSize:11,color:"#777"}}>
+                  Loading bank details...
+                </div>
+              ) : bankConfigured ? (
                 <div style={{display:"grid",gap:10}}>
                   <div style={{background:"#f7f7f8",border:"1px solid #ececec",borderRadius:10,padding:"11px 12px"}}>
                     <p style={{fontSize:10,color:"#888",marginBottom:4}}>Bank Name</p>
-                    <p style={{fontSize:13,fontWeight:700,color:"#222"}}>{BUYER_BANK_DETAILS.bankName}</p>
+                    <p style={{fontSize:13,fontWeight:700,color:"#222"}}>{bankDetails.bankName}</p>
                   </div>
                   <div style={{background:"#f7f7f8",border:"1px solid #ececec",borderRadius:10,padding:"11px 12px"}}>
                     <p style={{fontSize:10,color:"#888",marginBottom:4}}>Account Number / IBAN</p>
-                    <p style={{fontSize:13,fontWeight:700,color:"#222",wordBreak:"break-all"}}>{BUYER_BANK_DETAILS.accountNumber}</p>
+                    <p style={{fontSize:13,fontWeight:700,color:"#222",wordBreak:"break-all"}}>{bankDetails.accountNumber}</p>
                   </div>
                 </div>
               ) : (

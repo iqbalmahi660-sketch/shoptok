@@ -145,6 +145,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/settings', require('./routes/settings'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/videos', require('./routes/videos'));

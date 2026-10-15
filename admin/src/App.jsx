@@ -1405,6 +1405,63 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
     notifications: true,
   });
   const [saving, setSaving] = useState(null);
+  const [bankSettings, setBankSettings] = useState({ bank_name: "", bank_account: "" });
+  const [bankLoading, setBankLoading] = useState(true);
+  const [bankSaving, setBankSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const loadBankSettings = async () => {
+      setBankLoading(true);
+      try {
+        const res = await fetch(`${API}/settings/payment/admin`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("shopAdminToken")}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Could not load bank settings");
+        if (active) {
+          setBankSettings({
+            bank_name: data.bank_name || "",
+            bank_account: data.bank_account || "",
+          });
+        }
+      } catch (err) {
+        if (active) addToast(err.message, "error");
+      } finally {
+        if (active) setBankLoading(false);
+      }
+    };
+    loadBankSettings();
+    return () => { active = false; };
+  }, []);
+
+  const saveBankSettings = async () => {
+    const bank_name = bankSettings.bank_name.trim();
+    const bank_account = bankSettings.bank_account.trim();
+    if (!bank_name || !bank_account) {
+      addToast("Bank Name and Account Number / IBAN are required", "warn");
+      return;
+    }
+    setBankSaving(true);
+    try {
+      const res = await fetch(`${API}/settings/payment`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("shopAdminToken")}`,
+        },
+        body: JSON.stringify({ bank_name, bank_account }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not save bank settings");
+      setBankSettings({ bank_name:data.bank_name || bank_name, bank_account:data.bank_account || bank_account });
+      addToast("Buyer bank payment details saved ✅", "success");
+    } catch (err) {
+      addToast(err.message, "error");
+    } finally {
+      setBankSaving(false);
+    }
+  };
 
   const toggle = async (key) => {
     setSaving(key);
@@ -1487,6 +1544,41 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
 
   return (
     <div style={{ animation:"fadeUp .3s ease", maxWidth:680 }}>
+      <div className="card" style={{ marginBottom:16 }}>
+        <h3 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, marginBottom:6 }}>🏦 Buyer Bank Payment</h3>
+        <p style={{ fontSize:12, color:"rgba(255,255,255,.4)", marginBottom:18 }}>These details appear on the buyer checkout payment screen.</p>
+
+        {bankLoading ? (
+          <div style={{ padding:"18px 0", color:"rgba(255,255,255,.45)", fontSize:13 }}>Loading payment settings...</div>
+        ) : (
+          <>
+            <label style={{ display:"block", fontSize:12, color:"rgba(255,255,255,.55)", marginBottom:6 }}>Bank Name</label>
+            <input
+              value={bankSettings.bank_name}
+              onChange={e=>setBankSettings(prev=>({...prev,bank_name:e.target.value}))}
+              placeholder="Bank Name"
+              style={{ width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"11px 13px", color:"#fff", outline:"none", fontFamily:"inherit", marginBottom:14 }}
+            />
+
+            <label style={{ display:"block", fontSize:12, color:"rgba(255,255,255,.55)", marginBottom:6 }}>Account Number / IBAN</label>
+            <input
+              value={bankSettings.bank_account}
+              onChange={e=>setBankSettings(prev=>({...prev,bank_account:e.target.value}))}
+              placeholder="Account Number / IBAN"
+              style={{ width:"100%", boxSizing:"border-box", background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"11px 13px", color:"#fff", outline:"none", fontFamily:"inherit", marginBottom:16 }}
+            />
+
+            <button
+              onClick={saveBankSettings}
+              disabled={bankSaving}
+              style={{ width:"100%", padding:"11px 16px", borderRadius:10, border:"none", background:bankSaving?"#444":"#fe2c55", color:"#fff", fontWeight:700, cursor:bankSaving?"wait":"pointer" }}
+            >
+              {bankSaving ? "Saving..." : "Save Bank Details"}
+            </button>
+          </>
+        )}
+      </div>
+
       <div className="card" style={{ marginBottom:16 }}>
         <h3 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, marginBottom:20 }}>⚙️ Platform Settings</h3>
         {settingsList.map(({ key, label, desc }) => {
