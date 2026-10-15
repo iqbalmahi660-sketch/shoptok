@@ -47,6 +47,29 @@ const ensureWalletSchema = () => {
     await query(`CREATE INDEX IF NOT EXISTS idx_wallet_transactions_order ON wallet_transactions(order_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_withdrawals_seller ON withdrawal_requests(seller_id, requested_at DESC)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON withdrawal_requests(status, requested_at DESC)`);
+
+    // Older deployments may already contain duplicate ledger rows from early wallet builds.
+    // Deduplicate before adding the idempotency indexes so order status changes cannot fail.
+    await query(`
+      DELETE FROM wallet_transactions a
+      USING wallet_transactions b
+      WHERE a.order_id IS NOT NULL
+        AND b.order_id IS NOT NULL
+        AND a.seller_id=b.seller_id
+        AND a.order_id=b.order_id
+        AND a.transaction_type=b.transaction_type
+        AND (a.created_at < b.created_at OR (a.created_at=b.created_at AND a.id < b.id))
+    `);
+    await query(`
+      DELETE FROM wallet_transactions a
+      USING wallet_transactions b
+      WHERE a.withdrawal_id IS NOT NULL
+        AND b.withdrawal_id IS NOT NULL
+        AND a.withdrawal_id=b.withdrawal_id
+        AND a.transaction_type=b.transaction_type
+        AND (a.created_at < b.created_at OR (a.created_at=b.created_at AND a.id < b.id))
+    `);
+
     await query(`
       CREATE UNIQUE INDEX IF NOT EXISTS uq_wallet_order_type_seller
       ON wallet_transactions(seller_id, order_id, transaction_type)

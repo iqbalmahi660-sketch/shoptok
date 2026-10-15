@@ -308,19 +308,46 @@ router.patch('/orders/:id/status', async (req, res) => {
     }
 
     const { rows } = await query(`
-      UPDATE orders SET status=$1,
-        tracking_number  = COALESCE($2, tracking_number),
-        cancelled_reason = COALESCE($3, cancelled_reason),
-        updated_at=NOW()
-      WHERE id=$4 RETURNING *
-    `, [status, tracking_number||null, cancelled_reason||null, req.params.id]);
+      UPDATE orders
+      SET status=$1::varchar,
+          tracking_number=COALESCE($2::varchar, tracking_number),
+          cancelled_reason=COALESCE($3::text, cancelled_reason),
+          updated_at=NOW()
+      WHERE id=$4::uuid
+      RETURNING *
+    `, [status, tracking_number || null, cancelled_reason || null, req.params.id]);
 
-    await syncOrderWallet(rows[0]);
-    logAction(req.admin.id, req.admin.name, `order_${status}`, 'order', req.params.id, rows[0].order_number, {}, req.ip);
-    res.json({ success: true, message: `Order updated to ${status}`, order: rows[0] });
+    if (!rows[0]) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    let walletWarning = null;
+    try {
+      await syncOrderWallet(rows[0]);
+    } catch (walletErr) {
+      walletWarning = walletErr?.message || 'Wallet sync failed';
+      console.error('Admin order wallet sync failed:', walletErr);
+    }
+
+    try {
+      logAction(req.admin.id, req.admin.name, `order_${status}`, 'order', req.params.id, rows[0].order_number, {}, req.ip);
+    } catch (logErr) {
+      console.error('Admin order log failed:', logErr);
+    }
+
+    return res.json({
+      success: true,
+      message: `Order updated to ${status}`,
+      order: rows[0],
+      ...(walletWarning ? { wallet_warning: walletWarning } : {}),
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed' });
+    console.error('Admin order status update failed:', err);
+    return res.status(500).json({
+      success: false,
+      message: err?.message || 'Failed to update order status',
+      code: err?.code || null,
+    });
   }
 });
 
