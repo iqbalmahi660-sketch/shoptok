@@ -322,19 +322,32 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
       });
     }
 
-    const { rows } = await query(`
-      UPDATE orders
-      SET status=$1,
-          cancelled_reason = CASE
-            WHEN $1='cancelled' THEN COALESCE($4, 'Rejected by seller')
-            ELSE cancelled_reason
-          END,
-          updated_at=NOW()
-      WHERE id=$2
-        AND seller_id=$3
-        AND status='pending'
-      RETURNING *
-    `, [status, req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
+    let updateResult;
+
+    if (status === 'confirmed') {
+      updateResult = await query(`
+        UPDATE orders
+        SET status='confirmed',
+            updated_at=NOW()
+        WHERE id=$1
+          AND seller_id=$2
+          AND status='pending'
+        RETURNING *
+      `, [req.params.id, req.seller.id]);
+    } else {
+      updateResult = await query(`
+        UPDATE orders
+        SET status='cancelled',
+            cancelled_reason=COALESCE($3::text, 'Rejected by seller'),
+            updated_at=NOW()
+        WHERE id=$1
+          AND seller_id=$2
+          AND status='pending'
+        RETURNING *
+      `, [req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
+    }
+
+    const { rows } = updateResult;
 
     if (!rows[0]) {
       return res.status(409).json({
