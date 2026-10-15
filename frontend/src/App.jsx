@@ -8,6 +8,15 @@ import SellerOnboard from "./pages/seller/SellerOnboard";
 import MainApp from "./pages/MainApp";
 import ResetPassword from "./pages/auth/ResetPassword";
 
+const AuthHeader = ({ go }) => (
+  <div style={{position:"sticky",top:0,zIndex:1000,height:72,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",fontFamily:"Poppins, sans-serif"}}>
+    <button onClick={()=>go(S.APP)} style={{display:"flex",alignItems:"center",background:"none",border:"none",padding:0,cursor:"pointer"}} aria-label="Go to shop">
+      <img src="/logo.png" alt="TokZoo" style={{height:30,width:"auto",display:"block"}} />
+    </button>
+    <button onClick={()=>go(S.APP)} style={{background:"none",border:"none",fontFamily:"inherit",fontSize:13,fontWeight:600,color:"#111",cursor:"pointer"}}>Shop</button>
+  </div>
+);
+
 export default function App() {
   const params = new URLSearchParams(window.location.search);
   const resetToken = params.get("reset_token");
@@ -40,7 +49,7 @@ export default function App() {
   }, []);
 
   if (resetToken && resetUid) {
-    return <ResetPassword uid={resetUid} token={resetToken} />;
+    return <><AuthHeader go={go} /><ResetPassword uid={resetUid} token={resetToken} /></>;
   }
 
   if (authLoading) {
@@ -54,6 +63,7 @@ export default function App() {
 
   return (
     <>
+      {screen !== S.APP && <AuthHeader go={go} />}
       {screen === S.LAND && <Landing go={go} />}
       {screen === S.LOGIN && <Login go={go} setUser={setUser} />}
       {screen === S.REG && <Register go={go} setUser={setUser} />}

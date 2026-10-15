@@ -421,7 +421,10 @@ export const CheckoutFlow = ({
     <div
       style={{
         position: "fixed",
-        inset: 0,
+        top: 72,
+        right: 0,
+        bottom: 0,
+        left: 0,
         background: "#f7f7f8",
         zIndex: 600,
         overflowY: "auto",

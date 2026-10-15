@@ -1106,7 +1106,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  }} user={user} profileImg={profileImg} setProfileImg={setPImg}/>}
 
  {selProd&&(
- <div className="content-with-sidebar" style={{position:"fixed",top:0,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:120,overflowY:"auto"}}><FullProductPage
+ <div className="content-with-sidebar" style={{position:"fixed",top:72,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:120,overflowY:"auto"}}><FullProductPage
  prod={selProd}
  onClose={()=>setSP(null)}
  addToCart={addToCart}
@@ -1171,7 +1171,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  <span style={{fontSize:11,color:"#999",marginTop:2}}>© 2026 TikTokShop</span></div></div><div className="content-with-sidebar">
 
- <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:100,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:72,display:"flex",alignItems:"center",gap:16}}>
+ <nav className="tz-top-nav" style={{position:"sticky",top:0,zIndex:1000,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",padding:"0 24px",height:72,display:"flex",alignItems:"center",gap:16}}>
  <div className="mobile-nav-brand" onClick={goHome} role="button" tabIndex={0} aria-label="Go to home">
    <img src="/logo.png" alt="TokZoo"/>
  </div>

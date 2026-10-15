@@ -14,7 +14,7 @@ export const StorePanel=({store,detail,onClose,addToCart,showToast,setSP})=>{
  });
 
  return(
- <div style={{position:"fixed",inset:0,background:"#f7f7f8",zIndex:500,overflowY:"auto",animation:"fadeUp 0.3s ease"}}>
+ <div style={{position:"fixed",top:72,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:500,overflowY:"auto",animation:"fadeUp 0.3s ease"}}>
    <div style={{position:"sticky",top:0,zIndex:10,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.07)",padding:"13px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
      <button onClick={onClose} style={{width:36,height:36,borderRadius:"50%",background:"rgba(0,0,0,0.07)",border:"none",color:"#111",cursor:"pointer",fontSize:17}}>←</button>
      <span style={{fontWeight:700,fontSize:14}}>Store</span><div style={{width:36}}/>
