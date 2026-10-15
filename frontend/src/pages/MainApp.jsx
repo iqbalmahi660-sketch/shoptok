@@ -107,8 +107,13 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
   setSubcat("all");
   setSearch("");
   setSearchMode("products");
-  setPage("shop");
+  setSelProd(null);
+  setSelStore(null);
+  setCheckout(false);
+  setCO(false);
+  setLoginPopup(false);
   setMobileMenu(false);
+  setPage("shop");
   window.scrollTo(0,0);
  };
  const addToCart=(p)=>{setCart(prev=>{const ex=prev.find(i=>i.id===p.id);return ex?prev.map(i=>i.id===p.id?{...i,qty:i.qty+1}:i):[...prev,{...p,qty:1}];});showToast(`${p.emoji} Added to cart!`);};
@@ -1129,8 +1134,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  />
  )}
 
- {cartOpen&&!checkout&&(
- <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:200}}/><div className="cart-drawer" style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:201,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
+ {cartOpen&&(
+ <><div onClick={()=>setCO(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)",zIndex:2000}}/><div className="cart-drawer" style={{position:"fixed",top:0,right:0,bottom:0,width:360,background:"#ffffff",borderLeft:"1px solid rgba(0,0,0,0.08)",zIndex:2001,display:"flex",flexDirection:"column",animation:"slideIn 0.3s ease"}}><div style={{padding:"18px 20px",borderBottom:"1px solid rgba(0,0,0,0.08)",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:15}}>Cart ({cartCount})</span><button onClick={()=>setCO(false)} style={{background:"rgba(0,0,0,0.08)",border:"none",color:"#111",width:28,height:28,borderRadius:"50%",cursor:"pointer",fontSize:16}}>×</button></div><div style={{flex:1,overflowY:"auto",padding:"12px 20px",display:"flex",flexDirection:"column",gap:10}}>
  {cart.length===0
  ?<div style={{textAlign:"center",paddingTop:60}}><div style={{fontSize:46,marginBottom:12}}></div><p style={{color:"rgba(0,0,0,0.4)"}}>Cart is empty</p><button onClick={()=>{setCO(false);setPage("shop");}} style={{marginTop:16,background:"#fe2c55",color:"#fff",border:"none",padding:"10px 22px",borderRadius:100,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600,fontSize:13}}>Browse Shop</button></div>
  :cart.map(item=>(
