@@ -3,172 +3,10 @@ import { API, CITIES } from "../../data/catalogue.js";
 import Btn from "../common/Btn.jsx";
 import Field from "../common/Field.jsx";
 
-const PAYMENT_DETAILS = {
-  USDT: {
-    label: "USDT (TRC-20)",
-    network: "TRON / TRC-20",
-    address: "DEMO-USDT-TRC20-TOKZOO-NOT-FOR-PAYMENT",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=DEMO-USDT-TRC20-TOKZOO-NOT-FOR-PAYMENT",
-  },
-  BTC: {
-    label: "Bitcoin",
-    network: "Bitcoin Network",
-    address: "DEMO-BTC-TOKZOO-NOT-FOR-PAYMENT",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=DEMO-BTC-TOKZOO-NOT-FOR-PAYMENT",
-  },
-  ETH: {
-    label: "Ethereum",
-    network: "Ethereum / ERC-20",
-    address: "DEMO-ETH-TOKZOO-NOT-FOR-PAYMENT",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=DEMO-ETH-TOKZOO-NOT-FOR-PAYMENT",
-  },
-  BNB: {
-    label: "BNB",
-    network: "BNB Smart Chain / BEP-20",
-    address: "DEMO-BNB-TOKZOO-NOT-FOR-PAYMENT",
-    qr: "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=DEMO-BNB-TOKZOO-NOT-FOR-PAYMENT",
-  },
+const BUYER_BANK_DETAILS = {
+  bankName: String(import.meta.env.VITE_BANK_NAME || "").trim(),
+  accountNumber: String(import.meta.env.VITE_BANK_ACCOUNT || "").trim(),
 };
-
-const DemoWarning = () => (
-  <div
-    style={{
-      background: "#fff7ed",
-      border: "1px solid #fdba74",
-      borderRadius: 10,
-      padding: "10px 12px",
-      marginBottom: 14,
-    }}
-  >
-    <p
-      style={{
-        fontSize: 11,
-        color: "#9a3412",
-        fontWeight: 700,
-        marginBottom: 2,
-      }}
-    >
-      DEMO PAYMENT DETAILS
-    </p>
-
-    <p
-      style={{
-        fontSize: 11,
-        color: "#9a3412",
-        lineHeight: 1.5,
-      }}
-    >
-      These are sample wallet addresses. Do not send real payment to these
-      addresses.
-    </p>
-  </div>
-);
-
-const WalletCard = ({
-  title,
-  network,
-  address,
-  qr,
-  accent = "#34d399",
-}) => (
-  <div
-    style={{
-      background: "#ffffff",
-      border: "1px solid #e5e5e5",
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 14,
-    }}
-  >
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "140px 1fr",
-        gap: 18,
-        alignItems: "center",
-      }}
-    >
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #ececec",
-          borderRadius: 12,
-          padding: 10,
-          textAlign: "center",
-        }}
-      >
-        <img
-          src={qr}
-          alt={`${title} QR`}
-          style={{
-            width: 118,
-            height: 118,
-            display: "block",
-            margin: "0 auto",
-          }}
-        />
-
-        <p
-          style={{
-            fontSize: 9,
-            color: "#999",
-            marginTop: 6,
-          }}
-        >
-          Scan QR
-        </p>
-      </div>
-
-      <div style={{ minWidth: 0 }}>
-        <p
-          style={{
-            fontSize: 12,
-            color: accent,
-            fontWeight: 800,
-            marginBottom: 5,
-          }}
-        >
-          {title}
-        </p>
-
-        <p
-          style={{
-            fontSize: 11,
-            color: "#777",
-            marginBottom: 8,
-          }}
-        >
-          Network: <strong>{network}</strong>
-        </p>
-
-        <p
-          style={{
-            fontSize: 10,
-            color: "#777",
-            marginBottom: 4,
-          }}
-        >
-          Wallet Address
-        </p>
-
-        <div
-          style={{
-            fontSize: 11,
-            fontFamily: "monospace",
-            color: "#222",
-            wordBreak: "break-all",
-            background: "#f7f7f8",
-            border: "1px solid #ececec",
-            borderRadius: 8,
-            padding: "10px 11px",
-          }}
-        >
-          {address}
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 const getProductImage = (item) => {
   if (!item) return "";
@@ -243,11 +81,8 @@ export const CheckoutFlow = ({
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState(false);
 
-  const [pay, setPay] = useState({
-    method: "USDT",
-    txRef: "",
-    cryptoType: "BTC",
-  });
+  const [pay] = useState({ method: "Bank Transfer" });
+  const bankConfigured = Boolean(BUYER_BANK_DETAILS.bankName && BUYER_BANK_DETAILS.accountNumber);
 
   const STEPS = ["Review", "Shipping", "Payment", "Confirm"];
 
@@ -1035,209 +870,38 @@ export const CheckoutFlow = ({
 
             <div
               style={{
-                display: "flex",
-                gap: 10,
-                marginBottom: 20,
+                background: "#ffffff",
+                border: "1px solid #e5e5e5",
+                borderRadius: 14,
+                padding: 18,
+                marginBottom: 16,
               }}
             >
-              {[
-                ["USDT", "USDT"],
-                ["Crypto", "₿ Crypto"],
-              ].map(([m, l]) => (
-                <button
-                  key={m}
-                  onClick={() =>
-                    setPay({
-                      ...pay,
-                      method: m,
-                      txRef: "",
-                    })
-                  }
-                  style={{
-                    flex: 1,
-                    padding: "10px 6px",
-                    borderRadius: 10,
-                    border: `2px solid ${
-                      pay.method === m
-                        ? "#fe2c55"
-                        : "#e5e5e5"
-                    }`,
-                    background:
-                      pay.method === m
-                        ? "rgba(254,44,85,0.08)"
-                        : "#ffffff",
-                    color:
-                      pay.method === m
-                        ? "#fe2c55"
-                        : "#666",
-                    fontSize: 11,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    fontWeight:
-                      pay.method === m ? 700 : 400,
-                  }}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-{/* USDT */}
-            {pay.method === "USDT" && (
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5e5",
-                  borderRadius: 14,
-                  padding: 20,
-                  marginBottom: 16,
-                }}
-              >
-                <DemoWarning />
-
-                <WalletCard
-                  title={PAYMENT_DETAILS.USDT.label}
-                  network={
-                    PAYMENT_DETAILS.USDT.network
-                  }
-                  address={
-                    PAYMENT_DETAILS.USDT.address
-                  }
-                  qr={PAYMENT_DETAILS.USDT.qr}
-                  accent="#16a34a"
-                />
-
-                <Field
-                  label="Your TxHash / Transaction ID"
-                  value={pay.txRef || ""}
-                  onChange={(v) =>
-                    setPay({
-                      ...pay,
-                      txRef: v,
-                    })
-                  }
-                  placeholder="e.g. DEMO-USDT-TX-123"
-                />
-              </div>
-            )}
-
-            {/* CRYPTO */}
-            {pay.method === "Crypto" && (
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e5e5",
-                  borderRadius: 14,
-                  padding: 20,
-                  marginBottom: 16,
-                }}
-              >
-                <DemoWarning />
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    marginBottom: 14,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {[
-                    [
-                      "BTC",
-                      "₿ Bitcoin",
-                      "#f7931a",
-                    ],
-                    [
-                      "ETH",
-                      "Ξ Ethereum",
-                      "#627eea",
-                    ],
-                    [
-                      "BNB",
-                      "⬡ BNB",
-                      "#f3ba2f",
-                    ],
-                  ].map(([c, l, col]) => (
-                    <button
-                      key={c}
-                      onClick={() =>
-                        setPay({
-                          ...pay,
-                          cryptoType: c,
-                          txRef: "",
-                        })
-                      }
-                      style={{
-                        flex: 1,
-                        padding: "8px",
-                        borderRadius: 8,
-                        border: `2px solid ${
-                          pay.cryptoType === c
-                            ? col
-                            : "#e5e5e5"
-                        }`,
-                        background:
-                          pay.cryptoType === c
-                            ? `${col}15`
-                            : "transparent",
-                        color:
-                          pay.cryptoType === c
-                            ? col
-                            : "#555",
-                        fontSize: 11,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {l}
-                    </button>
-                  ))}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:14}}>
+                <div>
+                  <p style={{fontWeight:800,fontSize:15,color:"#111",marginBottom:3}}>Bank Payment</p>
+                  <p style={{fontSize:11,color:"#777"}}>Transfer to the bank account below.</p>
                 </div>
-
-                <WalletCard
-                  title={
-                    PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
-                    ].label
-                  }
-                  network={
-                    PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
-                    ].network
-                  }
-                  address={
-                    PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
-                    ].address
-                  }
-                  qr={
-                    PAYMENT_DETAILS[
-                      pay.cryptoType || "BTC"
-                    ].qr
-                  }
-                  accent={
-                    pay.cryptoType === "ETH"
-                      ? "#627eea"
-                      : pay.cryptoType === "BNB"
-                      ? "#b88700"
-                      : "#f7931a"
-                  }
-                />
-
-                <Field
-                  label="Transaction Hash / TxID"
-                  value={pay.txRef || ""}
-                  onChange={(v) =>
-                    setPay({
-                      ...pay,
-                      txRef: v,
-                    })
-                  }
-                  placeholder="e.g. DEMO-CRYPTO-TX-123"
-                />
+                <span style={{padding:"5px 9px",borderRadius:999,background:"rgba(254,44,85,.08)",color:"#fe2c55",fontSize:10,fontWeight:800}}>BANK</span>
               </div>
-            )}
+
+              {bankConfigured ? (
+                <div style={{display:"grid",gap:10}}>
+                  <div style={{background:"#f7f7f8",border:"1px solid #ececec",borderRadius:10,padding:"11px 12px"}}>
+                    <p style={{fontSize:10,color:"#888",marginBottom:4}}>Bank Name</p>
+                    <p style={{fontSize:13,fontWeight:700,color:"#222"}}>{BUYER_BANK_DETAILS.bankName}</p>
+                  </div>
+                  <div style={{background:"#f7f7f8",border:"1px solid #ececec",borderRadius:10,padding:"11px 12px"}}>
+                    <p style={{fontSize:10,color:"#888",marginBottom:4}}>Account Number / IBAN</p>
+                    <p style={{fontSize:13,fontWeight:700,color:"#222",wordBreak:"break-all"}}>{BUYER_BANK_DETAILS.accountNumber}</p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{background:"#fff7ed",border:"1px solid #fed7aa",borderRadius:10,padding:"11px 12px",fontSize:11,color:"#9a3412"}}>
+                  Bank details are not configured yet.
+                </div>
+              )}
+            </div>
 
             {/* TOTAL */}
             <div
@@ -1329,7 +993,7 @@ export const CheckoutFlow = ({
             <Btn
               full
               loading={loading}
-              disabled={!pay.txRef?.trim()}
+              disabled={!bankConfigured}
               onClick={async () => {
                 setLoading(true);
 
@@ -1370,7 +1034,7 @@ export const CheckoutFlow = ({
                           shipping_fee: 0,
 
                           payment_method:
-                            pay.method,
+                            "Bank Transfer",
 
                           shipping_name:
                             addr.name,
@@ -1382,18 +1046,6 @@ export const CheckoutFlow = ({
                             addr.city,
                           rider_note:
                             addr.note || "",
-
-                          transaction_reference:
-                            pay.txRef,
-
-                          crypto_type:
-                            pay.method ===
-                            "Crypto"
-                              ? pay.cryptoType
-                              : pay.method ===
-                                "USDT"
-                              ? "USDT"
-                              : null,
                         }),
                       }
                     );

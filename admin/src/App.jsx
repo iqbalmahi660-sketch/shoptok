@@ -1000,17 +1000,17 @@ export default function AdminApp() {
             <div style={{ animation:"fadeUp .3s ease" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:10 }}>
                 <FilterTabs tabs={["all","pending","approved","completed","rejected"]} active={withdrawalFilter} onChange={setWithdrawalFilter} />
-                <div style={{ fontSize:12, color:"rgba(255,255,255,.45)" }}>Seller payout requests using saved bank details</div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,.45)" }}>Seller payout requests using saved USDT / Crypto wallet details</div>
               </div>
               <div className="card tcard" style={{ padding:0 }}>
                 <table>
-                  <thead><tr>{["Seller","Amount","Bank / Account","Status","Requested","Actions"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+                  <thead><tr>{["Seller","Amount","Payout Wallet","Status","Requested","Actions"].map(h=><th key={h}>{h}</th>)}</tr></thead>
                   <tbody>
                     {withdrawals.map(w=>(
                       <tr key={w.id} className="row">
                         <td><p style={{fontWeight:600}}>{w.shop_name||w.seller_name||"Seller"}</p><p style={{fontSize:11,color:"rgba(255,255,255,.35)"}}>{w.seller_email||""}</p></td>
                         <td><p style={{fontFamily:"'Syne',sans-serif",fontWeight:800,color:"#34d399"}}>${Number(w.amount||0).toFixed(2)}</p></td>
-                        <td><p style={{fontSize:12}}>{w.bank_name||"—"}</p><p style={{fontSize:11,color:"rgba(255,255,255,.45)"}}>{w.account_title||"—"} · {w.account_number||"—"}</p></td>
+                        <td><p style={{fontSize:12,fontWeight:600}}>{w.payout_method||"—"} · {w.payout_network||"—"}</p><p style={{fontSize:11,color:"rgba(255,255,255,.45)",wordBreak:"break-all"}}>{w.payout_wallet_address||"—"}</p></td>
                         <td><Badge status={w.status}/></td>
                         <td style={{fontSize:12,color:"rgba(255,255,255,.4)"}}>{new Date(w.requested_at).toLocaleString("en-PK")}</td>
                         <td><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1322,9 +1322,9 @@ export default function AdminApp() {
                   ["Shop Address",s.shop_address||"—"],
                   ["Category",s.category||"—"],
                   ["CNIC / ID",s.cnic||"—"],
-                  ["Bank",s.bank_name||"—"],
-                  ["Account Title",s.account_title||"—"],
-                  ["Account No.",s.account_number||"—"],
+                  ["Payout",s.payout_method||"—"],
+                  ["Network",s.payout_network||"—"],
+                  ["Wallet Address",s.payout_wallet_address||"—"],
                   ["Invite Code",s.invite_code||"—"],
                   ["Joined",s.created_at?new Date(s.created_at).toLocaleDateString():"—"],
                   ["Rating",s.rating||"New"]
@@ -1453,10 +1453,10 @@ function SettingsPanel({ addToast, buyers, sellers, products, orders, analytics 
     rows.push([]);
 
     rows.push(["=== SELLERS ==="]);
-    rows.push(["Shop Name","Owner","Email","Phone","City","Status","CNIC","Bank","Account No","Joined"]);
+    rows.push(["Shop Name","Owner","Email","Phone","City","Status","CNIC","Payout","Network","Wallet Address","Joined"]);
     sellers.forEach(s => rows.push([
       s.shop_name, s.owner_name, s.email, s.phone||"—", s.city||"—",
-      s.status, s.cnic||"—", s.bank_name||"—", s.account_number||"—",
+      s.status, s.cnic||"—", s.payout_method||"—", s.payout_network||"—", s.payout_wallet_address||"—",
       new Date(s.created_at).toLocaleDateString()
     ]));
     rows.push([]);

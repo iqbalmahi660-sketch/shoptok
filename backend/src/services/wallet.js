@@ -26,6 +26,20 @@ const ensureWalletSchema = () => {
     `);
 
     await query(`
+      ALTER TABLE sellers
+      ADD COLUMN IF NOT EXISTS payout_method VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS payout_network VARCHAR(80),
+      ADD COLUMN IF NOT EXISTS payout_wallet_address TEXT
+    `);
+
+    await query(`
+      ALTER TABLE withdrawal_requests
+      ADD COLUMN IF NOT EXISTS payout_method VARCHAR(20),
+      ADD COLUMN IF NOT EXISTS payout_network VARCHAR(80),
+      ADD COLUMN IF NOT EXISTS payout_wallet_address TEXT
+    `);
+
+    await query(`
       CREATE TABLE IF NOT EXISTS wallet_transactions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE,

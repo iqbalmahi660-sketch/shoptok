@@ -97,13 +97,15 @@ router.post('/', authUser, async (req, res) => {
   const {
     product_id,
     quantity = 1,
-    payment_method = 'COD',
+    payment_method = 'Bank Transfer',
     shipping_name,
     shipping_phone,
     shipping_address,
     shipping_city,
     rider_note,
   } = req.body;
+
+  const paymentMethod = 'Bank Transfer';
 
   try {
     if (!UUID_RE.test(String(product_id || ''))) {
@@ -199,7 +201,7 @@ router.post('/', authUser, async (req, res) => {
       supplierAmount,
       resellerProfit,
       platformFee,
-      payment_method,
+      paymentMethod,
       shipping_name,
       shipping_phone,
       shipping_address,

@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
         LIMIT 250
       `, [req.seller.id]),
       query(`
-        SELECT bank_name, account_title, account_number
+        SELECT payout_method, payout_network, payout_wallet_address
         FROM sellers WHERE id=$1
       `, [req.seller.id]),
       query(`
@@ -50,6 +50,34 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.put('/payout-account', async (req, res) => {
+  try {
+    await ensureWalletSchema();
+    const payoutMethod = String(req.body?.payout_method || '').trim();
+    const payoutNetwork = String(req.body?.payout_network || '').trim();
+    const walletAddress = String(req.body?.payout_wallet_address || '').trim();
+
+    if (!['USDT', 'Crypto'].includes(payoutMethod)) {
+      return res.status(400).json({ success: false, message: 'Choose USDT or Crypto' });
+    }
+    if (!payoutNetwork || !walletAddress) {
+      return res.status(400).json({ success: false, message: 'Network and wallet address are required' });
+    }
+
+    const { rows } = await query(`
+      UPDATE sellers
+      SET payout_method=$1, payout_network=$2, payout_wallet_address=$3
+      WHERE id=$4
+      RETURNING payout_method, payout_network, payout_wallet_address
+    `, [payoutMethod, payoutNetwork, walletAddress, req.seller.id]);
+
+    return res.json({ success: true, payout_account: rows[0] });
+  } catch (err) {
+    console.error('Payout account update failed:', err);
+    return res.status(500).json({ success: false, message: 'Failed to save payout account' });
+  }
+});
+
 router.post('/withdrawals', async (req, res) => {
   const amount = Number(req.body?.amount);
   const sellerNote = String(req.body?.note || '').trim() || null;
@@ -65,16 +93,16 @@ router.post('/withdrawals', async (req, res) => {
     await client.query('BEGIN');
 
     const sellerRes = await client.query(`
-      SELECT bank_name, account_title, account_number
+      SELECT payout_method, payout_network, payout_wallet_address
       FROM sellers WHERE id=$1 FOR UPDATE
     `, [req.seller.id]);
     const seller = sellerRes.rows[0];
 
-    if (!seller?.bank_name || !seller?.account_title || !seller?.account_number) {
+    if (!['USDT', 'Crypto'].includes(seller?.payout_method) || !seller?.payout_network || !seller?.payout_wallet_address) {
       await client.query('ROLLBACK');
       return res.status(400).json({
         success: false,
-        message: 'Please complete your bank/account details in your seller profile before withdrawing.',
+        message: 'Please save your USDT/Crypto payout details before withdrawing.',
       });
     }
 
@@ -98,15 +126,15 @@ router.post('/withdrawals', async (req, res) => {
 
     const withdrawalRes = await client.query(`
       INSERT INTO withdrawal_requests (
-        seller_id, amount, bank_name, account_title, account_number, seller_note
+        seller_id, amount, payout_method, payout_network, payout_wallet_address, seller_note
       ) VALUES ($1,$2,$3,$4,$5,$6)
       RETURNING *
     `, [
       req.seller.id,
       amount,
-      seller.bank_name,
-      seller.account_title,
-      seller.account_number,
+      seller.payout_method,
+      seller.payout_network,
+      seller.payout_wallet_address,
       sellerNote,
     ]);
     const withdrawal = withdrawalRes.rows[0];
@@ -122,9 +150,9 @@ router.post('/withdrawals', async (req, res) => {
       -Math.abs(amount),
       `Withdrawal request ${withdrawal.id}`,
       JSON.stringify({
-        bank_name: seller.bank_name,
-        account_title: seller.account_title,
-        account_number: seller.account_number,
+        payout_method: seller.payout_method,
+        payout_network: seller.payout_network,
+        payout_wallet_address: seller.payout_wallet_address,
       }),
     ]);
 

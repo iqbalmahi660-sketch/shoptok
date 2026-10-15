@@ -64,6 +64,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [sellerVideos,setSellerVideos] = useState([]);
  const [walletData,setWalletData] = useState({summary:{available_balance:0,pending_balance:0,total_earnings:0,withdrawn:0},transactions:[],withdrawals:[],payout_account:null});
  const [walletLoading,setWalletLoading] = useState(false);
+ const [payoutSaving,setPayoutSaving] = useState(false);
+ const [payoutForm,setPayoutForm] = useState({payout_method:"USDT",payout_network:"",payout_wallet_address:""});
  const [fundFilter,setFundFilter] = useState("All");
  const [showUploadVideo,setShowUploadVideo] = useState(false);
  const [buyerOrders,setBO] = useState([]);
@@ -469,6 +471,12 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  withdrawals:Array.isArray(data.withdrawals)?data.withdrawals:[],
  payout_account:data.payout_account||null,
  });
+ const acct=data.payout_account||{};
+ setPayoutForm({
+ payout_method:acct.payout_method||"USDT",
+ payout_network:acct.payout_network||"",
+ payout_wallet_address:acct.payout_wallet_address||"",
+ });
  }catch(e){console.log("Wallet load failed",e);}
  finally{setWalletLoading(false);}
  };
@@ -480,12 +488,34 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  return()=>clearInterval(interval);
  },[user]);
 
+ const savePayoutAccount=async()=>{
+ const method=String(payoutForm.payout_method||"").trim();
+ const network=String(payoutForm.payout_network||"").trim();
+ const address=String(payoutForm.payout_wallet_address||"").trim();
+ if(!["USDT","Crypto"].includes(method)){showToast("Choose USDT or Crypto");return;}
+ if(!network||!address){showToast("Network and wallet address are required");return;}
+ try{
+ setPayoutSaving(true);
+ const token=localStorage.getItem("shopToken");
+ const res=await fetch(`${API}/wallet/payout-account`,{
+ method:"PUT",
+ headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},
+ body:JSON.stringify({payout_method:method,payout_network:network,payout_wallet_address:address}),
+ });
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.message||"Could not save payout account");
+ showToast("Payout wallet saved");
+ await loadWalletData();
+ }catch(e){showToast(e.message||"Could not save payout account");}
+ finally{setPayoutSaving(false);}
+ };
+
  const requestWithdrawal=async()=>{
  const available=Number(walletData.summary?.available_balance)||0;
  if(available<=0){showToast("No available balance to withdraw");return;}
  const account=walletData.payout_account;
- if(!account?.bank_name||!account?.account_title||!account?.account_number){
- showToast("Complete your bank/account details in Store Setting before withdrawing");return;
+ if(!account?.payout_method||!account?.payout_network||!account?.payout_wallet_address){
+ showToast("Save your USDT/Crypto payout details before withdrawing");return;
  }
  const raw=window.prompt(`Available balance: $${available.toFixed(2)}\nEnter withdrawal amount:`);
  if(raw===null)return;
@@ -1583,7 +1613,18 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div>
  <button onClick={requestWithdrawal} disabled={walletLoading||Number(walletData.summary?.available_balance||0)<=0} style={{width:"100%",padding:"14px",background:Number(walletData.summary?.available_balance||0)>0?"#fe2c55":"#ccc",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:Number(walletData.summary?.available_balance||0)>0?"pointer":"not-allowed",marginBottom:12}}>Withdraw</button>
- {walletData.payout_account&&<div style={{background:"#fff",border:"1px solid #e6e6e6",borderRadius:12,padding:14,marginBottom:16}}><p style={{fontWeight:700,fontSize:12,marginBottom:6}}>Payout Account</p><p style={{fontSize:12,color:"#555"}}>{walletData.payout_account.bank_name||"Bank not set"} · {walletData.payout_account.account_title||"Account title not set"}</p><p style={{fontSize:12,color:"#555"}}>{walletData.payout_account.account_number||"Account number not set"}</p></div>}
+ <div style={{background:"#fff",border:"1px solid #e6e6e6",borderRadius:12,padding:14,marginBottom:16}}>
+ <p style={{fontWeight:800,fontSize:13,marginBottom:3}}>USDT / Crypto Payout</p>
+ <p style={{fontSize:11,color:"#777",marginBottom:12}}>Save the wallet where approved withdrawals should be sent.</p>
+ <div style={{display:"grid",gridTemplateColumns:"120px 1fr",gap:10,marginBottom:10}}>
+ <select value={payoutForm.payout_method} onChange={e=>setPayoutForm({...payoutForm,payout_method:e.target.value})} style={{padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,background:"#fff",fontFamily:"inherit"}}>
+ <option value="USDT">USDT</option><option value="Crypto">Crypto</option>
+ </select>
+ <input value={payoutForm.payout_network} onChange={e=>setPayoutForm({...payoutForm,payout_network:e.target.value})} placeholder="Network" style={{padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,fontFamily:"inherit",minWidth:0}}/>
+ </div>
+ <input value={payoutForm.payout_wallet_address} onChange={e=>setPayoutForm({...payoutForm,payout_wallet_address:e.target.value})} placeholder="Wallet Address" style={{width:"100%",padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,fontFamily:"inherit",marginBottom:10,boxSizing:"border-box"}}/>
+ <button onClick={savePayoutAccount} disabled={payoutSaving} style={{width:"100%",padding:"10px",border:"none",borderRadius:9,background:"#111",color:"#fff",fontWeight:700,cursor:"pointer"}}>{payoutSaving?"Saving…":"Save Payout Wallet"}</button>
+ </div>
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><p style={{fontWeight:700,color:"#fe2c55"}}>Transaction History</p>{walletLoading&&<span style={{fontSize:11,color:"#777"}}>Updating…</span>}</div>
  {walletData.transactions.length===0?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{color:"#555",fontSize:13}}>No wallet transactions yet</p></div>:
  <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",minWidth:620}}><thead><tr>{["Date","Type","Order / Ref","Amount","Status"].map(h=><th key={h} style={{textAlign:"left",padding:"9px 8px",fontSize:11,color:"#777",borderBottom:"1px solid #eee"}}>{h}</th>)}</tr></thead><tbody>{walletData.transactions.map(tx=><tr key={tx.id}><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{new Date(tx.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short"})}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{walletTypeLabel(tx.transaction_type)}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1",color:"#555"}}>{tx.order_number||tx.withdrawal_id?.slice(0,8)||"—"}</td><td style={{padding:"10px 8px",fontSize:12,fontWeight:700,borderBottom:"1px solid #f1f1f1",color:Number(tx.amount)<0?"#fe2c55":"#16a34a"}}>{tx.transaction_type==="platform_fee"?`$${Number(tx.amount||0).toFixed(2)}`:walletMoney(tx.amount)}</td><td style={{padding:"10px 8px",fontSize:12,borderBottom:"1px solid #f1f1f1"}}>{walletStatusLabel(tx.status)}</td></tr>)}</tbody></table></div>}
