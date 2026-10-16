@@ -11,7 +11,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 const AuthHeader = ({ go }) => (
   <div style={{position:"sticky",top:0,zIndex:1000,height:72,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.08)",fontFamily:"Poppins, sans-serif"}}>
     <button onClick={()=>go(S.APP)} style={{display:"flex",alignItems:"center",background:"none",border:"none",padding:0,cursor:"pointer"}} aria-label="Go to shop">
-      <img src="/logo.png" alt="TokZoo" style={{height:30,width:"auto",display:"block"}} />
+      <img src="/logo.png" alt="TokZoo" style={{display:"block",height:64,width:"auto",maxWidth:170,objectFit:"contain",transform:"scale(1.85)",transformOrigin:"left center"}} />
     </button>
     <button onClick={()=>go(S.APP)} style={{background:"none",border:"none",fontFamily:"inherit",fontSize:13,fontWeight:600,color:"#111",cursor:"pointer"}}>Shop</button>
   </div>
