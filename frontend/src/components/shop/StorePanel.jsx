@@ -1,5 +1,15 @@
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+
 export const StorePanel=({store,detail,onClose,addToCart,showToast,setSP})=>{
  const products=Array.isArray(detail?.products)?detail.products:[];
+
+ useEffect(()=>{
+   const previousOverflow=document.body.style.overflow;
+   document.body.style.overflow="hidden";
+   return()=>{document.body.style.overflow=previousOverflow;};
+ },[]);
+
  const normalize=(p)=>({
    ...p,
    price:Number(p.price)||0,
@@ -13,14 +23,14 @@ export const StorePanel=({store,detail,onClose,addToCart,showToast,setSP})=>{
    img:p.img||(Array.isArray(p.images)&&p.images.length?p.images[0]:(p.image_url||p.image||p.thumbnail||null)),
  });
 
- return(
- <div style={{position:"fixed",top:72,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:500,overflowY:"auto",animation:"fadeUp 0.3s ease"}}>
-   <div style={{position:"sticky",top:0,zIndex:10,background:"rgba(255,255,255,0.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(0,0,0,0.07)",padding:"13px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+ const panel=(
+ <div style={{position:"fixed",top:72,right:0,bottom:0,left:0,background:"#f7f7f8",zIndex:900,overflowY:"auto",overscrollBehavior:"contain"}}>
+   <div style={{position:"sticky",top:0,zIndex:20,background:"#fff",borderBottom:"1px solid rgba(0,0,0,0.07)",padding:"13px 24px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
      <button onClick={onClose} style={{width:36,height:36,borderRadius:"50%",background:"rgba(0,0,0,0.07)",border:"none",color:"#111",cursor:"pointer",fontSize:17}}>←</button>
      <span style={{fontWeight:700,fontSize:14}}>Store</span><div style={{width:36}}/>
    </div>
 
-   <div style={{maxWidth:1000,margin:"0 auto",paddingBottom:80}}>
+   <div style={{maxWidth:1000,margin:"0 auto",paddingBottom:80,minHeight:"100%",background:"#f7f7f8"}}>
      <div style={{background:"linear-gradient(135deg,#fe2c55,#ff6b35)",padding:"44px 24px",textAlign:"center",position:"relative",overflow:"hidden"}}>
        <div style={{width:84,height:84,borderRadius:22,overflow:"hidden",background:"rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:34,fontWeight:800,color:"#fff",margin:"0 auto 14px",border:"3px solid rgba(255,255,255,.45)"}}>
          {store.profile_img?<img src={store.profile_img} alt={store.shop_name||"Store"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:String(store.shop_name||"S").charAt(0).toUpperCase()}
@@ -67,6 +77,8 @@ export const StorePanel=({store,detail,onClose,addToCart,showToast,setSP})=>{
    </div>
  </div>
  );
+
+ return createPortal(panel,document.body);
 };
 
 export default StorePanel;
