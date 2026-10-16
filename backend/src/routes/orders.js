@@ -217,17 +217,33 @@ router.post('/', authUser, async (req, res) => {
   }
 });
 
-// ─── ORIGINAL SELLER / FULFILLMENT ORDERS ────────────────────────────────────
+// ─── SELLER SHOP ORDERS ──────────────────────────────────────────────────────
+// Direct-sale orders belong to the product owner. Reseller-sale orders are shown
+// to both the reseller (storefront/order owner) and original supplier
+// (fulfilment reference), but only the reseller can confirm/reject a reseller sale.
 router.get('/seller', authSeller, async (req, res) => {
   try {
     const { rows } = await query(`
       SELECT
         o.*,
+        p.images[1] AS product_image,
         CASE WHEN o.reseller_seller_id IS NULL THEN false ELSE true END AS is_reseller_order,
-        rs.shop_name AS reseller_shop_name
+        rs.shop_name AS reseller_shop_name,
+        os.shop_name AS supplier_shop_name,
+        CASE
+          WHEN o.reseller_seller_id = $1::uuid THEN 'reseller'
+          ELSE 'supplier'
+        END AS order_role,
+        CASE
+          WHEN o.reseller_seller_id IS NOT NULL THEN o.reseller_seller_id = $1::uuid
+          ELSE o.seller_id = $1::uuid
+        END AS can_confirm
       FROM orders o
+      LEFT JOIN products p ON p.id=o.product_id
       LEFT JOIN sellers rs ON rs.id=o.reseller_seller_id
-      WHERE o.seller_id=$1
+      LEFT JOIN sellers os ON os.id=o.original_seller_id
+      WHERE o.seller_id=$1::uuid
+         OR o.reseller_seller_id=$1::uuid
       ORDER BY o.created_at DESC
     `, [req.seller.id]);
 
@@ -240,7 +256,7 @@ router.get('/seller', authSeller, async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: 'Failed',
+      message: err.message || 'Failed to load seller orders',
     });
   }
 });
@@ -284,24 +300,45 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
       });
     }
 
-    const { rows } = await query(`
-      UPDATE orders
-      SET status=$1,
-          cancelled_reason = CASE
-            WHEN $1='cancelled' THEN COALESCE($4, 'Rejected by seller')
-            ELSE cancelled_reason
-          END,
-          updated_at=NOW()
-      WHERE id=$2
-        AND seller_id=$3
-        AND status='pending'
-      RETURNING *
-    `, [status, req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
+    // For reseller sales, the reseller/storefront seller owns confirmation.
+    // For direct sales, the original product seller owns confirmation.
+    let result;
+    if (status === 'confirmed') {
+      result = await query(`
+        UPDATE orders
+        SET status='confirmed',
+            updated_at=NOW()
+        WHERE id=$1::uuid
+          AND status='pending'
+          AND (
+            (reseller_seller_id IS NOT NULL AND reseller_seller_id=$2::uuid)
+            OR
+            (reseller_seller_id IS NULL AND seller_id=$2::uuid)
+          )
+        RETURNING *
+      `, [req.params.id, req.seller.id]);
+    } else {
+      result = await query(`
+        UPDATE orders
+        SET status='cancelled',
+            cancelled_reason=COALESCE($3::text, 'Rejected by seller'),
+            updated_at=NOW()
+        WHERE id=$1::uuid
+          AND status='pending'
+          AND (
+            (reseller_seller_id IS NOT NULL AND reseller_seller_id=$2::uuid)
+            OR
+            (reseller_seller_id IS NULL AND seller_id=$2::uuid)
+          )
+        RETURNING *
+      `, [req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
+    }
 
+    const rows = result.rows;
     if (!rows[0]) {
       return res.status(409).json({
         success: false,
-        message: 'Only pending orders can be confirmed or rejected by the seller',
+        message: 'This order is not pending or it does not belong to this seller account',
       });
     }
 
@@ -319,12 +356,17 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
 
     return res.json({
       success: true,
-      message: status === 'confirmed' ? 'Order confirmed. Admin can now manage delivery status.' : 'Order rejected and cancelled.',
+      message: status === 'confirmed'
+        ? 'Order confirmed. Admin can now manage delivery status.'
+        : 'Order rejected and cancelled.',
       order: rows[0],
     });
   } catch (err) {
     console.error('Seller order status update failed:', err);
-    return res.status(500).json({ success: false, message: 'Failed to update order status' });
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to update order status',
+    });
   }
 });
 
