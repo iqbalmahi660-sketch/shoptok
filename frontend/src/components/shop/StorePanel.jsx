@@ -131,9 +131,31 @@ export const StorePanel = ({ store, detail, onClose, addToCart, showToast, setSP
             )}
           </div>
 
-          <h1 style={{ fontWeight: 800, fontSize: 28, marginBottom: 7, color: "#fff" }}>
-            {currentStore.shop_name}
-          </h1>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 7, flexWrap: "wrap" }}>
+            <h1 style={{ fontWeight: 800, fontSize: 28, margin: 0, color: "#fff" }}>
+              {currentStore.shop_name}
+            </h1>
+            {currentStore.is_verified && (
+              <span
+                title="Verified Seller"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "4px 9px",
+                  borderRadius: 999,
+                  background: "#fff",
+                  color: "#1677ff",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  boxShadow: "0 2px 8px rgba(0,0,0,.10)",
+                }}
+              >
+                <span style={{ fontSize: 13 }}>✓</span> Verified Seller
+              </span>
+            )}
+          </div>
           <p
             style={{
               fontSize: 13,

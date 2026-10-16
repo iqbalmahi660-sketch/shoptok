@@ -811,6 +811,12 @@ router.get('/stores', async (req, res) => {
         u.name AS owner_name,
         (
           SELECT COUNT(*)::int
+          FROM products vp
+          WHERE vp.seller_id=s.id
+            AND vp.status='live'
+        ) >= 3 AS is_verified,
+        (
+          SELECT COUNT(*)::int
           FROM products p
           WHERE p.seller_id=s.id
             AND p.status='live'
@@ -853,7 +859,13 @@ router.get('/stores/:id', async (req, res) => {
         s.rating,
         s.created_at,
         u.profile_img,
-        u.name AS owner_name
+        u.name AS owner_name,
+        (
+          SELECT COUNT(*)::int
+          FROM products vp
+          WHERE vp.seller_id=s.id
+            AND vp.status='live'
+        ) >= 3 AS is_verified
       FROM sellers s
       JOIN users u ON u.id=s.user_id
       WHERE s.id=$1
