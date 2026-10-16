@@ -272,21 +272,175 @@ const cleanupInvalidSellerWalletRows = async (sellerId) => {
 
 const backfillSellerOrders = async (sellerId) => {
   await ensureWalletSchema();
+
+  // Clear legacy rows that were attached to the wrong seller before rebuilding.
   await cleanupInvalidSellerWalletRows(sellerId);
 
-  const { rows } = await query(`
-    SELECT * FROM orders
-    WHERE COALESCE(original_seller_id, seller_id)=$1::uuid
-       OR reseller_seller_id=$1::uuid
-    ORDER BY created_at ASC
+  // Rebuild this seller's supplier/direct-sale ledger in one SQL operation.
+  // This also covers historical orders created before supplier_amount existed by
+  // falling back to total_amount when the stored supplier amount is null/zero.
+  await query(`
+    INSERT INTO wallet_transactions (
+      seller_id, order_id, transaction_type, amount, status,
+      affects_balance, description, metadata, available_at
+    )
+    SELECT
+      COALESCE(o.original_seller_id, o.seller_id) AS seller_id,
+      o.id AS order_id,
+      CASE WHEN o.reseller_seller_id IS NULL THEN 'product_sale' ELSE 'supplier_sale' END AS transaction_type,
+      CASE
+        WHEN o.reseller_seller_id IS NULL THEN COALESCE(o.total_amount, 0)::numeric
+        ELSE COALESCE(NULLIF(o.supplier_amount, 0), o.total_amount, 0)::numeric
+      END AS amount,
+      CASE
+        WHEN LOWER(COALESCE(o.status,''))='delivered' THEN 'available'
+        WHEN LOWER(COALESCE(o.status,'')) IN ('processing','shipped') THEN 'pending'
+        WHEN LOWER(COALESCE(o.status,'')) IN ('cancelled','refunded') THEN 'reversed'
+        ELSE 'held'
+      END AS status,
+      TRUE AS affects_balance,
+      CASE
+        WHEN o.reseller_seller_id IS NULL THEN 'Product sale ' || COALESCE(o.order_number,'')
+        ELSE 'Supplier earning from ' || COALESCE(o.order_number,'')
+      END AS description,
+      jsonb_build_object(
+        'order_number', o.order_number,
+        'product_title', o.product_title,
+        'total_amount', COALESCE(o.total_amount,0),
+        'supplier_amount', CASE
+          WHEN o.reseller_seller_id IS NULL THEN COALESCE(o.total_amount,0)
+          ELSE COALESCE(NULLIF(o.supplier_amount,0),o.total_amount,0)
+        END,
+        'reseller_profit', COALESCE(o.reseller_profit,0),
+        'platform_fee', COALESCE(o.platform_fee,0),
+        'is_reseller_order', (o.reseller_seller_id IS NOT NULL)
+      ) AS metadata,
+      CASE WHEN LOWER(COALESCE(o.status,''))='delivered' THEN COALESCE(o.updated_at,o.created_at,NOW()) ELSE NULL END AS available_at
+    FROM orders o
+    WHERE COALESCE(o.original_seller_id, o.seller_id)=$1::uuid
+      AND COALESCE(o.total_amount,0) > 0
+    ON CONFLICT (seller_id, order_id, transaction_type) WHERE order_id IS NOT NULL
+    DO UPDATE SET
+      amount=EXCLUDED.amount,
+      status=EXCLUDED.status,
+      affects_balance=EXCLUDED.affects_balance,
+      description=EXCLUDED.description,
+      metadata=EXCLUDED.metadata,
+      available_at=CASE
+        WHEN EXCLUDED.status='available' THEN COALESCE(wallet_transactions.available_at, EXCLUDED.available_at, NOW())
+        ELSE NULL
+      END,
+      updated_at=NOW()
   `, [sellerId]);
 
-  for (const order of rows) {
-    await syncOrderWallet(order);
-  }
+  // Rebuild reseller-profit ledger. If an older reseller order has a zero/null
+  // reseller_profit, derive it from customer total - supplier amount - platform fee.
+  await query(`
+    INSERT INTO wallet_transactions (
+      seller_id, order_id, transaction_type, amount, status,
+      affects_balance, description, metadata, available_at
+    )
+    SELECT
+      o.reseller_seller_id AS seller_id,
+      o.id AS order_id,
+      'reseller_profit' AS transaction_type,
+      GREATEST(
+        COALESCE(
+          NULLIF(o.reseller_profit,0),
+          COALESCE(o.total_amount,0) - COALESCE(NULLIF(o.supplier_amount,0),0) - COALESCE(o.platform_fee,0)
+        ),
+        0
+      )::numeric AS amount,
+      CASE
+        WHEN LOWER(COALESCE(o.status,''))='delivered' THEN 'available'
+        WHEN LOWER(COALESCE(o.status,'')) IN ('processing','shipped') THEN 'pending'
+        WHEN LOWER(COALESCE(o.status,'')) IN ('cancelled','refunded') THEN 'reversed'
+        ELSE 'held'
+      END AS status,
+      TRUE AS affects_balance,
+      'Reseller profit from ' || COALESCE(o.order_number,'') AS description,
+      jsonb_build_object(
+        'order_number', o.order_number,
+        'product_title', o.product_title,
+        'total_amount', COALESCE(o.total_amount,0),
+        'supplier_amount', COALESCE(NULLIF(o.supplier_amount,0),0),
+        'reseller_profit', GREATEST(
+          COALESCE(
+            NULLIF(o.reseller_profit,0),
+            COALESCE(o.total_amount,0) - COALESCE(NULLIF(o.supplier_amount,0),0) - COALESCE(o.platform_fee,0)
+          ),
+          0
+        ),
+        'platform_fee', COALESCE(o.platform_fee,0),
+        'is_reseller_order', TRUE
+      ) AS metadata,
+      CASE WHEN LOWER(COALESCE(o.status,''))='delivered' THEN COALESCE(o.updated_at,o.created_at,NOW()) ELSE NULL END AS available_at
+    FROM orders o
+    WHERE o.reseller_seller_id=$1::uuid
+      AND GREATEST(
+        COALESCE(
+          NULLIF(o.reseller_profit,0),
+          COALESCE(o.total_amount,0) - COALESCE(NULLIF(o.supplier_amount,0),0) - COALESCE(o.platform_fee,0)
+        ),
+        0
+      ) > 0
+    ON CONFLICT (seller_id, order_id, transaction_type) WHERE order_id IS NOT NULL
+    DO UPDATE SET
+      amount=EXCLUDED.amount,
+      status=EXCLUDED.status,
+      affects_balance=EXCLUDED.affects_balance,
+      description=EXCLUDED.description,
+      metadata=EXCLUDED.metadata,
+      available_at=CASE
+        WHEN EXCLUDED.status='available' THEN COALESCE(wallet_transactions.available_at, EXCLUDED.available_at, NOW())
+        ELSE NULL
+      END,
+      updated_at=NOW()
+  `, [sellerId]);
 
-  // Run once more after backfill so legacy rows from older wallet versions
-  // cannot survive or reappear in this seller's ledger.
+  // Platform-fee records are informational only and never change seller balance.
+  await query(`
+    INSERT INTO wallet_transactions (
+      seller_id, order_id, transaction_type, amount, status,
+      affects_balance, description, metadata, available_at
+    )
+    SELECT
+      o.reseller_seller_id,
+      o.id,
+      'platform_fee',
+      COALESCE(o.platform_fee,0)::numeric,
+      CASE
+        WHEN LOWER(COALESCE(o.status,''))='delivered' THEN 'available'
+        WHEN LOWER(COALESCE(o.status,'')) IN ('processing','shipped') THEN 'pending'
+        WHEN LOWER(COALESCE(o.status,'')) IN ('cancelled','refunded') THEN 'reversed'
+        ELSE 'held'
+      END,
+      FALSE,
+      'TokZoo platform fee for ' || COALESCE(o.order_number,''),
+      jsonb_build_object(
+        'order_number', o.order_number,
+        'product_title', o.product_title,
+        'platform_fee', COALESCE(o.platform_fee,0),
+        'is_reseller_order', TRUE
+      ),
+      CASE WHEN LOWER(COALESCE(o.status,''))='delivered' THEN COALESCE(o.updated_at,o.created_at,NOW()) ELSE NULL END
+    FROM orders o
+    WHERE o.reseller_seller_id=$1::uuid
+      AND COALESCE(o.platform_fee,0) > 0
+    ON CONFLICT (seller_id, order_id, transaction_type) WHERE order_id IS NOT NULL
+    DO UPDATE SET
+      amount=EXCLUDED.amount,
+      status=EXCLUDED.status,
+      affects_balance=FALSE,
+      description=EXCLUDED.description,
+      metadata=EXCLUDED.metadata,
+      available_at=CASE
+        WHEN EXCLUDED.status='available' THEN COALESCE(wallet_transactions.available_at, EXCLUDED.available_at, NOW())
+        ELSE NULL
+      END,
+      updated_at=NOW()
+  `, [sellerId]);
+
   await cleanupInvalidSellerWalletRows(sellerId);
 };
 

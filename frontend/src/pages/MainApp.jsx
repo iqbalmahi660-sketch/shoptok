@@ -232,7 +232,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
      showToast(e.message||"Could not load store");
    }
  };
- const totalRev=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.total)||0),0);
+ const deliveredOrderRevenue=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.total)||0),0);
+ const totalRev=Number(walletData.summary?.total_earnings)>0?Number(walletData.summary.total_earnings):deliveredOrderRevenue;
  const activePrds=sellerProds.filter(p=>p.status==="active"||p.status==="live").length;
  const pendingPrds=sellerProds.filter(p=>p.status==="pending").length;
  const pendingOrd=sellerOrders.filter(o=>o.status==="Processing").length;
