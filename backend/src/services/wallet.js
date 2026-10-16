@@ -444,35 +444,137 @@ const backfillSellerOrders = async (sellerId) => {
   await cleanupInvalidSellerWalletRows(sellerId);
 };
 
-const getWalletSummary = async (sellerId) => {
+const getSellerOrderTransactions = async (sellerId) => {
   await ensureWalletSchema();
   const { rows } = await query(`
-    SELECT
-      COALESCE(SUM(CASE
-        WHEN affects_balance=true AND status='available' THEN amount
-        WHEN transaction_type='withdrawal' AND affects_balance=true AND status IN ('pending','approved','completed') THEN amount
-        ELSE 0 END),0)::numeric AS available_balance,
-      COALESCE(SUM(CASE
-        WHEN affects_balance=true AND amount > 0 AND status='pending' THEN amount
-        ELSE 0 END),0)::numeric AS pending_balance,
-      COALESCE(SUM(CASE
-        WHEN affects_balance=true AND amount > 0 AND status IN ('pending','available','completed') THEN amount
-        ELSE 0 END),0)::numeric AS total_earnings,
-      COALESCE(ABS(SUM(CASE
-        WHEN transaction_type='withdrawal' AND status='completed' THEN amount
-        ELSE 0 END)),0)::numeric AS withdrawn
-    FROM wallet_transactions wt
-    LEFT JOIN orders o ON o.id=wt.order_id
-    WHERE wt.seller_id=$1::uuid
-      AND ${walletOrderOwnershipSql('wt', 'o')}
-  `, [sellerId]);
+    WITH direct_or_supplier AS (
+      SELECT
+        ('order-' || o.id::text || '-' || CASE WHEN o.reseller_seller_id IS NULL THEN 'product_sale' ELSE 'supplier_sale' END) AS id,
+        o.id AS order_id,
+        NULL::uuid AS withdrawal_id,
+        CASE WHEN o.reseller_seller_id IS NULL THEN 'product_sale' ELSE 'supplier_sale' END AS transaction_type,
+        CASE
+          WHEN o.reseller_seller_id IS NULL THEN COALESCE(o.total_amount,0)::numeric
+          ELSE COALESCE(NULLIF(o.supplier_amount,0),o.total_amount,0)::numeric
+        END AS amount,
+        CASE
+          WHEN LOWER(COALESCE(o.status,''))='delivered' THEN 'available'
+          WHEN LOWER(COALESCE(o.status,'')) IN ('processing','shipped') THEN 'pending'
+          WHEN LOWER(COALESCE(o.status,'')) IN ('cancelled','refunded') THEN 'reversed'
+          ELSE 'held'
+        END AS status,
+        TRUE AS affects_balance,
+        CASE
+          WHEN o.reseller_seller_id IS NULL THEN 'Product sale ' || COALESCE(o.order_number,'')
+          ELSE 'Supplier earning from ' || COALESCE(o.order_number,'')
+        END AS description,
+        jsonb_build_object(
+          'order_number',o.order_number,
+          'product_title',o.product_title,
+          'total_amount',COALESCE(o.total_amount,0),
+          'supplier_amount',COALESCE(NULLIF(o.supplier_amount,0),o.total_amount,0),
+          'reseller_profit',COALESCE(o.reseller_profit,0),
+          'platform_fee',COALESCE(o.platform_fee,0),
+          'is_reseller_order',(o.reseller_seller_id IS NOT NULL)
+        ) AS metadata,
+        CASE WHEN LOWER(COALESCE(o.status,''))='delivered' THEN COALESCE(o.updated_at,o.created_at,NOW()) ELSE NULL END AS available_at,
+        o.created_at,
+        o.updated_at,
+        o.order_number
+      FROM orders o
+      WHERE o.seller_id=$1::uuid
+        AND COALESCE(o.total_amount,0)>0
+    ), reseller_profit_rows AS (
+      SELECT
+        ('order-' || o.id::text || '-reseller_profit') AS id,
+        o.id AS order_id,
+        NULL::uuid AS withdrawal_id,
+        'reseller_profit' AS transaction_type,
+        GREATEST(
+          COALESCE(
+            NULLIF(o.reseller_profit,0),
+            COALESCE(o.total_amount,0)-COALESCE(NULLIF(o.supplier_amount,0),0)-COALESCE(o.platform_fee,0)
+          ),0
+        )::numeric AS amount,
+        CASE
+          WHEN LOWER(COALESCE(o.status,''))='delivered' THEN 'available'
+          WHEN LOWER(COALESCE(o.status,'')) IN ('processing','shipped') THEN 'pending'
+          WHEN LOWER(COALESCE(o.status,'')) IN ('cancelled','refunded') THEN 'reversed'
+          ELSE 'held'
+        END AS status,
+        TRUE AS affects_balance,
+        'Reseller profit from ' || COALESCE(o.order_number,'') AS description,
+        jsonb_build_object(
+          'order_number',o.order_number,
+          'product_title',o.product_title,
+          'total_amount',COALESCE(o.total_amount,0),
+          'supplier_amount',COALESCE(NULLIF(o.supplier_amount,0),0),
+          'reseller_profit',GREATEST(
+            COALESCE(
+              NULLIF(o.reseller_profit,0),
+              COALESCE(o.total_amount,0)-COALESCE(NULLIF(o.supplier_amount,0),0)-COALESCE(o.platform_fee,0)
+            ),0
+          ),
+          'platform_fee',COALESCE(o.platform_fee,0),
+          'is_reseller_order',TRUE
+        ) AS metadata,
+        CASE WHEN LOWER(COALESCE(o.status,''))='delivered' THEN COALESCE(o.updated_at,o.created_at,NOW()) ELSE NULL END AS available_at,
+        o.created_at,
+        o.updated_at,
+        o.order_number
+      FROM orders o
+      WHERE o.reseller_seller_id=$1::uuid
+        AND GREATEST(
+          COALESCE(
+            NULLIF(o.reseller_profit,0),
+            COALESCE(o.total_amount,0)-COALESCE(NULLIF(o.supplier_amount,0),0)-COALESCE(o.platform_fee,0)
+          ),0
+        )>0
+    )
+    SELECT * FROM direct_or_supplier
+    UNION ALL
+    SELECT * FROM reseller_profit_rows
+    ORDER BY created_at DESC
+  `,[sellerId]);
+  return rows;
+};
 
-  const r = rows[0] || {};
+const getWalletSummary = async (sellerId) => {
+  await ensureWalletSchema();
+
+  const txs = await getSellerOrderTransactions(sellerId);
+  let available = 0;
+  let pending = 0;
+  let totalEarnings = 0;
+
+  for (const tx of txs) {
+    const amount = Number(tx.amount || 0);
+    if (!Number.isFinite(amount) || amount <= 0) continue;
+    if (tx.status === 'available') {
+      available += amount;
+      totalEarnings += amount;
+    } else if (tx.status === 'pending') {
+      pending += amount;
+      totalEarnings += amount;
+    }
+  }
+
+  const { rows } = await query(`
+    SELECT
+      COALESCE(SUM(CASE WHEN status IN ('pending','approved','completed') THEN amount ELSE 0 END),0)::numeric AS reserved_or_paid,
+      COALESCE(SUM(CASE WHEN status='completed' THEN amount ELSE 0 END),0)::numeric AS withdrawn
+    FROM withdrawal_requests
+    WHERE seller_id=$1::uuid
+  `,[sellerId]);
+
+  const reservedOrPaid = Number(rows[0]?.reserved_or_paid || 0);
+  const withdrawn = Number(rows[0]?.withdrawn || 0);
+
   return {
-    available_balance: Number(r.available_balance || 0),
-    pending_balance: Number(r.pending_balance || 0),
-    total_earnings: Number(r.total_earnings || 0),
-    withdrawn: Number(r.withdrawn || 0),
+    available_balance: Math.max(0, available - reservedOrPaid),
+    pending_balance: pending,
+    total_earnings: totalEarnings,
+    withdrawn,
   };
 };
 
@@ -481,6 +583,7 @@ module.exports = {
   syncOrderWallet,
   backfillSellerOrders,
   getWalletSummary,
+  getSellerOrderTransactions,
   cleanupInvalidSellerWalletRows,
   walletOrderOwnershipSql,
 };

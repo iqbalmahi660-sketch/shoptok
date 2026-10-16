@@ -5,6 +5,7 @@ const {
   ensureWalletSchema,
   backfillSellerOrders,
   getWalletSummary,
+  getSellerOrderTransactions,
   cleanupInvalidSellerWalletRows,
 } = require('../services/wallet');
 
@@ -14,53 +15,58 @@ router.use(authSeller);
 router.get('/', async (req, res) => {
   try {
     await ensureWalletSchema();
-    await backfillSellerOrders(req.seller.id);
-    await cleanupInvalidSellerWalletRows(req.seller.id);
 
-    const [summary, txRes, sellerRes, withdrawalRes] = await Promise.all([
+    // Wallet display is derived directly from real orders so it cannot go empty
+    // merely because a historical ledger backfill failed.
+    const [summary, orderTransactions, sellerRes, withdrawalRes] = await Promise.all([
       getWalletSummary(req.seller.id),
-      query(`
-        SELECT wt.*, o.order_number
-        FROM wallet_transactions wt
-        LEFT JOIN orders o ON o.id=wt.order_id
-        WHERE wt.seller_id=$1::uuid
-          AND (
-            wt.order_id IS NULL
-            OR (
-              wt.transaction_type IN ('product_sale','supplier_sale')
-              AND wt.seller_id = o.seller_id
-            )
-            OR (
-              wt.transaction_type IN ('reseller_profit','platform_fee')
-              AND o.reseller_seller_id IS NOT NULL
-              AND wt.seller_id = o.reseller_seller_id
-            )
-          )
-        ORDER BY wt.created_at DESC
-        LIMIT 250
-      `, [req.seller.id]),
+      getSellerOrderTransactions(req.seller.id),
       query(`
         SELECT payout_method, payout_network, payout_wallet_address
-        FROM sellers WHERE id=$1
+        FROM sellers WHERE id=$1::uuid
       `, [req.seller.id]),
       query(`
         SELECT * FROM withdrawal_requests
-        WHERE seller_id=$1
+        WHERE seller_id=$1::uuid
         ORDER BY requested_at DESC
         LIMIT 100
       `, [req.seller.id]),
     ]);
 
+    const withdrawalTransactions = withdrawalRes.rows.map((w) => ({
+      id: `withdrawal-${w.id}`,
+      order_id: null,
+      withdrawal_id: w.id,
+      transaction_type: 'withdrawal',
+      amount: -Math.abs(Number(w.amount || 0)),
+      status: String(w.status || 'pending').toLowerCase(),
+      affects_balance: true,
+      description: `Withdrawal request ${w.id}`,
+      metadata: {
+        payout_method: w.payout_method,
+        payout_network: w.payout_network,
+        payout_wallet_address: w.payout_wallet_address,
+      },
+      available_at: w.completed_at || null,
+      created_at: w.requested_at,
+      updated_at: w.updated_at,
+      order_number: null,
+    }));
+
+    const transactions = [...orderTransactions, ...withdrawalTransactions]
+      .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      .slice(0, 250);
+
     return res.json({
       success: true,
       summary,
-      transactions: txRes.rows,
+      transactions,
       withdrawals: withdrawalRes.rows,
       payout_account: sellerRes.rows[0] || null,
     });
   } catch (err) {
     console.error('Wallet load failed:', err);
-    return res.status(500).json({ success: false, message: 'Failed to load wallet' });
+    return res.status(500).json({ success: false, message: err.message || 'Failed to load wallet' });
   }
 });
 
@@ -120,15 +126,8 @@ router.post('/withdrawals', async (req, res) => {
       });
     }
 
-    const balanceRes = await client.query(`
-      SELECT COALESCE(SUM(CASE
-        WHEN affects_balance=true AND status='available' THEN amount
-        WHEN transaction_type='withdrawal' AND affects_balance=true AND status IN ('pending','approved','completed') THEN amount
-        ELSE 0 END),0)::numeric AS available_balance
-      FROM wallet_transactions
-      WHERE seller_id=$1
-    `, [req.seller.id]);
-    const available = Number(balanceRes.rows[0]?.available_balance || 0);
+    const walletSummary = await getWalletSummary(req.seller.id);
+    const available = Number(walletSummary.available_balance || 0);
 
     if (amount > available) {
       await client.query('ROLLBACK');
