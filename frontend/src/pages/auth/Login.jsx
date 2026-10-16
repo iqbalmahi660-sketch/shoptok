@@ -3,26 +3,6 @@ import { API, S } from "../../data/catalogue.js";
 import Btn from "../../components/common/Btn.jsx";
 import Field from "../../components/common/Field.jsx";
 
-const GIcon = () => (
-  <span
-    style={{
-      width: 18,
-      height: 18,
-      borderRadius: "50%",
-      background: "#fff",
-      color: "#4285F4",
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontWeight: 800,
-      fontSize: 12,
-      marginRight: 8,
-    }}
-  >
-    G
-  </span>
-);
-
 export const Login = ({ go, setUser }) => {
   const [f, sf] = useState({
     email: "",
@@ -151,45 +131,6 @@ export const Login = ({ go, setUser }) => {
         >
           Sign in to your TokZoo account
         </p>
-
-        <Btn full variant="google">
-          <GIcon />
-          Continue with Google
-        </Btn>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            margin: "16px 0",
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              height: 1,
-              background: "#f2f2f2",
-            }}
-          />
-
-          <span
-            style={{
-              color: "#333",
-              fontSize: 11,
-            }}
-          >
-            OR
-          </span>
-
-          <div
-            style={{
-              flex: 1,
-              height: 1,
-              background: "#f2f2f2",
-            }}
-          />
-        </div>
 
         {err.form && (
           <div
