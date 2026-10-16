@@ -6,41 +6,6 @@ const { syncOrderWallet } = require('../services/wallet');
 
 const router = express.Router();
 
-// Keep the live Railway database compatible with the current order workflow.
-// Older deployments may still have an orders.status CHECK constraint that does
-// not allow the seller-confirmed state even when the source migration does.
-let orderStatusSchemaPromise = null;
-
-const ensureOrderStatusSchema = () => {
-  if (!orderStatusSchemaPromise) {
-    orderStatusSchemaPromise = (async () => {
-      await query(`
-        ALTER TABLE orders
-        DROP CONSTRAINT IF EXISTS orders_status_check
-      `);
-
-      await query(`
-        ALTER TABLE orders
-        ADD CONSTRAINT orders_status_check
-        CHECK (status IN (
-          'pending',
-          'confirmed',
-          'processing',
-          'shipped',
-          'delivered',
-          'cancelled',
-          'refunded'
-        )) NOT VALID
-      `);
-    })().catch((err) => {
-      orderStatusSchemaPromise = null;
-      throw err;
-    });
-  }
-
-  return orderStatusSchemaPromise;
-};
-
 const genOrderNum = () =>
   '#ORD-' +
   Date.now().toString(36).toUpperCase() +
@@ -97,15 +62,13 @@ router.post('/', authUser, async (req, res) => {
   const {
     product_id,
     quantity = 1,
-    payment_method = 'Bank Transfer',
+    payment_method = 'COD',
     shipping_name,
     shipping_phone,
     shipping_address,
     shipping_city,
     rider_note,
   } = req.body;
-
-  const paymentMethod = 'Bank Transfer';
 
   try {
     if (!UUID_RE.test(String(product_id || ''))) {
@@ -201,7 +164,7 @@ router.post('/', authUser, async (req, res) => {
       supplierAmount,
       resellerProfit,
       platformFee,
-      paymentMethod,
+      payment_method,
       shipping_name,
       shipping_phone,
       shipping_address,
@@ -261,11 +224,9 @@ router.get('/seller', authSeller, async (req, res) => {
       SELECT
         o.*,
         CASE WHEN o.reseller_seller_id IS NULL THEN false ELSE true END AS is_reseller_order,
-        rs.shop_name AS reseller_shop_name,
-        p.images[1] AS product_image
+        rs.shop_name AS reseller_shop_name
       FROM orders o
       LEFT JOIN sellers rs ON rs.id=o.reseller_seller_id
-      LEFT JOIN products p ON p.id=o.product_id
       WHERE o.seller_id=$1
       ORDER BY o.created_at DESC
     `, [req.seller.id]);
@@ -314,7 +275,6 @@ router.get('/reseller', authSeller, async (req, res) => {
 // ─── SELLER CONFIRM / REJECT ORDER ──────────────────────────────────────────
 router.patch('/seller/:id/status', authSeller, async (req, res) => {
   try {
-    await ensureOrderStatusSchema();
     const status = String(req.body?.status || '').trim().toLowerCase();
 
     if (!['confirmed', 'cancelled'].includes(status)) {
@@ -324,32 +284,19 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
       });
     }
 
-    let updateResult;
-
-    if (status === 'confirmed') {
-      updateResult = await query(`
-        UPDATE orders
-        SET status='confirmed',
-            updated_at=NOW()
-        WHERE id=$1
-          AND seller_id=$2
-          AND status='pending'
-        RETURNING *
-      `, [req.params.id, req.seller.id]);
-    } else {
-      updateResult = await query(`
-        UPDATE orders
-        SET status='cancelled',
-            cancelled_reason=COALESCE($3::text, 'Rejected by seller'),
-            updated_at=NOW()
-        WHERE id=$1
-          AND seller_id=$2
-          AND status='pending'
-        RETURNING *
-      `, [req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
-    }
-
-    const { rows } = updateResult;
+    const { rows } = await query(`
+      UPDATE orders
+      SET status=$1,
+          cancelled_reason = CASE
+            WHEN $1='cancelled' THEN COALESCE($4, 'Rejected by seller')
+            ELSE cancelled_reason
+          END,
+          updated_at=NOW()
+      WHERE id=$2
+        AND seller_id=$3
+        AND status='pending'
+      RETURNING *
+    `, [status, req.params.id, req.seller.id, req.body?.cancelled_reason || null]);
 
     if (!rows[0]) {
       return res.status(409).json({
@@ -377,18 +324,7 @@ router.patch('/seller/:id/status', authSeller, async (req, res) => {
     });
   } catch (err) {
     console.error('Seller order status update failed:', err);
-
-    if (err?.code === '23514') {
-      return res.status(500).json({
-        success: false,
-        message: 'Order status database rule is outdated. Please retry after deployment finishes.',
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: err?.message || 'Failed to update order status',
-    });
+    return res.status(500).json({ success: false, message: 'Failed to update order status' });
   }
 });
 
@@ -399,6 +335,7 @@ router.get('/my', authUser, async (req, res) => {
       SELECT
         o.*,
         p.emoji,
+        p.images[1] AS product_image,
         COALESCE(rs.shop_name, s.shop_name) AS seller_name
       FROM orders o
       LEFT JOIN products p ON p.id=o.product_id

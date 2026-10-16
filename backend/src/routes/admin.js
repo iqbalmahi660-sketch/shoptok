@@ -29,10 +29,12 @@ router.get('/dashboard', async (req, res) => {
       query(`SELECT COUNT(*)::int FROM sellers WHERE status='pending'`),
       query(`SELECT COUNT(*)::int FROM products WHERE status='pending'`),
       query(`SELECT o.id, o.order_number, o.total_amount, o.status, o.payment_method, o.created_at,
-               u.name AS buyer_name, s.shop_name AS seller_name, o.product_title, o.product_emoji
+               u.name AS buyer_name, s.shop_name AS seller_name, o.product_title, o.product_emoji,
+               p.images[1] AS product_image
              FROM orders o
              LEFT JOIN users u ON u.id=o.buyer_id
              LEFT JOIN sellers s ON s.id=o.seller_id
+             LEFT JOIN products p ON p.id=o.product_id
              ORDER BY o.created_at DESC LIMIT 8`),
       query(`SELECT TO_CHAR(DATE_TRUNC('month',created_at),'Mon') AS month,
                COALESCE(SUM(total_amount),0)::int AS revenue,
@@ -262,10 +264,12 @@ router.get('/orders', async (req, res) => {
   try {
     const countRes = await query(`SELECT COUNT(*)::int FROM orders o LEFT JOIN users u ON u.id=o.buyer_id ${wc}`, params);
     const { rows } = await query(`
-      SELECT o.*, u.name AS buyer_name, u.phone AS buyer_phone, s.shop_name AS seller_name
+      SELECT o.*, u.name AS buyer_name, u.phone AS buyer_phone, s.shop_name AS seller_name,
+             p.images[1] AS product_image
       FROM orders o
       LEFT JOIN users u   ON u.id=o.buyer_id
       LEFT JOIN sellers s ON s.id=o.seller_id
+      LEFT JOIN products p ON p.id=o.product_id
       ${wc}
       ORDER BY o.created_at DESC
       LIMIT $${params.length+1} OFFSET $${params.length+2}
@@ -308,46 +312,19 @@ router.patch('/orders/:id/status', async (req, res) => {
     }
 
     const { rows } = await query(`
-      UPDATE orders
-      SET status=$1::varchar,
-          tracking_number=COALESCE($2::varchar, tracking_number),
-          cancelled_reason=COALESCE($3::text, cancelled_reason),
-          updated_at=NOW()
-      WHERE id=$4::uuid
-      RETURNING *
-    `, [status, tracking_number || null, cancelled_reason || null, req.params.id]);
+      UPDATE orders SET status=$1,
+        tracking_number  = COALESCE($2, tracking_number),
+        cancelled_reason = COALESCE($3, cancelled_reason),
+        updated_at=NOW()
+      WHERE id=$4 RETURNING *
+    `, [status, tracking_number||null, cancelled_reason||null, req.params.id]);
 
-    if (!rows[0]) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    let walletWarning = null;
-    try {
-      await syncOrderWallet(rows[0]);
-    } catch (walletErr) {
-      walletWarning = walletErr?.message || 'Wallet sync failed';
-      console.error('Admin order wallet sync failed:', walletErr);
-    }
-
-    try {
-      logAction(req.admin.id, req.admin.name, `order_${status}`, 'order', req.params.id, rows[0].order_number, {}, req.ip);
-    } catch (logErr) {
-      console.error('Admin order log failed:', logErr);
-    }
-
-    return res.json({
-      success: true,
-      message: `Order updated to ${status}`,
-      order: rows[0],
-      ...(walletWarning ? { wallet_warning: walletWarning } : {}),
-    });
+    await syncOrderWallet(rows[0]);
+    logAction(req.admin.id, req.admin.name, `order_${status}`, 'order', req.params.id, rows[0].order_number, {}, req.ip);
+    res.json({ success: true, message: `Order updated to ${status}`, order: rows[0] });
   } catch (err) {
-    console.error('Admin order status update failed:', err);
-    return res.status(500).json({
-      success: false,
-      message: err?.message || 'Failed to update order status',
-      code: err?.code || null,
-    });
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed' });
   }
 });
 

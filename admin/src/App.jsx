@@ -748,7 +748,7 @@ export default function AdminApp() {
                       <tr key={o.id} className="row">
                         <td style={{ color:"#25f4ee", fontWeight:600 }}>{o.order_number}</td>
                         <td>{o.buyer_name}</td>
-                        <td style={{ color:"rgba(255,255,255,.6)" }}>{o.product_emoji} {o.product_title}</td>
+                        <td><div style={{display:"flex",alignItems:"center",gap:9}}><div style={{width:34,height:34,borderRadius:7,overflow:"hidden",background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{o.product_image?<img src={o.product_image} alt={o.product_title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:8,color:"rgba(255,255,255,.35)"}}>No image</span>}</div><span style={{color:"rgba(255,255,255,.6)"}}>{o.product_title}</span></div></td>
                         <td style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>${o.total_amount?.toLocaleString()}</td>
                         <td><Badge status={o.status} /></td>
                         <td style={{ color:"rgba(255,255,255,.4)" }}>{new Date(o.created_at).toLocaleDateString()}</td>
@@ -946,8 +946,7 @@ export default function AdminApp() {
                           <p style={{ fontSize:11, color:"rgba(255,255,255,.4)" }}>{o.buyer_phone}</p>
                         </td>
                         <td style={{ maxWidth:160 }}>
-                          <p style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"rgba(255,255,255,.8)" }}>{o.product_emoji} {o.product_title}</p>
-                          <p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>🏪 {o.seller_name}</p>
+                          <div style={{display:"flex",alignItems:"center",gap:9}}><div style={{width:38,height:38,borderRadius:8,overflow:"hidden",background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{o.product_image?<img src={o.product_image} alt={o.product_title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:8,color:"rgba(255,255,255,.35)"}}>No image</span>}</div><div style={{minWidth:0}}><p style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"rgba(255,255,255,.8)" }}>{o.product_title}</p><p style={{ fontSize:11, color:"rgba(255,255,255,.35)" }}>🏪 {o.seller_name}</p></div></div>
                         </td>
                         <td>
                           <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#fe2c55" }}>${o.total_amount?.toLocaleString()}</p>
