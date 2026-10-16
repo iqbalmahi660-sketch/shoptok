@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { CATALOGUE, PRODUCT_REVIEWS, SIZES, SWATCH_COLORS } from "../../data/catalogue.js";
+import { CATALOGUE, SIZES, SWATCH_COLORS } from "../../data/catalogue.js";
 
 const Stars = ({ rating = 0, size = 13, gap = 2 }) => (
   <div style={{ display: "flex", gap, lineHeight: 1 }}>
@@ -19,6 +19,7 @@ const ProductThumb = ({ img, emoji, size = "100%" }) =>
   );
 
 const PAGE_SIZE = 5;
+const API = import.meta.env.VITE_API_URL || "";
 
 export const FullProductPage = ({
   prod,
@@ -39,9 +40,16 @@ export const FullProductPage = ({
   const [sortBy, setSortBy] = useState("recommended");
   const [visualsOnly, setVisualsOnly] = useState(false);
   const [reviewPage, setReviewPage] = useState(1);
-
-  const rawReviews = PRODUCT_REVIEWS?.[prod.id] || PRODUCT_REVIEWS?.[3] || [];
-  const rating = Number(prod.rating) || 4.5;
+  const [rawReviews, setRawReviews] = useState([]);
+  const [liveRating, setLiveRating] = useState(Number(prod.rating) || 0);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewNotice, setReviewNotice] = useState("");
+  const token = localStorage.getItem("shopToken");
+  let currentUser = null;
+  try { currentUser = JSON.parse(localStorage.getItem("shopUser") || "null"); } catch {}
+  const rating = Number(liveRating) || 0;
   const sold = Number(prod.sold) || 0;
   const hasDiscount = Number(prod.disc) > 0 && Number(prod.orig) > Number(prod.price);
   const hasSizes =
@@ -61,27 +69,70 @@ export const FullProductPage = ({
     setReviewPage(1);
   }, [prod.id]);
 
+  const loadReviews = async () => {
+    try {
+      const res = await fetch(`${API}/products/${prod.id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not load reviews");
+      const list = Array.isArray(data.reviews) ? data.reviews : [];
+      setRawReviews(list);
+      setLiveRating(Number(data.product?.rating || 0));
+      const mine = currentUser?.id ? list.find((r) => String(r.buyer_id) === String(currentUser.id)) : null;
+      if (mine) {
+        setReviewRating(Number(mine.rating) || 5);
+        setReviewText(mine.comment || "");
+      } else {
+        setReviewRating(5);
+        setReviewText("");
+      }
+    } catch (err) {
+      console.error("Review load failed:", err);
+    }
+  };
+
+  useEffect(() => { loadReviews(); }, [prod.id]);
+
+  const submitReview = async () => {
+    if (!token) { setReviewNotice("Please log in to write a review."); return; }
+    if (!reviewText.trim()) { setReviewNotice("Write a short review first."); return; }
+    setReviewSaving(true);
+    setReviewNotice("");
+    try {
+      const res = await fetch(`${API}/products/${prod.id}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewText.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not save review");
+      setReviewNotice(data.message || "Review saved");
+      await loadReviews();
+      setReviewPage(1);
+    } catch (err) {
+      setReviewNotice(err.message || "Could not save review");
+    } finally {
+      setReviewSaving(false);
+    }
+  };
+
   const gallery = prod.images?.length ? prod.images : prod.img ? [prod.img, prod.img, prod.img, prod.img] : [];
 
-  const ratingBuckets = [
-    { star: 5, pct: 78 },
-    { star: 4, pct: 14 },
-    { star: 3, pct: 5 },
-    { star: 2, pct: 2 },
-    { star: 1, pct: 1 },
-  ];
-  const totalReviews = rawReviews.length || sold || 0;
+  const totalReviews = rawReviews.length;
+  const ratingBuckets = [5,4,3,2,1].map((star) => {
+    const count = rawReviews.filter((r) => Number(r.rating) === star).length;
+    return { star, count, pct: totalReviews ? Math.round((count / totalReviews) * 100) : 0 };
+  });
 
   // Normalize review shape — PRODUCT_REVIEWS entries use {n,loc,ago,stars,txt,hasPhoto}
   const reviews = useMemo(() => {
     return rawReviews.map((r, i) => ({
-      name: r.n || r.name || r.buyer_name || "Verified Buyer",
-      loc: r.loc || "",
-      ago: r.ago || r.date || "Recently",
-      stars: r.stars ?? r.rating ?? 5,
-      txt: r.txt || r.comment || r.text || "",
-      hasPhoto: !!r.hasPhoto,
-      photo: r.hasPhoto ? `https://placehold.co/120x120/${(prod.color || "#fe2c55").replace("#", "")}/ffffff?text=` : null,
+      name: r.buyer_name || r.name || "Buyer",
+      loc: "",
+      ago: r.updated_at || r.created_at ? new Date(r.updated_at || r.created_at).toLocaleDateString() : "Recently",
+      stars: Number(r.rating) || 5,
+      txt: r.comment || "",
+      hasPhoto: Array.isArray(r.images) && r.images.length > 0,
+      photo: Array.isArray(r.images) && r.images.length ? r.images[0] : null,
       itemColor: typeof colorList[i % colorList.length] === "string" && !colorList[i % colorList.length].startsWith("#")
         ? colorList[i % colorList.length]
         : ["NAVY BLUE", "BLACK", "GREY", "NAVY GREEN"][i % 4],
@@ -282,7 +333,7 @@ export const FullProductPage = ({
                 <div style={{ flex: 1, height: 6, background: "#eee", borderRadius: 100 }}>
                   <div style={{ height: "100%", width: `${pct}%`, background: "#111", borderRadius: 100 }} />
                 </div>
-                <span style={{ fontSize: 11.5, color: "#999", minWidth: 34, textAlign: "right" }}>{Math.round((pct / 100) * totalReviews)}</span>
+                <span style={{ fontSize: 11.5, color: "#999", minWidth: 34, textAlign: "right" }}>{count}</span>
               </div>
             ))}
           </div>
@@ -304,6 +355,24 @@ export const FullProductPage = ({
             </div>
           )}
 
+          {/* Write / edit review */}
+          <div style={{ border:"1px solid #e8e8e8", borderRadius:14, padding:18, margin:"18px 0 22px", background:"#fff" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:12 }}>
+              <div>
+                <p style={{ fontSize:14, fontWeight:800, color:"#111", marginBottom:3 }}>Write a review</p>
+                <p style={{ fontSize:11.5, color:"#888" }}>Purchase is not required. One review per account; submit again to edit it.</p>
+              </div>
+              <div style={{ display:"flex", gap:3 }}>
+                {[1,2,3,4,5].map((star)=><button key={star} onClick={()=>setReviewRating(star)} type="button" style={{ border:"none", background:"transparent", padding:2, cursor:"pointer", fontSize:22, color:star<=reviewRating?"#ff9500":"#ddd" }}>★</button>)}
+              </div>
+            </div>
+            <textarea value={reviewText} onChange={(e)=>setReviewText(e.target.value)} maxLength={1500} placeholder={token?"Share your experience with this product...":"Log in to write a review"} disabled={!token || reviewSaving} style={{ width:"100%", minHeight:88, resize:"vertical", border:"1px solid #ddd", borderRadius:10, padding:"11px 12px", fontFamily:"inherit", fontSize:13, outline:"none", boxSizing:"border-box", background:token?"#fff":"#f7f7f7" }} />
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginTop:10 }}>
+              <span style={{ fontSize:11.5, color:reviewNotice?.toLowerCase().includes("could") || reviewNotice?.toLowerCase().includes("cannot") || reviewNotice?.toLowerCase().includes("please") ? "#e5484d" : "#16803c" }}>{reviewNotice}</span>
+              <button type="button" onClick={submitReview} disabled={!token || reviewSaving} style={{ border:"none", borderRadius:100, padding:"10px 18px", background:!token||reviewSaving?"#ddd":"#fe2c55", color:"#fff", fontWeight:700, cursor:!token||reviewSaving?"not-allowed":"pointer", fontFamily:"inherit" }}>{reviewSaving?"Saving...":"Submit Review"}</button>
+            </div>
+          </div>
+
           {/* Sort / Filter controls */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 6 }}>
             <div>
@@ -319,7 +388,6 @@ export const FullProductPage = ({
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => { setVisualsOnly(false); setReviewPage(1); }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${!visualsOnly ? "#111" : "#ddd"}`, background: !visualsOnly ? "#111" : "#fff", color: !visualsOnly ? "#fff" : "#555", fontSize: 12.5, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>★ All</button>
                 <button onClick={() => { setVisualsOnly(true); setReviewPage(1); }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${visualsOnly ? "#111" : "#ddd"}`, background: visualsOnly ? "#111" : "#fff", color: visualsOnly ? "#fff" : "#555", fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>Includes visuals</button>
-                <button style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", color: "#555", fontSize: 12.5, fontWeight: 600, cursor: "default" }}>Verified purchase</button>
               </div>
             </div>
           </div>
@@ -334,7 +402,7 @@ export const FullProductPage = ({
           {/* Review list */}
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {pagedReviews.length === 0 && (
-              <p style={{ fontSize: 13, color: "#999", padding: "24px 0" }}>No reviews match this filter.</p>
+              <p style={{ fontSize: 13, color: "#999", padding: "24px 0" }}>No reviews yet for this product.</p>
             )}
             {pagedReviews.map((r, i) => (
               <div key={i} style={{ borderBottom: "1px solid #f0f0f0", padding: "20px 0" }}>
@@ -343,7 +411,7 @@ export const FullProductPage = ({
                     {r.name[0]}
                   </div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#111" }}>{r.name} · <span style={{ fontWeight: 400, color: "#888" }}>Verified purchase</span></p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#111" }}>{r.name}</p>
                     <p style={{ fontSize: 11, color: "#999" }}>{r.loc}</p>
                   </div>
                 </div>

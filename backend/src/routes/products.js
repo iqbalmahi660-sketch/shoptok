@@ -3,7 +3,7 @@ const express = require('express');
 const multer  = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { query } = require('../database/db');
-const { authSeller } = require('../middleware/auth');
+const { authSeller, authUser } = require('../middleware/auth');
 const { notify } = require('../socket');
 
 const router = express.Router();
@@ -1023,6 +1023,120 @@ router.get('/stores/:id', async (req, res) => {
   }
 });
 
+// ── BUYER PRODUCT REVIEWS ─────────────────────────────────────────────────────
+// Any logged-in user may review a product; purchase is not required.
+// A seller cannot review their own master product. One review per user/product;
+// submitting again edits the existing review.
+const ensureReviewSchema = async () => {
+  await query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      product_id  UUID REFERENCES products(id) ON DELETE CASCADE,
+      buyer_id    UUID REFERENCES users(id) ON DELETE CASCADE,
+      order_id    UUID REFERENCES orders(id) ON DELETE SET NULL,
+      rating      INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+      comment     TEXT,
+      images      TEXT[] DEFAULT '{}',
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()`);
+};
+
+const resolveReviewProduct = async (listingId) => {
+  const direct = await query(`SELECT id, seller_id FROM products WHERE id=$1::uuid LIMIT 1`, [listingId]);
+  if (direct.rows[0]) return direct.rows[0];
+
+  const reseller = await query(`
+    SELECT p.id, p.seller_id
+    FROM reseller_listings rl
+    JOIN products p ON p.id=rl.product_id
+    WHERE rl.id=$1::uuid
+    LIMIT 1
+  `, [listingId]);
+  return reseller.rows[0] || null;
+};
+
+const refreshProductRating = async (productId) => {
+  const stats = await query(`
+    SELECT COALESCE(ROUND(AVG(rating)::numeric, 1), 0) AS rating,
+           COUNT(*)::int AS review_count
+    FROM reviews
+    WHERE product_id=$1::uuid
+  `, [productId]);
+  const row = stats.rows[0] || { rating: 0, review_count: 0 };
+  await query(`
+    UPDATE products
+    SET rating=$2::numeric, review_count=$3::int, updated_at=NOW()
+    WHERE id=$1::uuid
+  `, [productId, Number(row.rating || 0), Number(row.review_count || 0)]);
+  return row;
+};
+
+router.post('/:id/reviews', authUser, async (req, res) => {
+  try {
+    await ensureReviewSchema();
+    const product = await resolveReviewProduct(req.params.id);
+    if (!product) return res.status(404).json({ success:false, message:'Product not found' });
+
+    const rating = Number(req.body?.rating);
+    const comment = String(req.body?.comment || '').trim();
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success:false, message:'Choose a rating from 1 to 5 stars' });
+    }
+    if (!comment) return res.status(400).json({ success:false, message:'Write a short review' });
+    if (comment.length > 1500) return res.status(400).json({ success:false, message:'Review is too long' });
+
+    const ownSeller = await query(`SELECT id FROM sellers WHERE id=$1::uuid AND user_id=$2::uuid LIMIT 1`, [product.seller_id, req.user.id]);
+    if (ownSeller.rows[0]) {
+      return res.status(403).json({ success:false, message:'You cannot review your own product' });
+    }
+
+    const existing = await query(`
+      SELECT id FROM reviews
+      WHERE product_id=$1::uuid AND buyer_id=$2::uuid
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [product.id, req.user.id]);
+
+    let saved;
+    if (existing.rows[0]) {
+      saved = await query(`
+        UPDATE reviews
+        SET rating=$3::int, comment=$4::text, updated_at=NOW()
+        WHERE id=$1::uuid AND buyer_id=$2::uuid
+        RETURNING *
+      `, [existing.rows[0].id, req.user.id, rating, comment]);
+    } else {
+      saved = await query(`
+        INSERT INTO reviews (product_id,buyer_id,rating,comment,updated_at)
+        VALUES ($1::uuid,$2::uuid,$3::int,$4::text,NOW())
+        RETURNING *
+      `, [product.id, req.user.id, rating, comment]);
+    }
+
+    const stats = await refreshProductRating(product.id);
+    const withBuyer = await query(`
+      SELECT r.*, u.name AS buyer_name
+      FROM reviews r
+      LEFT JOIN users u ON u.id=r.buyer_id
+      WHERE r.id=$1::uuid
+    `, [saved.rows[0].id]);
+
+    return res.json({
+      success:true,
+      message: existing.rows[0] ? 'Review updated' : 'Review added',
+      review: withBuyer.rows[0],
+      rating: Number(stats.rating || 0),
+      review_count: Number(stats.review_count || 0),
+    });
+  } catch (err) {
+    console.error('Save review failed:', err);
+    return res.status(500).json({ success:false, message:err.message || 'Could not save review' });
+  }
+});
+
 // ── PRODUCT DETAIL: MASTER OR RESELLER LISTING ────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
@@ -1074,6 +1188,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    await ensureReviewSchema();
     const reviews = await query(`
       SELECT r.*, u.name AS buyer_name
       FROM reviews r
