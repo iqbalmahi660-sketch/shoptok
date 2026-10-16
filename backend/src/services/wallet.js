@@ -130,7 +130,17 @@ const upsertOrderTransaction = async (client, {
     INSERT INTO wallet_transactions (
       seller_id, order_id, transaction_type, amount, status,
       affects_balance, description, metadata, available_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,CASE WHEN $5='available' THEN NOW() ELSE NULL END)
+    ) VALUES (
+      $1::uuid,
+      $2::uuid,
+      $3::varchar(40),
+      $4::numeric,
+      $5::varchar(20),
+      $6::boolean,
+      $7::text,
+      $8::jsonb,
+      CASE WHEN $5::text='available' THEN NOW() ELSE NULL END
+    )
     ON CONFLICT (seller_id, order_id, transaction_type) WHERE order_id IS NOT NULL
     DO UPDATE SET
       amount=EXCLUDED.amount,
