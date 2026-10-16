@@ -5,6 +5,7 @@ const {
   ensureWalletSchema,
   backfillSellerOrders,
   getWalletSummary,
+  cleanupInvalidSellerWalletRows,
 } = require('../services/wallet');
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.get('/', async (req, res) => {
   try {
     await ensureWalletSchema();
     await backfillSellerOrders(req.seller.id);
+    await cleanupInvalidSellerWalletRows(req.seller.id);
 
     const [summary, txRes, sellerRes, withdrawalRes] = await Promise.all([
       getWalletSummary(req.seller.id),
@@ -21,7 +23,19 @@ router.get('/', async (req, res) => {
         SELECT wt.*, o.order_number
         FROM wallet_transactions wt
         LEFT JOIN orders o ON o.id=wt.order_id
-        WHERE wt.seller_id=$1
+        WHERE wt.seller_id=$1::uuid
+          AND (
+            wt.order_id IS NULL
+            OR (
+              wt.transaction_type IN ('product_sale','supplier_sale')
+              AND wt.seller_id = COALESCE(o.original_seller_id, o.seller_id)
+            )
+            OR (
+              wt.transaction_type IN ('reseller_profit','platform_fee')
+              AND o.reseller_seller_id IS NOT NULL
+              AND wt.seller_id = o.reseller_seller_id
+            )
+          )
         ORDER BY wt.created_at DESC
         LIMIT 250
       `, [req.seller.id]),

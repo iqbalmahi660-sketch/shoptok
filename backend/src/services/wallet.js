@@ -231,17 +231,63 @@ const syncOrderWallet = async (order, existingClient = null) => {
   }
 };
 
+const walletOrderOwnershipSql = (sellerAlias = 'wt', orderAlias = 'o') => `
+  (
+    ${sellerAlias}.order_id IS NULL
+    OR (
+      ${sellerAlias}.transaction_type IN ('product_sale','supplier_sale')
+      AND ${sellerAlias}.seller_id = COALESCE(${orderAlias}.original_seller_id, ${orderAlias}.seller_id)
+    )
+    OR (
+      ${sellerAlias}.transaction_type IN ('reseller_profit','platform_fee')
+      AND ${orderAlias}.reseller_seller_id IS NOT NULL
+      AND ${sellerAlias}.seller_id = ${orderAlias}.reseller_seller_id
+    )
+  )
+`;
+
+const cleanupInvalidSellerWalletRows = async (sellerId) => {
+  await ensureWalletSchema();
+
+  // Remove legacy/misassigned order transactions that do not belong to this
+  // seller according to the order's authoritative supplier/reseller IDs.
+  await query(`
+    DELETE FROM wallet_transactions wt
+    USING orders o
+    WHERE wt.order_id=o.id
+      AND wt.seller_id=$1::uuid
+      AND NOT (
+        (
+          wt.transaction_type IN ('product_sale','supplier_sale')
+          AND wt.seller_id = COALESCE(o.original_seller_id, o.seller_id)
+        )
+        OR (
+          wt.transaction_type IN ('reseller_profit','platform_fee')
+          AND o.reseller_seller_id IS NOT NULL
+          AND wt.seller_id = o.reseller_seller_id
+        )
+      )
+  `, [sellerId]);
+};
+
 const backfillSellerOrders = async (sellerId) => {
   await ensureWalletSchema();
+  await cleanupInvalidSellerWalletRows(sellerId);
+
   const { rows } = await query(`
     SELECT * FROM orders
-    WHERE seller_id=$1 OR original_seller_id=$1 OR reseller_seller_id=$1
+    WHERE COALESCE(original_seller_id, seller_id)=$1::uuid
+       OR reseller_seller_id=$1::uuid
     ORDER BY created_at ASC
   `, [sellerId]);
 
   for (const order of rows) {
     await syncOrderWallet(order);
   }
+
+  // Run once more after backfill so legacy rows from older wallet versions
+  // cannot survive or reappear in this seller's ledger.
+  await cleanupInvalidSellerWalletRows(sellerId);
 };
 
 const getWalletSummary = async (sellerId) => {
@@ -261,8 +307,10 @@ const getWalletSummary = async (sellerId) => {
       COALESCE(ABS(SUM(CASE
         WHEN transaction_type='withdrawal' AND status='completed' THEN amount
         ELSE 0 END)),0)::numeric AS withdrawn
-    FROM wallet_transactions
-    WHERE seller_id=$1
+    FROM wallet_transactions wt
+    LEFT JOIN orders o ON o.id=wt.order_id
+    WHERE wt.seller_id=$1::uuid
+      AND ${walletOrderOwnershipSql('wt', 'o')}
   `, [sellerId]);
 
   const r = rows[0] || {};
@@ -279,4 +327,6 @@ module.exports = {
   syncOrderWallet,
   backfillSellerOrders,
   getWalletSummary,
+  cleanupInvalidSellerWalletRows,
+  walletOrderOwnershipSql,
 };
