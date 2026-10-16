@@ -258,22 +258,6 @@ const COUNTRIES = [
   "Åland Islands",
 ];
 
-const SELLER_CATEGORIES = [
-  "Fashion & Clothing",
-  "Beauty & Skincare",
-  "Phones & Electronics",
-  "Home & Living",
-  "Food & Beverages",
-  "Sports & Outdoors",
-  "Books & Stationery",
-  "Toys & Kids",
-  "Automotive",
-  "Health & Personal Care",
-  "Jewelry & Accessories",
-  "Shoes & Footwear",
-  "Bags & Luggage",
-  "Other",
-];
 
 // IMPORTANT:
 // These components stay OUTSIDE SellerOnboard.
@@ -479,7 +463,6 @@ export const SellerOnboard = ({
 
 
     phone: "",
-    category: "",
   });
 
   const up = (k, v) =>
@@ -598,12 +581,6 @@ export const SellerOnboard = ({
       return;
     }
 
-    if (!f.category.trim()) {
-      alert(
-        "Store category is required."
-      );
-      return;
-    }
 
 
     sl(true);
@@ -682,8 +659,6 @@ export const SellerOnboard = ({
             phone:
               f.phone,
 
-            category:
-              f.category,
 
 
             inviteCode:
@@ -1373,114 +1348,6 @@ export const SellerOnboard = ({
             placeholder="Please enter your phone number"
           />
 
-          <div
-            style={{
-              marginBottom:
-                16,
-            }}
-          >
-            <label
-              style={{
-                display:
-                  "block",
-
-                fontSize:
-                  13,
-
-                color:
-                  "#888",
-
-                marginBottom:
-                  7,
-
-                fontWeight:
-                  500,
-              }}
-            >
-              <span
-                style={{
-                  color:
-                    "#fe2c55",
-
-                  marginRight:
-                    4,
-                }}
-              >
-                *
-              </span>
-
-              Category
-            </label>
-
-            <select
-              value={
-                f.category
-              }
-              onChange={(
-                e
-              ) =>
-                up(
-                  "category",
-                  e.target
-                    .value
-                )
-              }
-              style={{
-                width:
-                  "100%",
-
-                padding:
-                  "12px 14px",
-
-                background:
-                  "#ffffff",
-
-                border:
-                  "1px solid #222",
-
-                borderRadius:
-                  10,
-
-                color:
-                  "#111",
-
-                fontSize:
-                  14,
-
-                fontFamily:
-                  "inherit",
-
-                outline:
-                  "none",
-
-                boxSizing:
-                  "border-box",
-              }}
-            >
-              <option value="">
-                Select store category
-              </option>
-
-              {SELLER_CATEGORIES.map(
-                (
-                  category
-                ) => (
-                  <option
-                    key={
-                      category
-                    }
-                    value={
-                      category
-                    }
-                  >
-                    {
-                      category
-                    }
-                  </option>
-                )
-              )}
-            </select>
-          </div>
         </div>
 
         {/* ID Upload */}
