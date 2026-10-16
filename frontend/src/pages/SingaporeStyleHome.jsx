@@ -31,6 +31,9 @@ export default function SingaporeStyleHome({
   onOpenStore,
 }) {
   const [showAll, setShowAll] = useState(false);
+  const [showStoresPage, setShowStoresPage] = useState(false);
+  const [storeQuery, setStoreQuery] = useState("");
+  const [storeCategory, setStoreCategory] = useState("all");
 
   const pick = (start, count) => {
     if (!products.length) return [];
@@ -55,6 +58,84 @@ export default function SingaporeStyleHome({
     v,
     p: products.find((p) => (v.prods || []).includes(p.id)) || pick(i, 1)[0],
   }));
+
+  const storeCategories = useMemo(() => {
+    const values = Array.from(new Set(stores.map((s) => String(s.category || "").trim()).filter(Boolean)));
+    return values.sort((a, b) => a.localeCompare(b));
+  }, [stores]);
+
+  const visibleStores = useMemo(() => {
+    const q = storeQuery.trim().toLowerCase();
+    return stores.filter((store) => {
+      const matchesCategory = storeCategory === "all" || String(store.category || "").toLowerCase() === storeCategory.toLowerCase();
+      const haystack = `${store.shop_name || ""} ${store.category || ""} ${store.city || ""}`.toLowerCase();
+      return matchesCategory && (!q || haystack.includes(q));
+    });
+  }, [stores, storeQuery, storeCategory]);
+
+  if (showStoresPage) {
+    return (
+      <main style={{width:"100%",minHeight:"calc(100vh - 72px)",background:"#f7f8fa",padding:"24px clamp(14px,3vw,42px) 48px",boxSizing:"border-box"}}>
+        <div style={{maxWidth:1380,margin:"0 auto"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,marginBottom:22,flexWrap:"wrap"}}>
+            <div>
+              <button type="button" onClick={()=>setShowStoresPage(false)} style={{border:0,background:"transparent",padding:0,marginBottom:10,cursor:"pointer",fontSize:13,color:"#555"}}>← Back to Home</button>
+              <h1 style={{margin:0,fontSize:"clamp(24px,3vw,34px)",fontWeight:900,color:"#111827"}}>All Stores</h1>
+              <div style={{fontSize:13,color:"#7b8190",marginTop:4}}>{stores.length} active seller stores</div>
+            </div>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"minmax(220px,1fr) minmax(180px,260px)",gap:12,marginBottom:22}} className="all-stores-filters">
+            <input
+              value={storeQuery}
+              onChange={(e)=>setStoreQuery(e.target.value)}
+              placeholder="Search stores by name, category or city"
+              style={{width:"100%",height:46,border:"1px solid #dfe3e8",borderRadius:12,padding:"0 14px",fontFamily:"inherit",fontSize:13,boxSizing:"border-box",background:"#fff"}}
+            />
+            <select
+              value={storeCategory}
+              onChange={(e)=>setStoreCategory(e.target.value)}
+              style={{width:"100%",height:46,border:"1px solid #dfe3e8",borderRadius:12,padding:"0 12px",fontFamily:"inherit",fontSize:13,background:"#fff"}}
+            >
+              <option value="all">All Categories</option>
+              {storeCategories.map((category)=><option value={category} key={category}>{category}</option>)}
+            </select>
+          </div>
+
+          {storesLoading ? (
+            <div style={{padding:40,textAlign:"center",color:"#777"}}>Loading stores…</div>
+          ) : visibleStores.length ? (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:16}}>
+              {visibleStores.map((store)=>(
+                <button
+                  type="button"
+                  key={store.id}
+                  onClick={()=>onOpenStore?.(store)}
+                  style={{border:"1px solid #e5e7eb",borderRadius:18,overflow:"hidden",background:"#fff",padding:0,textAlign:"left",cursor:"pointer",boxShadow:"0 4px 16px rgba(15,23,42,.05)"}}
+                >
+                  <div style={{height:72,background:"radial-gradient(circle at 86% 18%,rgba(255,255,255,.34),transparent 27%),linear-gradient(125deg,#111827 0%,#2d3748 54%,#fe2c55 140%)"}} />
+                  <div style={{position:"relative",padding:"38px 15px 15px"}}>
+                    <div style={{position:"absolute",top:-31,left:15,width:58,height:58,borderRadius:"50%",overflow:"hidden",border:"3px solid #fff",background:"linear-gradient(135deg,#fe2c55,#ff7a59)",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,boxShadow:"0 4px 12px rgba(15,23,42,.15)"}}>
+                      {store.profile_img ? <img src={store.profile_img} alt={store.shop_name || "Store"} style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span>{String(store.shop_name || "S").charAt(0).toUpperCase()}</span>}
+                    </div>
+                    <div style={{fontSize:15,fontWeight:850,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{store.shop_name || "Store"}</div>
+                    <div style={{fontSize:11.5,color:"#7b8190",marginTop:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{[store.category,store.city].filter(Boolean).join(" · ") || "TokZoo Seller"}</div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginTop:14,fontSize:11.5,color:"#555f70"}}>
+                      <div style={{display:"flex",gap:9}}><span>★ {Number(store.rating || 0).toFixed(1)}</span><span>{Number(store.product_count || 0)} items</span></div>
+                      <span style={{fontWeight:800,color:"#fe2c55"}}>View Store →</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{padding:44,textAlign:"center",background:"#fff",border:"1px solid #e5e7eb",borderRadius:16,color:"#777"}}>No stores found.</div>
+          )}
+          <style>{`@media(max-width:640px){.all-stores-filters{grid-template-columns:1fr !important;}}`}</style>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="sg-home" style={{ width: "100%", maxWidth: "none", margin: 0, minWidth: 0 }}>
@@ -442,12 +523,20 @@ export default function SingaporeStyleHome({
       </div>
 
       {!search && cat === "all" && (
-        <HomeSection title="Stores">
+        <section className="sg-section">
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:12}}>
+            <h2 className="sg-section-title" style={{marginBottom:0}}>Stores</h2>
+            {stores.length > 0 && (
+              <button type="button" onClick={()=>setShowStoresPage(true)} style={{border:"1px solid #ffd0da",background:"#fff",color:"#fe2c55",borderRadius:999,padding:"8px 14px",fontFamily:"inherit",fontSize:11.5,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap"}}>
+                View All Stores →
+              </button>
+            )}
+          </div>
           {storesLoading ? (
             <div className="sg-loading">Loading stores…</div>
           ) : stores.length ? (
             <div className="sg-store-row">
-              {stores.map((store) => (
+              {stores.slice(0,4).map((store) => (
                 <button
                   type="button"
                   className="sg-store-card"
@@ -479,7 +568,7 @@ export default function SingaporeStyleHome({
           ) : (
             <div className="sg-empty">No seller stores available yet.</div>
           )}
-        </HomeSection>
+        </section>
       )}
 
       {loading ? (
