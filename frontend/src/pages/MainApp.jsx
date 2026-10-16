@@ -65,6 +65,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const [walletData,setWalletData] = useState({summary:{available_balance:0,pending_balance:0,total_earnings:0,withdrawn:0},transactions:[],withdrawals:[],payout_account:null});
  const [walletLoading,setWalletLoading] = useState(false);
  const [payoutSaving,setPayoutSaving] = useState(false);
+ const [payoutEditing,setPayoutEditing] = useState(false);
  const [payoutForm,setPayoutForm] = useState({payout_method:"USDT",payout_network:"",payout_wallet_address:""});
  const [fundFilter,setFundFilter] = useState("All");
  const [showUploadVideo,setShowUploadVideo] = useState(false);
@@ -505,6 +506,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  const data=await res.json().catch(()=>({}));
  if(!res.ok)throw new Error(data.message||"Could not save payout account");
  showToast("Payout wallet saved");
+ setPayoutEditing(false);
  await loadWalletData();
  }catch(e){showToast(e.message||"Could not save payout account");}
  finally{setPayoutSaving(false);}
@@ -1632,16 +1634,37 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div>
  <button onClick={requestWithdrawal} disabled={walletLoading||Number(walletData.summary?.available_balance||0)<=0} style={{width:"100%",padding:"14px",background:Number(walletData.summary?.available_balance||0)>0?"#fe2c55":"#ccc",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:Number(walletData.summary?.available_balance||0)>0?"pointer":"not-allowed",marginBottom:12}}>Withdraw</button>
  <div style={{background:"#fff",border:"1px solid #e6e6e6",borderRadius:12,padding:14,marginBottom:16}}>
- <p style={{fontWeight:800,fontSize:13,marginBottom:3}}>USDT / Crypto Payout</p>
- <p style={{fontSize:11,color:"#777",marginBottom:12}}>Save the wallet where approved withdrawals should be sent.</p>
- <div style={{display:"grid",gridTemplateColumns:"120px 1fr",gap:10,marginBottom:10}}>
- <select value={payoutForm.payout_method} onChange={e=>setPayoutForm({...payoutForm,payout_method:e.target.value})} style={{padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,background:"#fff",fontFamily:"inherit"}}>
- <option value="USDT">USDT</option><option value="Crypto">Crypto</option>
- </select>
- <input value={payoutForm.payout_network} onChange={e=>setPayoutForm({...payoutForm,payout_network:e.target.value})} placeholder="Network" style={{padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,fontFamily:"inherit",minWidth:0}}/>
+ <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:12}}>
+   <div>
+     <p style={{fontWeight:800,fontSize:13,marginBottom:3}}>USDT / Crypto Payout</p>
+     <p style={{fontSize:11,color:"#777"}}>{walletData.payout_account?.payout_wallet_address&&!payoutEditing?"Saved payout wallet":"Save the wallet where approved withdrawals should be sent."}</p>
+   </div>
+   {walletData.payout_account?.payout_wallet_address&&!payoutEditing&&<span style={{fontSize:11,fontWeight:700,color:"#16a34a",background:"#ecfdf5",border:"1px solid #bbf7d0",padding:"5px 9px",borderRadius:999}}>Wallet Added</span>}
  </div>
- <input value={payoutForm.payout_wallet_address} onChange={e=>setPayoutForm({...payoutForm,payout_wallet_address:e.target.value})} placeholder="Wallet Address" style={{width:"100%",padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,fontFamily:"inherit",marginBottom:10,boxSizing:"border-box"}}/>
- <button onClick={savePayoutAccount} disabled={payoutSaving} style={{width:"100%",padding:"10px",border:"none",borderRadius:9,background:"#111",color:"#fff",fontWeight:700,cursor:"pointer"}}>{payoutSaving?"Saving…":"Save Payout Wallet"}</button>
+ {walletData.payout_account?.payout_wallet_address&&!payoutEditing?(
+   <div>
+     <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,marginBottom:10}}>
+       <div style={{background:"#fafafa",border:"1px solid #eee",borderRadius:10,padding:"11px 12px"}}><p style={{fontSize:10,color:"#777",marginBottom:4}}>Type</p><p style={{fontWeight:700,fontSize:13}}>{walletData.payout_account.payout_method||"—"}</p></div>
+       <div style={{background:"#fafafa",border:"1px solid #eee",borderRadius:10,padding:"11px 12px"}}><p style={{fontSize:10,color:"#777",marginBottom:4}}>Network</p><p style={{fontWeight:700,fontSize:13}}>{walletData.payout_account.payout_network||"—"}</p></div>
+     </div>
+     <div style={{background:"#fafafa",border:"1px solid #eee",borderRadius:10,padding:"11px 12px",marginBottom:10}}><p style={{fontSize:10,color:"#777",marginBottom:4}}>Wallet Address</p><p style={{fontWeight:700,fontSize:13,wordBreak:"break-all"}}>{walletData.payout_account.payout_wallet_address}</p></div>
+     <button onClick={()=>setPayoutEditing(true)} style={{width:"100%",padding:"10px",border:"1px solid #111",borderRadius:9,background:"#fff",color:"#111",fontWeight:700,cursor:"pointer"}}>Edit Payout Wallet</button>
+   </div>
+ ):(
+   <div>
+     <div style={{display:"grid",gridTemplateColumns:"120px 1fr",gap:10,marginBottom:10}}>
+       <select value={payoutForm.payout_method} onChange={e=>setPayoutForm({...payoutForm,payout_method:e.target.value})} style={{padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,background:"#fff",fontFamily:"inherit"}}>
+       <option value="USDT">USDT</option><option value="Crypto">Crypto</option>
+       </select>
+       <input value={payoutForm.payout_network} onChange={e=>setPayoutForm({...payoutForm,payout_network:e.target.value})} placeholder="Network" style={{padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,fontFamily:"inherit",minWidth:0}}/>
+     </div>
+     <input value={payoutForm.payout_wallet_address} onChange={e=>setPayoutForm({...payoutForm,payout_wallet_address:e.target.value})} placeholder="Wallet Address" style={{width:"100%",padding:"10px 11px",border:"1px solid #ddd",borderRadius:9,fontFamily:"inherit",marginBottom:10,boxSizing:"border-box"}}/>
+     <div style={{display:"flex",gap:8}}>
+       {walletData.payout_account?.payout_wallet_address&&<button onClick={()=>{setPayoutEditing(false);const a=walletData.payout_account;setPayoutForm({payout_method:a.payout_method||"USDT",payout_network:a.payout_network||"",payout_wallet_address:a.payout_wallet_address||""});}} style={{flex:1,padding:"10px",border:"1px solid #ccc",borderRadius:9,background:"#fff",color:"#333",fontWeight:700,cursor:"pointer"}}>Cancel</button>}
+       <button onClick={savePayoutAccount} disabled={payoutSaving} style={{flex:1,padding:"10px",border:"none",borderRadius:9,background:"#111",color:"#fff",fontWeight:700,cursor:"pointer"}}>{payoutSaving?"Saving…":walletData.payout_account?.payout_wallet_address?"Save Changes":"Save Payout Wallet"}</button>
+     </div>
+   </div>
+ )}
  </div>
  <div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><p style={{fontWeight:700,color:"#fe2c55"}}>Transaction History</p>{walletLoading&&<span style={{fontSize:11,color:"#777"}}>Updating…</span>}</div>
  {walletData.transactions.length===0?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{color:"#555",fontSize:13}}>No wallet transactions yet</p></div>:

@@ -832,6 +832,7 @@ export default function AdminApp() {
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
                         <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15 }}>{s.shop_name}</p>
                         <Badge status={s.status} />
+                        <span style={{ fontSize:11, fontWeight:700, borderRadius:100, padding:"2px 9px", background:s.payout_wallet_address?"rgba(52,211,153,.12)":"rgba(255,255,255,.06)", color:s.payout_wallet_address?"#34d399":"rgba(255,255,255,.45)", border:`1px solid ${s.payout_wallet_address?"rgba(52,211,153,.22)":"rgba(255,255,255,.08)"}` }}>{s.payout_wallet_address?"Wallet Added":"Wallet Not Added"}</span>
                         {s.category && <span style={{ fontSize:11, background:"rgba(255,255,255,.06)", color:"rgba(255,255,255,.5)", borderRadius:100, padding:"2px 9px" }}>{s.category}</span>}
                       </div>
                       <p style={{ fontSize:12, color:"rgba(255,255,255,.45)" }}>Owner: {s.owner_name} · {s.email}</p>
@@ -1304,6 +1305,7 @@ export default function AdminApp() {
                   <h3 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:18, marginBottom:4 }}>{s.shop_name||"—"}</h3>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                     <Badge status={s.status}/>
+                    <span style={{ fontSize:11, fontWeight:700, borderRadius:100, padding:"3px 9px", background:s.payout_wallet_address?"rgba(52,211,153,.12)":"rgba(255,255,255,.06)", color:s.payout_wallet_address?"#34d399":"rgba(255,255,255,.45)", border:`1px solid ${s.payout_wallet_address?"rgba(52,211,153,.22)":"rgba(255,255,255,.08)"}` }}>{s.payout_wallet_address?"Wallet Added":"Wallet Not Added"}</span>
                     {s.category&&<span style={{ fontSize:11, background:"rgba(255,255,255,.07)", color:"rgba(255,255,255,.6)", borderRadius:100, padding:"3px 9px" }}>{s.category}</span>}
                   </div>
                   {s.shop_bio&&<p style={{fontSize:12,color:"rgba(255,255,255,.45)",marginTop:4}}>{s.shop_bio}</p>}
