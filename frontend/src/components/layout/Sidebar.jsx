@@ -296,12 +296,12 @@ export const Sidebar = ({
             : <span>{user?.avatar || user?.name?.[0]?.toUpperCase() || "U"}</span>}
         </div>
         <div className="seller-sidebar-name">
-          <p>{user?.name || "Seller"}</p>
-          <span className="seller-role">Seller</span>
+          <p>{user?.name || "User"}</p>
+          <span className="seller-role">{user?.role === "seller" ? "Seller" : "Buyer"}</span>
         </div>
       </div>
 
-      <nav className="seller-sidebar-scroll" aria-label="Seller dashboard">
+      <nav className="seller-sidebar-scroll" aria-label={user?.role === "seller" ? "Seller dashboard" : "Buyer dashboard"}>
         {topTabs.map(item => <TabButton key={item.key} item={item} />)}
 
         {productTabs.length > 0 && <div className="seller-side-group-title">Product Management</div>}
