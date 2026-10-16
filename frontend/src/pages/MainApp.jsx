@@ -1405,21 +1405,33 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  </div>}
  </div>}
 
- {sellerTab==="products"&&<div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><p style={{fontSize:13,color:"#555"}}>{sellerProds.length} total · {activePrds} live · {pendingPrds} pending</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 18px",borderRadius:100,fontSize:12,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:700}}>+ Add Product</button></div>
- {sellerProds.length===0
+ {sellerTab==="products"&&(()=>{
+ const combinedStoreProducts=[
+   ...sellerProds.map(p=>({...p,_storeType:"own"})),
+   ...resellerListings.map(l=>({
+     ...l,
+     _storeType:"reseller",
+     price:Number(l.selling_price||l.price)||0,
+     status:(l.status==="active"&&Number(l.stock)>0)?"active":"inactive",
+   })),
+ ];
+ const liveStoreProducts=combinedStoreProducts.filter(p=>p.status==="active"||p.status==="live").length;
+ const pendingStoreProducts=combinedStoreProducts.length-liveStoreProducts;
+ return <div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:12,flexWrap:"wrap"}}><div><p style={{fontSize:13,color:"#555"}}>{combinedStoreProducts.length} total · {liveStoreProducts} live · {pendingStoreProducts} unavailable/pending</p><p style={{fontSize:10.8,color:"#888",marginTop:3}}>{sellerProds.length} own · {resellerListings.length} reseller products</p></div><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"9px 18px",borderRadius:100,fontSize:12,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:700}}>+ Add Product</button></div>
+ {combinedStoreProducts.length===0
  ?<div style={{textAlign:"center",padding:"60px 0"}}><p style={{fontSize:48,marginBottom:12}}></p><p style={{color:"#555",marginBottom:16}}>No products yet</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"11px 24px",borderRadius:100,fontSize:13,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600}}>+ Add First Product</button></div>
- :<div style={{display:"flex",flexDirection:"column",gap:10}}>{sellerProds.map((p,i)=>(
- <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:11,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,overflow:"hidden"}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:13,fontWeight:600,marginBottom:3}}>{p.title}</p><div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock}</p>
- {p.allow_reselling&&(<span style={{fontSize:10,background:"rgba(167,139,250,0.12)",color:"#7c3aed",padding:"2px 7px",borderRadius:100}}>Reselling On</span>)}
- {p.flashSale&&(<span style={{fontSize:10,background:"rgba(254,44,85,0.1)",color:"#fe2c55",padding:"2px 7px",borderRadius:100}}>Flash Sale</span>)}
- {p.freeShipping&&(<span style={{fontSize:10,background:"rgba(37,244,238,0.1)",color:"#25f4ee",padding:"2px 7px",borderRadius:100}}>Free Ship</span>)}
- {p.featured&&(<span style={{fontSize:10,background:"rgba(251,191,36,0.1)",color:"#fbbf24",padding:"2px 7px",borderRadius:100}}>Featured</span>)}
- {p.promoCode&&<span style={{fontSize:10,background:"rgba(52,211,153,0.1)",color:"#34d399",padding:"2px 7px",borderRadius:100}}> {p.promoCode}</span>}
- </div></div><div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${p.price.toLocaleString()}</p><span style={{fontSize:10,padding:"3px 9px",background:(p.status==="active"||p.status==="live")?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)",color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24",border:`1px solid ${(p.status==="active"||p.status==="live")?"#34d39930":"#fbbf2430"}`,borderRadius:100}}>{(p.status==="active"||p.status==="live")?" Live":"⏳ Pending"}</span><button onClick={()=>setEditProd(p)}
- style={{background:"rgba(37,244,238,0.1)",border:"1px solid rgba(37,244,238,0.2)",color:"#25f4ee",padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Edit
- </button></div></div>
+ :<div style={{display:"flex",flexDirection:"column",gap:10}}>{combinedStoreProducts.map((p,i)=>(
+ <div key={`${p._storeType}-${p.id||i}`} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:11,background:p._storeType==="reseller"?"rgba(124,58,237,0.08)":"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,overflow:"hidden"}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}><p style={{fontSize:13,fontWeight:600,marginBottom:3}}>{p.title}</p>{p._storeType==="reseller"&&<span style={{fontSize:9.5,background:"rgba(124,58,237,0.10)",color:"#7c3aed",padding:"2px 7px",borderRadius:100,fontWeight:700}}>Reseller Product</span>}</div><div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock}</p>
+ {p._storeType==="reseller"&&p.supplier_name&&(<span style={{fontSize:10,background:"#f5f5f5",color:"#666",padding:"2px 7px",borderRadius:100}}>Supplier: {p.supplier_name}</span>)}
+ {p._storeType==="own"&&p.allow_reselling&&(<span style={{fontSize:10,background:"rgba(167,139,250,0.12)",color:"#7c3aed",padding:"2px 7px",borderRadius:100}}>Reselling On</span>)}
+ {p._storeType==="own"&&p.flashSale&&(<span style={{fontSize:10,background:"rgba(254,44,85,0.1)",color:"#fe2c55",padding:"2px 7px",borderRadius:100}}>Flash Sale</span>)}
+ {p._storeType==="own"&&p.freeShipping&&(<span style={{fontSize:10,background:"rgba(37,244,238,0.1)",color:"#25f4ee",padding:"2px 7px",borderRadius:100}}>Free Ship</span>)}
+ {p._storeType==="own"&&p.featured&&(<span style={{fontSize:10,background:"rgba(251,191,36,0.1)",color:"#fbbf24",padding:"2px 7px",borderRadius:100}}>Featured</span>)}
+ {p._storeType==="own"&&p.promoCode&&<span style={{fontSize:10,background:"rgba(52,211,153,0.1)",color:"#34d399",padding:"2px 7px",borderRadius:100}}>{p.promoCode}</span>}
+ </div></div><div style={{textAlign:"right",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>${Number(p.price||0).toLocaleString()}</p><span style={{fontSize:10,padding:"3px 9px",background:(p.status==="active"||p.status==="live")?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)",color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24",border:`1px solid ${(p.status==="active"||p.status==="live")?"#34d39930":"#fbbf2430"}`,borderRadius:100}}>{(p.status==="active"||p.status==="live")?"Live":"Unavailable"}</span>{p._storeType==="reseller"?<div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}><button onClick={()=>setResellModal({type:"edit",listing:p})} style={{background:"#fff",border:"1px solid #ddd",color:"#333",padding:"5px 10px",borderRadius:8,fontSize:10.5,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Edit Price</button><button onClick={()=>removeResellerListing(p.id)} style={{background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.22)",color:"#dc2626",padding:"5px 10px",borderRadius:8,fontSize:10.5,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Remove</button></div>:<button onClick={()=>setEditProd(p)} style={{background:"rgba(37,244,238,0.1)",border:"1px solid rgba(37,244,238,0.2)",color:"#25f4ee",padding:"5px 12px",borderRadius:8,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>Edit</button>}</div></div>
  ))}</div>}
- </div>}
+ </div>;
+ })()}
 
 
  {sellerTab==="reseller"&&<div>
