@@ -1315,12 +1315,22 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.07)";e.currentTarget.style.transform="translateY(0)";}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><p style={{fontSize:10,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>{s.label}</p><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:22,marginBottom:3}}>{s.val}</p></div><div style={{width:42,height:42,borderRadius:11,background:`${s.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{s.icon}</div></div><p style={{marginTop:10,fontSize:10,color:s.color}}>View details →</p></div>
  ))}
  </div><div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.07)",borderRadius:14,padding:20,marginBottom:20}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><h3 style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14}}>My Products</h3><button onClick={()=>setAP(true)} style={{background:"rgba(254,44,85,0.1)",border:"1px solid rgba(254,44,85,0.25)",color:"#fe2c55",padding:"6px 12px",borderRadius:100,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>+ Add</button></div>
- {sellerProds.length===0
+ {(()=>{
+ const dashboardProducts=[
+   ...sellerProds.map(p=>({...p,_dashboardType:"own"})),
+   ...resellerListings.map(l=>({
+     ...l,
+     _dashboardType:"reseller",
+     price:Number(l.selling_price||l.price)||0,
+     status:(l.status==="active"&&Number(l.stock)>0)?"active":"inactive",
+   })),
+ ];
+ return dashboardProducts.length===0
  ?<div style={{textAlign:"center",padding:"24px 0"}}><p style={{fontSize:28,marginBottom:8}}></p><p style={{fontSize:12,color:"#444",marginBottom:12}}>No products yet</p><button onClick={()=>setAP(true)} style={{background:"#fe2c55",color:"#fff",border:"none",padding:"8px 16px",borderRadius:100,fontSize:12,cursor:"pointer",fontFamily:"Poppins,sans-serif",fontWeight:600}}>+ Add First Product</button></div>
- :sellerProds.slice(0,4).map((p,i)=>(
- <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{fontSize:11,color:"#333",width:16}}>#{i+1}</span><div style={{width:34,height:34,borderRadius:8,background:"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:500,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p><p style={{fontSize:10,color:"rgba(0,0,0,0.3)"}}>Stock: {p.stock}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:12,color:"#fe2c55"}}>${p.price.toLocaleString()}</p><span style={{fontSize:9,color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24"}}>{(p.status==="active"||p.status==="live")?"● Live":"● Pending"}</span></div></div>
- ))
- }
+ :dashboardProducts.slice(0,4).map((p,i)=>(
+ <div key={`${p._dashboardType}-${p.id||i}`} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}><span style={{fontSize:11,color:"#333",width:16}}>#{i+1}</span><div style={{width:34,height:34,borderRadius:8,background:p._dashboardType==="reseller"?"rgba(124,58,237,0.08)":"rgba(254,44,85,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:p.emoji}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}><p style={{fontSize:12,fontWeight:500,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>{p.title}</p>{p._dashboardType==="reseller"&&<span style={{fontSize:8.5,background:"rgba(124,58,237,0.10)",color:"#7c3aed",padding:"2px 6px",borderRadius:100,fontWeight:700,flexShrink:0}}>Reseller Product</span>}</div><p style={{fontSize:10,color:"rgba(0,0,0,0.3)"}}>Stock: {p.stock}</p></div><div style={{textAlign:"right"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:12,color:"#fe2c55"}}>${Number(p.price||0).toLocaleString()}</p><span style={{fontSize:9,color:(p.status==="active"||p.status==="live")?"#34d399":"#fbbf24"}}>{(p.status==="active"||p.status==="live")?"● Live":"● Pending"}</span></div></div>
+ ));
+ })()}
  </div>
 
  {(()=>{
