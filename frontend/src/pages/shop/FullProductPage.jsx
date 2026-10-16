@@ -327,7 +327,7 @@ export const FullProductPage = ({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 420, marginBottom: 20 }}>
-            {ratingBuckets.map(({ star, pct }) => (
+            {ratingBuckets.map(({ star, count, pct }) => (
               <div key={star} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 12, color: "#555", minWidth: 12 }}>{star}</span>
                 <div style={{ flex: 1, height: 6, background: "#eee", borderRadius: 100 }}>
