@@ -1693,20 +1693,61 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  ))}
  </div><div style={{textAlign:"center",padding:"20px 0"}}><p style={{color:"#555",fontSize:13}}>No reviews yet — reviews appear after buyers purchase</p></div></div></div>}
 
- {sellerTab==="warehouse"&&<div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}><p style={{fontWeight:700,marginBottom:16,color:"#fe2c55"}}>Product Warehouse</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:20}}>
- {[["Total Stock",sellerProds.reduce((s,p)=>s+(p.stock||0),0).toString(),"#25f4ee"],["Active Products",activePrds.toString(),"#34d399"],["Low Stock","0","#fbbf24"]].map(([l,v,c])=>(
+ {sellerTab==="warehouse"&&(()=>{
+ const ownStock=sellerProds.reduce((sum,p)=>sum+(Number(p.stock)||0),0);
+ const resellerStock=resellerListings.reduce((sum,p)=>sum+(Number(p.stock)||0),0);
+ const warehouseItems=[
+   ...sellerProds.map(p=>({...p,_warehouseType:"own"})),
+   ...resellerListings.map(p=>({...p,_warehouseType:"reseller",status:p.product_status||p.status,title:p.title||"Reseller Product"})),
+ ];
+ const resellerHistoryFor=(listing)=>{
+   const listingId=String(listing.reseller_listing_id||listing.id||"");
+   return resellerOrders
+     .filter(o=>String(o.reseller_listing_id||"")===listingId)
+     .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+ };
+ return <div><div style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,padding:20}}>
+ <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"flex-start",flexWrap:"wrap",marginBottom:16}}>
+   <div><p style={{fontWeight:700,color:"#fe2c55"}}>Product Warehouse</p><p style={{fontSize:11,color:"#777",marginTop:4}}>Own inventory and reseller products in one place. Reseller quantity follows the supplier's live stock.</p></div>
+   <div style={{fontSize:11,color:"#555",background:"#f7f7f7",border:"1px solid #eee",padding:"7px 10px",borderRadius:9}}>{sellerProds.length} own · {resellerListings.length} reseller</div>
+ </div>
+ <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12,marginBottom:20}}>
+ {[['Own Stock',ownStock.toString(),'#25f4ee'],['Reseller Available',resellerStock.toString(),'#a78bfa'],['Reseller Products',resellerListings.length.toString(),'#fbbf24']].map(([l,v,c])=>(
  <div key={l} style={{background:"rgba(0,0,0,0.03)",border:"1px solid rgba(0,0,0,0.07)",borderRadius:12,padding:16,textAlign:"center"}}><p style={{fontFamily:"Poppins,sans-serif",fontWeight:800,fontSize:24,color:c,marginBottom:4}}>{v}</p><p style={{fontSize:11,color:"#555"}}>{l}</p></div>
  ))}
  </div>
- {sellerProds.length===0
- ?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{fontSize:40,marginBottom:8}}></p><p style={{color:"#555",fontSize:13}}>No products in warehouse</p></div>
- :<div style={{display:"flex",flexDirection:"column",gap:8}}>
- {sellerProds.map((p,i)=>(
- <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:14,background:"rgba(0,0,0,0.02)",borderRadius:12,border:"1px solid rgba(0,0,0,0.06)"}}><div style={{width:42,height:42,borderRadius:10,background:`${p.color||"#fe2c55"}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:(p.emoji||"")}</div><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>{p.title}</p><p style={{fontSize:11,color:"#555"}}>Stock: {p.stock||0} units</p></div><span style={{fontSize:12,fontWeight:700,color:p.stock>10?"#34d399":p.stock>0?"#fbbf24":"#fe2c55"}}>{p.stock>10?"In Stock":p.stock>0?"Low Stock":"Out of Stock"}</span></div>
- ))}
- </div>
- }
- </div></div>}
+ {warehouseItems.length===0
+ ?<div style={{textAlign:"center",padding:"30px 0"}}><p style={{color:"#555",fontSize:13}}>No products in warehouse</p></div>
+ :<div style={{display:"flex",flexDirection:"column",gap:10}}>
+ {warehouseItems.map((p,i)=>{
+   const isReseller=p._warehouseType==="reseller";
+   const history=isReseller?resellerHistoryFor(p):[];
+   const soldQty=history.filter(o=>String(o.status||"").toLowerCase()!=="cancelled").reduce((sum,o)=>sum+(Number(o.quantity)||0),0);
+   const liveStatus=String(p.product_status||p.status||"").toLowerCase();
+   return <div key={`${p._warehouseType}-${p.id||i}`} style={{background:"rgba(0,0,0,0.02)",borderRadius:12,border:"1px solid rgba(0,0,0,0.07)",overflow:"hidden"}}>
+     <div style={{display:"flex",alignItems:"center",gap:12,padding:14}}>
+       <div style={{width:48,height:48,borderRadius:10,background:"#f5f5f5",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0}}>{p.img?<img src={p.img} alt={p.title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:9,color:"#999"}}>No image</span>}</div>
+       <div style={{flex:1,minWidth:0}}>
+         <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}><p style={{fontSize:13,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.title}</p>{isReseller&&<span style={{fontSize:9.5,fontWeight:700,color:"#7c3aed",background:"#f3e8ff",padding:"3px 7px",borderRadius:100}}>Reseller Product</span>}</div>
+         <p style={{fontSize:11,color:"#666",marginTop:3}}>{isReseller?`Supplier: ${p.supplier_name||"Supplier"} · Selling $${Number(p.selling_price||p.price||0).toFixed(2)}`:`Own Product · $${Number(p.price||0).toFixed(2)}`}</p>
+       </div>
+       <div style={{textAlign:"right",minWidth:92}}><p style={{fontSize:10,color:"#777"}}>Current Quantity</p><p style={{fontSize:18,fontWeight:800,color:Number(p.stock)>10?"#16a34a":Number(p.stock)>0?"#d97706":"#dc2626"}}>{Number(p.stock)||0}</p>{isReseller&&<p style={{fontSize:9.5,color:"#888"}}>Sold by you: {soldQty}</p>}</div>
+       <span style={{fontSize:11,fontWeight:700,color:liveStatus==="live"||liveStatus==="active"?"#16a34a":"#d97706",background:liveStatus==="live"||liveStatus==="active"?"#ecfdf5":"#fffbeb",padding:"5px 8px",borderRadius:100,whiteSpace:"nowrap"}}>{liveStatus==="live"||liveStatus==="active"?"Available":"Unavailable"}</span>
+     </div>
+     {isReseller&&<details style={{borderTop:"1px solid #ececec",background:"#fff"}}>
+       <summary style={{padding:"11px 14px",fontSize:11.5,fontWeight:700,color:"#fe2c55",cursor:"pointer",userSelect:"none"}}>Quantity History ({history.length})</summary>
+       <div style={{padding:"0 14px 14px"}}>
+         <div style={{padding:"8px 10px",borderRadius:9,background:"#f8f8f8",fontSize:10.5,color:"#666",marginBottom:9}}>Current supplier stock: <b>{Number(p.stock)||0}</b> units · Added to your store {p.created_at?new Date(p.created_at).toLocaleDateString():"—"}</div>
+         {history.length===0?<p style={{fontSize:11,color:"#777",padding:"8px 0"}}>No quantity movement from your reseller orders yet.</p>:
+         <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",minWidth:560}}><thead><tr>{['Date','Order','Quantity','Movement','Status'].map(h=><th key={h} style={{textAlign:"left",padding:"8px",fontSize:10,color:"#777",borderBottom:"1px solid #eee"}}>{h}</th>)}</tr></thead><tbody>{history.map(o=>{const cancelled=String(o.status||"").toLowerCase()==="cancelled";return <tr key={o.id}><td style={{padding:"9px 8px",fontSize:11,borderBottom:"1px solid #f2f2f2"}}>{o.created_at?new Date(o.created_at).toLocaleString():"—"}</td><td style={{padding:"9px 8px",fontSize:11,borderBottom:"1px solid #f2f2f2",fontWeight:600}}>{o.order_number||"—"}</td><td style={{padding:"9px 8px",fontSize:11,borderBottom:"1px solid #f2f2f2"}}>{Number(o.quantity)||0}</td><td style={{padding:"9px 8px",fontSize:11,borderBottom:"1px solid #f2f2f2",fontWeight:700,color:cancelled?"#777":"#dc2626"}}>{cancelled?"Cancelled":`-${Number(o.quantity)||0} units`}</td><td style={{padding:"9px 8px",fontSize:11,borderBottom:"1px solid #f2f2f2",textTransform:"capitalize"}}>{o.status||"—"}</td></tr>})}</tbody></table></div>}
+       </div>
+     </details>}
+   </div>
+ })}
+ </div>}
+ </div></div>;
+ })()}
+
 
  {sellerTab==="bestsellers"&&(()=>{
  const sorted=[...sellerProds].sort((a,b)=>(b.sold||0)-(a.sold||0)).slice(0,10);
