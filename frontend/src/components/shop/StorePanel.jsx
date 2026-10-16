@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 
 export const StorePanel = ({ store, detail, onClose, addToCart, showToast, setSP }) => {
   const products = Array.isArray(detail?.products) ? detail.products : [];
+  const currentStore = detail?.store ? { ...store, ...detail.store } : store;
   const [target, setTarget] = useState(null);
 
   useEffect(() => {
@@ -119,31 +120,31 @@ export const StorePanel = ({ store, detail, onClose, addToCart, showToast, setSP
               border: "3px solid rgba(255,255,255,.45)",
             }}
           >
-            {store.profile_img ? (
+            {currentStore.profile_img ? (
               <img
-                src={store.profile_img}
-                alt={store.shop_name || "Store"}
+                src={currentStore.profile_img}
+                alt={currentStore.shop_name || "Store"}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
-              String(store.shop_name || "S").charAt(0).toUpperCase()
+              String(currentStore.shop_name || "S").charAt(0).toUpperCase()
             )}
           </div>
 
           <h1 style={{ fontWeight: 800, fontSize: 28, marginBottom: 7, color: "#fff" }}>
-            {store.shop_name}
+            {currentStore.shop_name}
           </h1>
           <p
             style={{
               fontSize: 13,
               color: "rgba(255,255,255,.9)",
-              marginBottom: store.shop_bio ? 10 : 20,
+              marginBottom: currentStore.shop_bio ? 10 : 20,
             }}
           >
-            {[store.category, store.city].filter(Boolean).join(" · ") || "TokZoo Seller"}
+            {[currentStore.category, currentStore.city].filter(Boolean).join(" · ") || "TokZoo Seller"}
           </p>
 
-          {store.shop_bio && (
+          {currentStore.shop_bio && (
             <p
               style={{
                 fontSize: 12.5,
@@ -153,22 +154,35 @@ export const StorePanel = ({ store, detail, onClose, addToCart, showToast, setSP
                 lineHeight: 1.6,
               }}
             >
-              {store.shop_bio}
+              {currentStore.shop_bio}
             </p>
           )}
 
-          <div style={{ display: "flex", gap: 32, justifyContent: "center", color: "#fff" }}>
-            <div>
-              <p style={{ fontWeight: 800, fontSize: 20 }}>⭐ {Number(store.rating || 0).toFixed(1)}</p>
-              <p style={{ fontSize: 11, opacity: 0.85 }}>Rating</p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+              gap: 10,
+              maxWidth: 620,
+              margin: "0 auto",
+              color: "#fff",
+            }}
+          >
+            <div style={{ padding: "8px 6px" }}>
+              <p style={{ fontWeight: 800, fontSize: 19 }}>⭐ {Number(currentStore.rating || 0).toFixed(1)}</p>
+              <p style={{ fontSize: 10.5, opacity: 0.85 }}>Rating · {Number(currentStore.review_count || 0)} reviews</p>
             </div>
-            <div>
-              <p style={{ fontWeight: 800, fontSize: 20 }}>{store.product_count ?? products.length}</p>
-              <p style={{ fontSize: 11, opacity: 0.85 }}>Products</p>
+            <div style={{ padding: "8px 6px" }}>
+              <p style={{ fontWeight: 800, fontSize: 19 }}>{Number(currentStore.total_sales || 0).toLocaleString()}</p>
+              <p style={{ fontSize: 10.5, opacity: 0.85 }}>Total Sales</p>
             </div>
-            <div>
-              <p style={{ fontWeight: 800, fontSize: 20 }}>✓</p>
-              <p style={{ fontSize: 11, opacity: 0.85 }}>Verified</p>
+            <div style={{ padding: "8px 6px" }}>
+              <p style={{ fontWeight: 800, fontSize: 19 }}>{Number(currentStore.products_sold || 0).toLocaleString()}</p>
+              <p style={{ fontSize: 10.5, opacity: 0.85 }}>Products Sold</p>
+            </div>
+            <div style={{ padding: "8px 6px" }}>
+              <p style={{ fontWeight: 800, fontSize: 19 }}>{currentStore.product_count ?? products.length}</p>
+              <p style={{ fontSize: 10.5, opacity: 0.85 }}>Products</p>
             </div>
           </div>
         </div>

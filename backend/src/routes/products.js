@@ -948,6 +948,58 @@ router.get('/stores/:id', async (req, res) => {
 
     store.product_count = productsResult.rows.length;
 
+    // Real buyer-facing store performance. Only delivered orders count as sales.
+    // A reseller order belongs to the reseller's storefront; a normal order belongs
+    // to the original seller storefront. Ratings are taken from reviews on those
+    // delivered orders, so no demo/fake figures are exposed.
+    const statsResult = await query(`
+      SELECT
+        (
+          SELECT COUNT(*)::int
+          FROM orders o
+          WHERE o.status='delivered'
+            AND (
+              o.reseller_seller_id=$1
+              OR (o.reseller_seller_id IS NULL AND o.seller_id=$1)
+            )
+        ) AS total_sales,
+        (
+          SELECT COALESCE(SUM(o.quantity),0)::int
+          FROM orders o
+          WHERE o.status='delivered'
+            AND (
+              o.reseller_seller_id=$1
+              OR (o.reseller_seller_id IS NULL AND o.seller_id=$1)
+            )
+        ) AS products_sold,
+        (
+          SELECT COALESCE(ROUND(AVG(r.rating)::numeric,1),0)::numeric
+          FROM reviews r
+          JOIN orders o ON o.id=r.order_id
+          WHERE o.status='delivered'
+            AND (
+              o.reseller_seller_id=$1
+              OR (o.reseller_seller_id IS NULL AND o.seller_id=$1)
+            )
+        ) AS rating,
+        (
+          SELECT COUNT(*)::int
+          FROM reviews r
+          JOIN orders o ON o.id=r.order_id
+          WHERE o.status='delivered'
+            AND (
+              o.reseller_seller_id=$1
+              OR (o.reseller_seller_id IS NULL AND o.seller_id=$1)
+            )
+        ) AS review_count
+    `, [req.params.id]);
+
+    const stats = statsResult.rows[0] || {};
+    store.total_sales = Number(stats.total_sales || 0);
+    store.products_sold = Number(stats.products_sold || 0);
+    store.review_count = Number(stats.review_count || 0);
+    store.rating = Number(stats.rating || 0);
+
     return res.json({
       success: true,
       store,
