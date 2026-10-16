@@ -125,23 +125,40 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200,
+// General API traffic is intentionally generous because the buyer, seller and
+// admin apps make several background requests. Authentication endpoints keep a
+// separate stricter limit to protect login/reset flows from abuse.
+const generalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1500,
+  message: {
+    success: false,
+    message: 'Too many requests. Please try again shortly.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) =>
+    req.method === 'OPTIONS' ||
+    req.path === '/health' ||
+    req.path === '/api/health',
+});
 
-    message: {
-      success: false,
-      message: 'Too many requests',
-    },
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 80,
+  message: {
+    success: false,
+    message: 'Too many authentication attempts. Please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
 
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
+app.use('/api', generalApiLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
