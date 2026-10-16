@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
             wt.order_id IS NULL
             OR (
               wt.transaction_type IN ('product_sale','supplier_sale')
-              AND wt.seller_id = COALESCE(o.original_seller_id, o.seller_id)
+              AND wt.seller_id = o.seller_id
             )
             OR (
               wt.transaction_type IN ('reseller_profit','platform_fee')

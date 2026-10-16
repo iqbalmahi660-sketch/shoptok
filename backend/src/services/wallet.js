@@ -236,7 +236,7 @@ const walletOrderOwnershipSql = (sellerAlias = 'wt', orderAlias = 'o') => `
     ${sellerAlias}.order_id IS NULL
     OR (
       ${sellerAlias}.transaction_type IN ('product_sale','supplier_sale')
-      AND ${sellerAlias}.seller_id = COALESCE(${orderAlias}.original_seller_id, ${orderAlias}.seller_id)
+      AND ${sellerAlias}.seller_id = ${orderAlias}.seller_id
     )
     OR (
       ${sellerAlias}.transaction_type IN ('reseller_profit','platform_fee')
@@ -259,7 +259,7 @@ const cleanupInvalidSellerWalletRows = async (sellerId) => {
       AND NOT (
         (
           wt.transaction_type IN ('product_sale','supplier_sale')
-          AND wt.seller_id = COALESCE(o.original_seller_id, o.seller_id)
+          AND wt.seller_id = o.seller_id
         )
         OR (
           wt.transaction_type IN ('reseller_profit','platform_fee')
@@ -285,7 +285,7 @@ const backfillSellerOrders = async (sellerId) => {
       affects_balance, description, metadata, available_at
     )
     SELECT
-      COALESCE(o.original_seller_id, o.seller_id) AS seller_id,
+      o.seller_id AS seller_id,
       o.id AS order_id,
       CASE WHEN o.reseller_seller_id IS NULL THEN 'product_sale' ELSE 'supplier_sale' END AS transaction_type,
       CASE
@@ -317,7 +317,7 @@ const backfillSellerOrders = async (sellerId) => {
       ) AS metadata,
       CASE WHEN LOWER(COALESCE(o.status,''))='delivered' THEN COALESCE(o.updated_at,o.created_at,NOW()) ELSE NULL END AS available_at
     FROM orders o
-    WHERE COALESCE(o.original_seller_id, o.seller_id)=$1::uuid
+    WHERE o.seller_id=$1::uuid
       AND COALESCE(o.total_amount,0) > 0
     ON CONFLICT (seller_id, order_id, transaction_type) WHERE order_id IS NOT NULL
     DO UPDATE SET
