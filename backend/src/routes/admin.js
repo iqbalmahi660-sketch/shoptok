@@ -358,56 +358,97 @@ router.get('/withdrawals', async (req, res) => {
 });
 
 router.patch('/withdrawals/:id/status', async (req, res) => {
-  const status = String(req.body?.status || '').toLowerCase();
+  const status = String(req.body?.status || '').trim().toLowerCase();
   const adminNote = String(req.body?.admin_note || '').trim() || null;
-  if (!['approved','completed','rejected'].includes(status)) {
+
+  if (!['approved', 'completed', 'rejected'].includes(status)) {
     return res.status(400).json({ success: false, message: 'Invalid withdrawal status' });
   }
 
-  await ensureWalletSchema();
   const client = await getClient();
   try {
+    await ensureWalletSchema();
     await client.query('BEGIN');
+
     const currentRes = await client.query(`
-      SELECT * FROM withdrawal_requests WHERE id=$1 FOR UPDATE
+      SELECT *
+      FROM withdrawal_requests
+      WHERE id=$1::uuid
+      FOR UPDATE
     `, [req.params.id]);
     const current = currentRes.rows[0];
+
     if (!current) {
       await client.query('ROLLBACK');
       return res.status(404).json({ success: false, message: 'Withdrawal request not found' });
     }
-    if (current.status === 'completed') {
+
+    const currentStatus = String(current.status || '').toLowerCase();
+    if (currentStatus === 'completed') {
       await client.query('ROLLBACK');
       return res.status(400).json({ success: false, message: 'Completed withdrawal cannot be changed' });
     }
 
     const updatedRes = await client.query(`
       UPDATE withdrawal_requests
-      SET status=$1,
-          admin_note=COALESCE($2, admin_note),
-          processed_by=$3,
-          approved_at=CASE WHEN $1 IN ('approved','completed') THEN COALESCE(approved_at,NOW()) ELSE approved_at END,
-          completed_at=CASE WHEN $1='completed' THEN NOW() ELSE NULL END,
+      SET status=$1::varchar(20),
+          admin_note=COALESCE($2::text, admin_note),
+          processed_by=$3::uuid,
+          approved_at=CASE
+            WHEN $1::text IN ('approved','completed') THEN COALESCE(approved_at, NOW())
+            ELSE approved_at
+          END,
+          completed_at=CASE
+            WHEN $1::text='completed' THEN NOW()
+            WHEN $1::text='rejected' THEN NULL
+            ELSE completed_at
+          END,
           updated_at=NOW()
-      WHERE id=$4
+      WHERE id=$4::uuid
       RETURNING *
     `, [status, adminNote, req.admin.id, req.params.id]);
 
+    // Keep the optional ledger row in sync when it exists. Wallet balances are
+    // derived from withdrawal_requests, so a missing historical ledger row must
+    // never block Approve/Reject/Completed actions.
     const txStatus = status === 'rejected' ? 'reversed' : status;
     await client.query(`
       UPDATE wallet_transactions
-      SET status=$1, updated_at=NOW()
-      WHERE withdrawal_id=$2 AND transaction_type='withdrawal'
+      SET status=$1::varchar(20), updated_at=NOW()
+      WHERE withdrawal_id=$2::uuid
+        AND transaction_type='withdrawal'
     `, [txStatus, req.params.id]);
 
     await client.query('COMMIT');
     const updated = updatedRes.rows[0];
-    logAction(req.admin.id, req.admin.name, `withdrawal_${status}`, 'withdrawal', updated.id, updated.id, { amount: updated.amount, admin_note: adminNote }, req.ip);
-    return res.json({ success: true, message: `Withdrawal ${status}`, withdrawal: updated });
+
+    logAction(
+      req.admin.id,
+      req.admin.name,
+      `withdrawal_${status}`,
+      'withdrawal',
+      updated.id,
+      updated.id,
+      { amount: updated.amount, admin_note: adminNote },
+      req.ip
+    );
+
+    return res.json({
+      success: true,
+      message: status === 'approved'
+        ? 'Withdrawal approved'
+        : status === 'rejected'
+          ? 'Withdrawal rejected'
+          : 'Withdrawal marked completed',
+      withdrawal: updated,
+    });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     console.error('Withdrawal status update failed:', err);
-    return res.status(500).json({ success: false, message: 'Failed to update withdrawal' });
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to update withdrawal',
+    });
   } finally {
     client.release();
   }

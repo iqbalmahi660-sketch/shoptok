@@ -106,6 +106,10 @@ router.post('/withdrawals', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Enter a valid withdrawal amount' });
   }
 
+  if (amount < 100) {
+    return res.status(400).json({ success: false, message: 'Minimum withdrawal amount is $100' });
+  }
+
   const client = await getClient();
   try {
     await ensureWalletSchema();

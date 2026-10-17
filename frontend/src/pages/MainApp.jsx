@@ -232,8 +232,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
      showToast(e.message||"Could not load store");
    }
  };
- const deliveredOrderRevenue=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.total)||0),0);
- const totalRev=Number(walletData.summary?.total_earnings)>0?Number(walletData.summary.total_earnings):deliveredOrderRevenue;
+ const totalRev=sellerOrders.filter(o=>String(o.status||"").toLowerCase()==="delivered").reduce((s,o)=>s+(Number(o.total)||0),0);
  const activePrds=sellerProds.filter(p=>p.status==="active"||p.status==="live").length;
  const pendingPrds=sellerProds.filter(p=>p.status==="pending").length;
  const pendingOrd=sellerOrders.filter(o=>o.status==="Processing").length;
@@ -515,15 +514,16 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
 
  const requestWithdrawal=async()=>{
  const available=Number(walletData.summary?.available_balance)||0;
- if(available<=0){showToast("No available balance to withdraw");return;}
+ if(available<100){showToast(available<=0?"No available balance to withdraw":"Minimum withdrawal amount is $100");return;}
  const account=walletData.payout_account;
  if(!account?.payout_method||!account?.payout_network||!account?.payout_wallet_address){
  showToast("Save your USDT/Crypto payout details before withdrawing");return;
  }
- const raw=window.prompt(`Available balance: $${available.toFixed(2)}\nEnter withdrawal amount:`);
+ const raw=window.prompt(`Available balance: $${available.toFixed(2)}\nMinimum withdrawal: $100\nEnter withdrawal amount:`);
  if(raw===null)return;
  const amount=Number(raw);
  if(!Number.isFinite(amount)||amount<=0){showToast("Enter a valid withdrawal amount");return;}
+ if(amount<100){showToast("Minimum withdrawal amount is $100");return;}
  if(amount>available){showToast(`Maximum available amount is $${available.toFixed(2)}`);return;}
  try{
  const token=localStorage.getItem("shopToken");
@@ -1405,7 +1405,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  {sellerOrders.map((o,i)=>(
  <div key={i} style={{background:"#ffffff",border:"1px solid #1a1a1a",borderRadius:14,overflow:"hidden"}}><div onClick={()=>setExpandedOrder(expandedOrder===i?null:i)} style={{padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}
  onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.03)"}
- onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:40,height:40,borderRadius:9,overflow:"hidden",background:"#f3f3f3",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:"1px solid rgba(0,0,0,0.08)"}}>{(o.items?.[0]?.img||o.product_image)?<img src={o.items?.[0]?.img||o.product_image} alt={o.items?.[0]?.title||o.product_title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:10,color:"#999"}}>No image</span>}</div><div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>{o.id||o.order_number}</span><span style={{fontSize:11,color:"#555"}}>{o.date||new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}</span></div><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginTop:2}}>{o.items?o.items[0]?.title:o.product_title}</p></div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:o.statusColor||"#fbbf24",background:(o.statusColor||"#fbbf24")+"18",padding:"4px 10px",borderRadius:100}}>● {o.status}</span>{o.is_reseller_order&&<span style={{fontSize:10,fontWeight:700,color:o.order_role==="reseller"?"#7c3aed":"#0369a1",background:o.order_role==="reseller"?"#ede9fe":"#e0f2fe",padding:"4px 8px",borderRadius:100}}>{o.order_role==="reseller"?"Reseller Order":"Supplier Fulfilment"}</span>}<span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#34d399"}}>${Number(o.total||o.total_amount||0).toLocaleString()}</span><span style={{fontSize:11,color:"#555"}}>{expandedOrder===i?"▲":"▼"}</span></div></div>
+ onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:40,height:40,borderRadius:9,overflow:"hidden",background:"#f3f3f3",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:"1px solid rgba(0,0,0,0.08)"}}>{(o.items?.[0]?.img||o.product_image)?<img src={o.items?.[0]?.img||o.product_image} alt={o.items?.[0]?.title||o.product_title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:10,color:"#999"}}>No image</span>}</div><div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#fe2c55"}}>{o.id||o.order_number}</span><span style={{fontSize:11,color:"#555"}}>{o.date||new Date(o.created_at).toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}</span></div><p style={{fontSize:12,color:"rgba(0,0,0,0.5)",marginTop:2}}>{o.items?o.items[0]?.title:o.product_title}</p></div></div><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:o.statusColor||"#fbbf24",background:(o.statusColor||"#fbbf24")+"18",padding:"4px 10px",borderRadius:100}}>● {o.status}</span><span style={{fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:13,color:"#34d399"}}>${Number(o.total||o.total_amount||0).toLocaleString()}</span><span style={{fontSize:11,color:"#555"}}>{expandedOrder===i?"▲":"▼"}</span></div></div>
  {expandedOrder===i&&(
  <div style={{borderTop:"1px solid rgba(254,44,85,0.2)"}}><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",gap:10}}><div style={{width:56,height:56,borderRadius:11,overflow:"hidden",background:"#f3f3f3",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:"1px solid rgba(0,0,0,0.08)"}}>{(o.items?.[0]?.img||o.product_image)?<img src={o.items?.[0]?.img||o.product_image} alt={o.items?.[0]?.title||o.product_title||"Product"} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:<span style={{fontSize:10,color:"#999"}}>No image</span>}</div><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600,marginBottom:2}}>{o.items?o.items[0]?.title:o.product_title}</p><p style={{fontSize:11,color:"#555"}}>Qty: {o.items?o.items[0]?.qty:o.quantity} · ${Number(o.items?o.items[0]?.price:o.unit_price||0).toLocaleString()} each</p></div><div style={{textAlign:"right"}}><p style={{fontSize:11,color:"#555",marginBottom:2}}>Shipping</p><p style={{fontSize:12,fontWeight:600,color:Number(o.shipping_fee)===0?"#34d399":"#fff"}}>{Number(o.shipping_fee)===0?"FREE":"$"+Number(o.shipping_fee||150).toLocaleString()}</p></div></div><div style={{padding:"12px 18px",borderBottom:"1px solid #1a1a1a"}}><p style={{fontSize:11,color:"#fe2c55",fontWeight:700,marginBottom:8}}>BUYER DETAILS</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
  {[["Name",o.shipping_name||o.buyer_name],["Phone",o.shipping_phone||o.buyer_phone],["City",o.shipping_city||o.buyer_city],["Payment",(o.payment_method||"COD").toUpperCase()]].map(([l,v])=>(
@@ -1426,7 +1426,7 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  (o.status||"").toLowerCase()==="pending"?"Confirm this order before admin can manage delivery status":
  (o.status||"").toLowerCase()==="confirmed"?"Seller confirmed — admin can now manage delivery status":
  "Delivery status is managed by admin"
- }</p></div>{(o.status||"").toLowerCase()==="pending"&&o.can_confirm!==false&&<div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}><button onClick={()=>sellerOrderAction(o,"confirmed")} style={{background:"#16a34a",color:"#fff",border:"none",padding:"8px 14px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Confirm Order</button><button onClick={()=>sellerOrderAction(o,"cancelled")} style={{background:"#fff",color:"#ef4444",border:"1px solid #ef4444",padding:"8px 14px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Reject</button></div>}</div></div></div>
+ }</p></div>{(o.status||"").toLowerCase()==="pending"&&<div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}><button onClick={()=>sellerOrderAction(o,"confirmed")} style={{background:"#16a34a",color:"#fff",border:"none",padding:"8px 14px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Confirm Order</button><button onClick={()=>sellerOrderAction(o,"cancelled")} style={{background:"#fff",color:"#ef4444",border:"1px solid #ef4444",padding:"8px 14px",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Reject</button></div>}</div></div></div>
  )}
  </div>
  ))}
@@ -1658,7 +1658,8 @@ export const MainApp=({user,setUser,goAuth,darkMode=true,setDarkMode})=>{
  <div key={label} style={{background:"#fff",border:"1px solid #1a1a1a",borderRadius:12,padding:14}}><p style={{fontSize:10,color:"#666",marginBottom:5}}>{label}</p><p style={{fontWeight:800,fontSize:18,color}}>${Number(value||0).toFixed(2)}</p></div>
  ))}
  </div>
- <button onClick={requestWithdrawal} disabled={walletLoading||Number(walletData.summary?.available_balance||0)<=0} style={{width:"100%",padding:"14px",background:Number(walletData.summary?.available_balance||0)>0?"#fe2c55":"#ccc",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:Number(walletData.summary?.available_balance||0)>0?"pointer":"not-allowed",marginBottom:12}}>Withdraw</button>
+ <button onClick={requestWithdrawal} disabled={walletLoading||Number(walletData.summary?.available_balance||0)<100} style={{width:"100%",padding:"14px",background:Number(walletData.summary?.available_balance||0)>=100?"#fe2c55":"#ccc",border:"none",borderRadius:12,color:"#fff",fontFamily:"Poppins,sans-serif",fontWeight:700,fontSize:14,cursor:Number(walletData.summary?.available_balance||0)>=100?"pointer":"not-allowed",marginBottom:6}}>Withdraw</button>
+ <p style={{fontSize:11,color:"#777",textAlign:"center",marginBottom:12}}>Minimum withdrawal amount: $100</p>
  <div style={{background:"#fff",border:"1px solid #e6e6e6",borderRadius:12,padding:14,marginBottom:16}}>
  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:12}}>
    <div>
