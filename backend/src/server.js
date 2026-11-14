@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const socketMgr = require('./socket');
 const { ensureWalletSchema } = require('./services/wallet');
+const { ensureAdminAccount } = require('./services/adminBootstrap');
 
 const app = express();
 
@@ -207,6 +208,10 @@ const PORT = process.env.PORT || 5000;
 
 ensureWalletSchema().catch((err) => {
   console.error('❌ Wallet schema initialization failed:', err.message);
+});
+
+ensureAdminAccount().catch((err) => {
+  console.error('❌ Admin bootstrap failed:', err.message);
 });
 
 server.listen(PORT, () => {

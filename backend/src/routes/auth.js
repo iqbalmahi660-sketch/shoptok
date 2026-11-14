@@ -618,6 +618,125 @@ router.post(
 );
 
 // ======================================================
+// ADMIN FORGOT / RESET PASSWORD
+// ======================================================
+
+const getAdminResetSecret = (admin) =>
+  `${process.env.JWT_ADMIN_SECRET}:admin-reset:${admin.password_hash}`;
+
+router.post('/admin/forgot-password', async (req, res) => {
+  // Same response whether or not the email exists, so this
+  // cannot be used to discover admin accounts.
+  const generic = {
+    success: true,
+    message:
+      'If this email belongs to an admin, a reset link has been sent.',
+  };
+
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email) return res.json(generic);
+
+    const { rows } = await query(
+      `SELECT id, name, email, password_hash
+         FROM admins
+        WHERE email=$1 AND is_active=true`,
+      [email]
+    );
+    const admin = rows[0];
+    if (!admin) return res.json(generic);
+
+    const token = jwt.sign(
+      { id: admin.id, purpose: 'admin-password-reset' },
+      getAdminResetSecret(admin),
+      { expiresIn: '15m' }
+    );
+
+    const adminUrl = (
+      process.env.ADMIN_URL || 'https://admin.tokzoo.com'
+    ).replace(/\/+$/, '');
+    const resetUrl =
+      `${adminUrl}/?reset_token=${encodeURIComponent(token)}` +
+      `&uid=${encodeURIComponent(admin.id)}`;
+    const from = process.env.GMAIL_USER || process.env.EMAIL_USER;
+
+    await getMailTransport().sendMail({
+      from: `"TokZoo Admin" <${from}>`,
+      to: admin.email,
+      subject: 'Reset your TokZoo admin password',
+      text:
+        `Hi ${admin.name || 'Admin'},\n\n` +
+        `Use this link to reset your admin password:\n${resetUrl}\n\n` +
+        `This link expires in 15 minutes and works once.\n` +
+        `If you did not request this, ignore this email.`,
+      html:
+        `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;color:#111">` +
+        `<h2>Reset your TokZoo admin password</h2>` +
+        `<p>Hi ${admin.name || 'Admin'},</p>` +
+        `<p style="margin:24px 0"><a href="${resetUrl}" style="display:inline-block;background:#fe2c55;color:#fff;text-decoration:none;padding:12px 20px;border-radius:999px;font-weight:700">Reset Password</a></p>` +
+        `<p style="font-size:13px;color:#666">This link expires in 15 minutes and works once. If you did not request this, ignore this email.</p>` +
+        `</div>`,
+    });
+
+    res.json(generic);
+  } catch (err) {
+    console.error('Admin forgot-password failed:', err);
+    res.status(500).json({
+      success: false,
+      message:
+        err.message === 'Gmail SMTP is not configured'
+          ? 'Email service is not configured'
+          : 'Could not send reset email',
+    });
+  }
+});
+
+router.post('/admin/reset-password', async (req, res) => {
+  const bad = (m = 'Invalid or expired reset link') =>
+    res.status(400).json({ success: false, message: m });
+
+  try {
+    const { uid, token, password } = req.body || {};
+    if (!uid || !token) return bad();
+    if (typeof password !== 'string' || password.length < 8) {
+      return bad('Password must be at least 8 characters');
+    }
+
+    const { rows } = await query(
+      `SELECT id, password_hash FROM admins
+        WHERE id::text=$1 AND is_active=true`,
+      [String(uid)]
+    );
+    const admin = rows[0];
+    if (!admin) return bad();
+
+    let payload;
+    try {
+      payload = jwt.verify(token, getAdminResetSecret(admin));
+    } catch {
+      return bad();
+    }
+    if (
+      String(payload.id) !== String(admin.id) ||
+      payload.purpose !== 'admin-password-reset'
+    ) {
+      return bad();
+    }
+
+    const hash = await bcrypt.hash(password, 12);
+    await query(`UPDATE admins SET password_hash=$1 WHERE id=$2`, [
+      hash,
+      admin.id,
+    ]);
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Admin reset-password failed:', err);
+    res.status(500).json({ success: false, message: 'Password reset failed' });
+  }
+});
+
+// ======================================================
 // CURRENT USER / FULL PROFILE
 // ======================================================
 
