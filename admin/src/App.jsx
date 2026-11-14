@@ -307,6 +307,39 @@ export default function AdminApp() {
     } finally { setLoading(false); }
   };
 
+  // ── Forgot / reset password ───────────────────────────────────────────────────
+  const resetParams = (() => {
+    const q = new URLSearchParams(window.location.search);
+    return { token: q.get("reset_token"), uid: q.get("uid") };
+  })();
+  const [authView, setAuthView] = useState(resetParams.token && resetParams.uid ? "reset" : "login");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [newPass, setNewPass] = useState({ p1:"", p2:"" });
+
+  const handleForgot = async () => {
+    if (!forgotEmail.trim()) return addToast("Enter your admin email", "error");
+    setLoading(true);
+    try {
+      const d = await api("/auth/admin/forgot-password", { method:"POST", body:{ email: forgotEmail.trim() } });
+      addToast(d.message, "success");
+    } catch (err) { addToast(err.message, "error"); }
+    finally { setLoading(false); }
+  };
+
+  const handleReset = async () => {
+    if (newPass.p1.length < 8) return addToast("Password must be at least 8 characters", "error");
+    if (newPass.p1 !== newPass.p2) return addToast("Passwords do not match", "error");
+    setLoading(true);
+    try {
+      await api("/auth/admin/reset-password", { method:"POST", body:{ uid: resetParams.uid, token: resetParams.token, password: newPass.p1 } });
+      window.history.replaceState({}, "", window.location.pathname);
+      setNewPass({ p1:"", p2:"" });
+      setAuthView("login");
+      addToast("Password changed. Please sign in.", "success");
+    } catch (err) { addToast(err.message, "error"); }
+    finally { setLoading(false); }
+  };
+
   // ── Load notifications ────────────────────────────────────────────────────────
   const loadNotifs = useCallback(async () => {
     try {
@@ -492,6 +525,7 @@ export default function AdminApp() {
           <p style={{ color:"rgba(255,255,255,.4)", fontSize:13 }}>Authorized access only</p>
         </div>
         <div className="card">
+          {authView === "login" && (<>
           {[["Admin Email","email","email",loginForm.email],["Password","password","password",loginForm.pass]].map(([lbl,type,key,val])=>(
             <div key={key} style={{ marginBottom:16 }}>
               <label style={{ fontSize:11, color:"#555", display:"block", marginBottom:6, textTransform:"uppercase", letterSpacing:".06em" }}>{lbl}</label>
@@ -505,6 +539,32 @@ export default function AdminApp() {
             style={{ width:"100%", background: loading?"#333":"linear-gradient(135deg,#fe2c55,#ff6b35)", border:"none", color:"#fff", padding:"13px", borderRadius:12, fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, cursor: loading?"wait":"pointer", marginTop:4 }}>
             {loading ? "Signing in…" : "Sign In →"}
           </button>
+          <button onClick={()=>setAuthView("forgot")} style={{ background:"none", border:"none", color:"rgba(255,255,255,.5)", fontSize:12, cursor:"pointer", marginTop:14, width:"100%", textAlign:"center" }}>Forgot password?</button>
+          </>)}
+          {authView === "forgot" && (<>
+            <p style={{ color:"rgba(255,255,255,.5)", fontSize:13, marginBottom:16 }}>Enter your admin email. We will send a reset link valid for 15 minutes.</p>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ fontSize:11, color:"#555", display:"block", marginBottom:6, textTransform:"uppercase", letterSpacing:".06em" }}>Admin Email</label>
+              <input type="email" value={forgotEmail} onChange={e=>setForgotEmail(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&handleForgot()}
+                style={{ width:"100%", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"11px 14px", color:"#fff", fontSize:13, fontFamily:"inherit" }} />
+            </div>
+            <button onClick={handleForgot} disabled={loading} style={{ width:"100%", background: loading?"#333":"linear-gradient(135deg,#fe2c55,#ff6b35)", border:"none", color:"#fff", padding:"13px", borderRadius:12, fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, cursor: loading?"wait":"pointer", marginTop:4 }}>{loading ? "Sending…" : "Send reset link"}</button>
+            <button onClick={()=>setAuthView("login")} style={{ background:"none", border:"none", color:"rgba(255,255,255,.5)", fontSize:12, cursor:"pointer", marginTop:14, width:"100%", textAlign:"center" }}>Back to sign in</button>
+          </>)}
+          {authView === "reset" && (<>
+            <p style={{ color:"rgba(255,255,255,.5)", fontSize:13, marginBottom:16 }}>Choose a new admin password (at least 8 characters).</p>
+            {[["New password","p1"],["Confirm password","p2"]].map(([l,k])=>(
+              <div key={k} style={{ marginBottom:16 }}>
+                <label style={{ fontSize:11, color:"#555", display:"block", marginBottom:6, textTransform:"uppercase", letterSpacing:".06em" }}>{l}</label>
+                <input type="password" value={newPass[k]} onChange={e=>setNewPass(f=>({...f,[k]:e.target.value}))}
+                  onKeyDown={e=>e.key==="Enter"&&handleReset()}
+                  style={{ width:"100%", background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.1)", borderRadius:10, padding:"11px 14px", color:"#fff", fontSize:13, fontFamily:"inherit" }} />
+              </div>
+            ))}
+            <button onClick={handleReset} disabled={loading} style={{ width:"100%", background: loading?"#333":"linear-gradient(135deg,#fe2c55,#ff6b35)", border:"none", color:"#fff", padding:"13px", borderRadius:12, fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, cursor: loading?"wait":"pointer", marginTop:4 }}>{loading ? "Saving…" : "Change password"}</button>
+            <button onClick={()=>{ window.history.replaceState({}, "", window.location.pathname); setAuthView("login"); }} style={{ background:"none", border:"none", color:"rgba(255,255,255,.5)", fontSize:12, cursor:"pointer", marginTop:14, width:"100%", textAlign:"center" }}>Back to sign in</button>
+          </>)}
         </div>
       </div>
       {toast && <Toast {...toast} onClose={()=>setToast(null)} />}
