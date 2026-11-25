@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   preview: {
     allowedHosts: [
-      'admin.tokzoo.com',
+      'admin.tokzoo.online',
       'motivated-solace-production-5ac8.up.railway.app',
     ],
   },
