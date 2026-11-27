@@ -24,6 +24,9 @@ const io = new Server(server, {
       'https://admin.tokzoo.com',
       'https://tokzoo.com',
       'https://www.tokzoo.com',
+      'https://tokzoo.online',
+      'https://www.tokzoo.online',
+      'https://admin.tokzoo.online',
       'https://motivated-solace-production-5ac8.up.railway.app',
       'http://localhost:5173',
     ],
@@ -63,6 +66,8 @@ const isAllowedOrigin = (origin) => {
       (
         hostname === 'tokzoo.com' ||
         hostname.endsWith('.tokzoo.com') ||
+        hostname === 'tokzoo.online' ||
+        hostname.endsWith('.tokzoo.online') ||
         hostname.endsWith('.up.railway.app')
       )
     ) {
